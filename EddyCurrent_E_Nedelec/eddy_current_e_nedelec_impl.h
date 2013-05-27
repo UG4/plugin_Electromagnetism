@@ -274,14 +274,14 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_loc_discr_func ()
 	static const ReferenceObjectID id = geometry_traits<TElem>::REFERENCE_OBJECT_ID;
 
 	this->enable_fast_add_elem (true);
-	set_prep_elem_loop_fct	(id, & this_type::template prepare_element_loop<TElem>);
-	set_prep_elem_fct		(id, & this_type::template prepare_element<TElem>);
-	set_fsh_elem_loop_fct	(id, & this_type::template finish_element_loop<TElem>);
-	set_add_jac_A_elem_fct	(id, & this_type::template ass_JA_elem<TElem>);
-	set_add_jac_M_elem_fct	(id, & this_type::template ass_JM_elem<TElem>);
-	set_add_def_A_elem_fct	(id, & this_type::template ass_dA_elem<TElem>);
-	set_add_def_M_elem_fct	(id, & this_type::template ass_dM_elem<TElem>);
-	set_add_rhs_elem_fct	(id, & this_type::template ass_rhs_elem<TElem>);
+	this->set_prep_elem_loop_fct(id, & this_type::template prepare_element_loop<TElem>);
+	this->set_prep_elem_fct		(id, & this_type::template prepare_element<TElem>);
+	this->set_fsh_elem_loop_fct	(id, & this_type::template finish_element_loop<TElem>);
+	this->set_add_jac_A_elem_fct(id, & this_type::template ass_JA_elem<TElem>);
+	this->set_add_jac_M_elem_fct(id, & this_type::template ass_JM_elem<TElem>);
+	this->set_add_def_A_elem_fct(id, & this_type::template ass_dA_elem<TElem>);
+	this->set_add_def_M_elem_fct(id, & this_type::template ass_dM_elem<TElem>);
+	this->set_add_rhs_elem_fct	(id, & this_type::template ass_rhs_elem<TElem>);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
