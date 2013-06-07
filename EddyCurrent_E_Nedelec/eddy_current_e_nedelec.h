@@ -65,128 +65,128 @@ template <typename TDomain, typename TAlgebra>
 class EddyCurrent_E_Nedelec
 	: public IElemDisc<TDomain>
 {
-	private:
-	///	base class type
-		typedef IElemDisc<TDomain> base_type;
+private:
+///	base class type
+	typedef IElemDisc<TDomain> base_type;
 
-	///	own type
-		typedef EddyCurrent_E_Nedelec<TDomain,TAlgebra> this_type;
+///	own type
+	typedef EddyCurrent_E_Nedelec<TDomain,TAlgebra> this_type;
+
+/// type of grid functions (used for the sources)
+	typedef GridFunction<TDomain, TAlgebra> TGridFunction;
+
+///	domain type
+	typedef typename base_type::domain_type domain_type;
+
+///	world dimension
+	static const int dim = base_type::dim;
+
+///	position type
+	typedef typename base_type::position_type position_type;
+
+/// indices of the real and the imaginary parts in the grid functions
+	static const size_t _Re_ = 0;
+	static const size_t _Im_ = 1;
+
+public:
+///	constructor
+	EddyCurrent_E_Nedelec
+	(
+		const char* functions,
+		ConstSmartPtr<EMaterial<domain_type> > spSubsetData,
+		number frequency
+	);
+
+private:
+/// frequency \f$\omega\f$ for the discretization
+	number m_omega;
+
+/// parameters of the materials in the domain
+	ConstSmartPtr<EMaterial<domain_type> > m_spSubsetData;
 	
-	/// type of grid functions (used for the sources)
-		typedef GridFunction<TDomain, TAlgebra> TGridFunction;
+/// the generator current \f$ \mathbf{J}_{G,h} \f$
+	SmartPtr<TGridFunction> m_spgfJG; ///< the grid function
+	size_t m_vfctJG[2]; ///< components of the grid function
 
-	///	domain type
-		typedef typename base_type::domain_type domain_type;
+public:
+/// sets the generator current \f$ \mathbf{J}_{G,h} \f$
+	void set_generator_current(SmartPtr<TGridFunction> spgfJG, const char* cmp);
 
-	///	world dimension
-		static const int dim = base_type::dim;
+//---- Local discretization interface: ----
+private:
+///	check type of the grid and the trial space
+	virtual void prepare_setting
+	(
+		const std::vector<LFEID> & vLfeID,
+		bool bNonRegular
+	);
 
-	///	position type
-		typedef typename base_type::position_type position_type;
-	
-	/// indices of the real and the imaginary parts in the grid functions
-		static const size_t _Re_ = 0;
-		static const size_t _Im_ = 1;
+/// assembling functions
+/// \{
+	template <typename TElem>
+	void prepare_element_loop(ReferenceObjectID roid, int si);
 
-	public:
-	///	constructor
-		EddyCurrent_E_Nedelec
-		(
-			const char* functions,
-			ConstSmartPtr<EMaterial<domain_type> > spSubsetData,
-			number frequency
-		);
-	
-	/// frequency \f$\omega\f$ for the discretization
-		number m_omega;
-	
-	/// parameters of the materials in the domain
-		ConstSmartPtr<EMaterial<domain_type> > m_spSubsetData;
-		
-	private:
-	/// the generator current \f$ \mathbf{J}_{G,h} \f$
-		SmartPtr<TGridFunction> m_spgfJG; ///< the grid function
-		size_t m_vfctJG[2]; ///< components of the grid function
-	
-	public:
-	/// sets the generator current \f$ \mathbf{J}_{G,h} \f$
-		void set_generator_current(SmartPtr<TGridFunction> spgfJG, const char* cmp);
+	template <typename TElem>
+	void prepare_element(const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
 
-//	Local discretization interface:
-	private:
-	///	check type of the grid and the trial space
-		virtual void prepare_setting
-		(
-			const std::vector<LFEID> & vLfeID,
-			bool bNonRegular
-		);
+	template <typename TElem>
+	void finish_element_loop();
 
-	/// assembling functions
-	/// \{
-		template <typename TElem>
-		void prepare_element_loop(ReferenceObjectID roid, int si);
+	template <typename TElem>
+	void ass_JA_elem(LocalMatrix& J, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
 
-		template <typename TElem>
-		void prepare_element(const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
+	template <typename TElem>
+	void ass_JM_elem(LocalMatrix& J, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
 
-		template <typename TElem>
-		void finish_element_loop();
+	template <typename TElem>
+	void ass_dA_elem(LocalVector& d, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
 
-		template <typename TElem>
-		void ass_JA_elem(LocalMatrix& J, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
+	template <typename TElem>
+	void ass_dM_elem(LocalVector& d, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
 
-		template <typename TElem>
-		void ass_JM_elem(LocalMatrix& J, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
-
-		template <typename TElem>
-		void ass_dA_elem(LocalVector& d, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
-
-		template <typename TElem>
-		void ass_dM_elem(LocalVector& d, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
-
-		template <typename TElem>
-		void ass_rhs_elem(LocalVector& d, GeometricObject* elem, const position_type vCornerCoords[]);
-	/// \}
-	
-	private:
-//	Registration of the template functions:
-		void register_all_loc_discr_funcs();
-
-		struct RegisterLocalDiscr {
-				RegisterLocalDiscr(this_type* pThis) : m_pThis(pThis){}
-				this_type* m_pThis;
-				template< typename TElem > void operator()(TElem&)
-				{m_pThis->register_loc_discr_func<TElem>();}
-		};
-
-		template <typename TElem>
-		void register_loc_discr_func();
+	template <typename TElem>
+	void ass_rhs_elem(LocalVector& d, GeometricObject* elem, const position_type vCornerCoords[]);
+/// \}
 
 	private:
-//	Auxiliary functions:
+//---- Registration of the template functions: ----
+	void register_all_loc_discr_funcs();
 
-	/// composes the stiffness matrix of the stationary problem
-		template<size_t numEdges>
-		void ass_elem_stiffness
-		(
-			number perm, ///< the magnetic permeability
-			number cond, ///< the electric conductivity
-			number S [2][numEdges] [2][numEdges] ///< for the composed matrix
-		);
+	struct RegisterLocalDiscr {
+			RegisterLocalDiscr(this_type* pThis) : m_pThis(pThis){}
+			this_type* m_pThis;
+			template< typename TElem > void operator()(TElem&)
+			{m_pThis->register_loc_discr_func<TElem>();}
+	};
 
-//	Temporary data used in the local discretization
+	template <typename TElem>
+	void register_loc_discr_func();
+
+	private:
+//---- Auxiliary functions: ----
+
+/// composes the stiffness matrix of the stationary problem
+	template<size_t numEdges>
+	void ass_elem_stiffness
+	(
+		number perm, ///< the magnetic permeability
+		number cond, ///< the electric conductivity
+		number S [2][numEdges] [2][numEdges] ///< for the composed matrix
+	);
+
+//---- Temporary data used in the local discretization ----
 	
-	/// local stiffness matrix of the rot-rot operator
-		number m_rot_rot_S [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES];
-	/// local mass matrix of the rot-rot operator
-		number m_rot_rot_M [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES];
-	
-	///	the magnetic permeability in the subdomain
-		number m_permeability;
-	
-	/// the electric conductivity in the subdomain
-		number m_conductivity;
-	
+/// local stiffness matrix of the rot-rot operator
+	number m_rot_rot_S [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES];
+/// local mass matrix of the rot-rot operator
+	number m_rot_rot_M [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES];
+
+///	the magnetic permeability in the subdomain
+	number m_permeability;
+
+/// the electric conductivity in the subdomain
+	number m_conductivity;
+
 }; // end class EddyCurrent_E_Nedelec
 
 ///@}
