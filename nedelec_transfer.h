@@ -152,7 +152,7 @@ public:
 	void prolongate (vector_type & uFineOut, const vector_type & uCoarse);
 	
 /// apples the restriction = transposed prolongation
-	void restrict (vector_type & uCoarse, const vector_type & uFine);
+	void do_restrict (vector_type & uCoarse, const vector_type & uFine);
 	
 ///	returns new instance with same setting
 	SmartPtr<ITransferOperator<TAlgebra> > clone ();

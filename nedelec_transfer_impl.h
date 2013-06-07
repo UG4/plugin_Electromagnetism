@@ -304,7 +304,7 @@ void NedelecTransfer<TDomain, TAlgebra>::prolongate
  * vector.
  */
 template <typename TDomain, typename TAlgebra>
-void NedelecTransfer<TDomain, TAlgebra>::restrict
+void NedelecTransfer<TDomain, TAlgebra>::do_restrict
 (
 	vector_type & uCoarse, ///< [out] the restricted vector
 	const vector_type & uFine ///< [in] the vector to restrict
