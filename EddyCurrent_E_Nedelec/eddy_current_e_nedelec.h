@@ -84,8 +84,9 @@ private:
 ///	position type
 	typedef typename base_type::position_type position_type;
 
-/// indices of the real and the imaginary parts in the grid functions
+/// index of the real part in the grid functions
 	static const size_t _Re_ = 0;
+/// index of the imaginary part in the grid functions
 	static const size_t _Im_ = 1;
 
 public:
