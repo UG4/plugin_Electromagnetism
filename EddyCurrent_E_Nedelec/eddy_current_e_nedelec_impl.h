@@ -91,7 +91,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element
 /**
  * This function composes the local stiffness matrix of the stationary problem
  * by combining the stiffness and the mass matrix of the discretization
- * of the rot-rot operator. Followin O. Sterz, the system has the following
+ * of the rot-rot operator. Following O. Sterz, the system has the following
  * block form:
  * \f{eqnarray*}{
  * \left (
