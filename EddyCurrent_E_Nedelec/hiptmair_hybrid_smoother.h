@@ -19,6 +19,8 @@
 #include "lib_algebra/operator/damping.h"
 #include "lib_algebra/operator/debug_writer.h"
 
+#include "../em_material.h"
+
 namespace ug{
 namespace Electromagnetism{
 
@@ -109,11 +111,15 @@ private:
 /// Smoother for the vertex dofs
 	SmartPtr<ILinearIterator<pot_vector_type> > m_spVertSmoother;
 
+///	Dirichlet boundary
+	SmartPtr<EMDirichlet<TDomain, TAlgebra> > m_spDirichlet;
+	
 /// Storage for the information about the edge-vertex interconnections
 /// \{
 	struct tEdgeInfo
 	{
-		size_t vrt_index [2]; ///< vertix dof's of the beginning and the end of the edge
+		size_t vrt_index [2]; ///< vertex dof's of the beginning and the end of the edge
+		bool Dirichlet; ///< whether this is a part of a Dirichlet boundary
 	};
 	VariableArray1<tEdgeInfo> m_vEdgeInfo;
 /// \}
@@ -123,6 +129,9 @@ private:
 	
 /// Whether initialized
 	bool m_bInit;
+	
+/// Needed mainly for debugging: Whether to skip one of the stages
+	bool m_bSkipEdge, m_bSkipVertex;
 
 public:
 /// Constructor setting the approx. spaces and the default subsmoothers
@@ -136,7 +145,8 @@ public:
 	  m_pPotDefRe (0), m_pPotDefIm (0),
 	  m_spVertApproxSpace (vertApproxSpace),
 	  m_spEdgeSmoother (edgeSmoother), m_spVertSmoother (vertSmoother),
-	  m_bInit(false)
+	  m_bInit (false),
+	  m_bSkipEdge (false), m_bSkipVertex (false)
 	{
 		if (m_spVertApproxSpace.invalid ())
 			UG_THROW (name() << ": illegal vert.-centered approx. space");
@@ -181,7 +191,7 @@ public:
 		return true;
 	}
 
-	///	Clone the smoother by copying the data
+///	Clone the smoother by copying the data
 	SmartPtr<ILinearIterator<vector_type, vector_type> > clone ()
 	{
 		SmartPtr<this_type> newInst
@@ -191,6 +201,20 @@ public:
 		newInst->set_damp (this->damping ());
 		return newInst;
 	}
+	
+///	Sets the Dirichlet boundary
+	void set_Dirichlet
+	(
+		SmartPtr<EMDirichlet<TDomain, TAlgebra> > spDirichlet ///< the Dirichlet BC object
+	)
+	{
+		m_spDirichlet = spDirichlet;
+	}
+	
+///	Skip flag the edge smoother
+	void set_skip_edge_smoother (bool skip_edge) {m_bSkipEdge = skip_edge;}
+///	Skip flag the vertex smoother
+	void set_skip_vertex_smoother (bool skip_vertex) {m_bSkipVertex = skip_vertex;}
 
 private: // Auxiliary functions:
 

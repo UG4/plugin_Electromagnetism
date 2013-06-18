@@ -153,6 +153,12 @@ struct Functionality
 							SmartPtr<ILinearIterator<typename T::pot_vector_type> >
 						)
 					>("VertexApproxSpace#EdgeSmoother#VertexSmoother")
+				.add_method("set_Dirichlet", static_cast<void (T::*)(SmartPtr<EMDirichlet<TDomain, TAlgebra> >)>(&T::set_Dirichlet),
+							"Sets the object of the Dirichlet BC", "Dirichlet BC")
+				.add_method("set_skip_edge_smoother", static_cast<void (T::*)(bool)>(&T::set_skip_edge_smoother),
+							"Whether to skip the edge smoother (for debugging)", "Flag")
+				.add_method("set_skip_vertex_smoother", static_cast<void (T::*)(bool)>(&T::set_skip_vertex_smoother),
+							"Whether to skip the vertex smoother (for debugging)", "Flag")
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "HiptmairHybridSmoother", tag);
 		}

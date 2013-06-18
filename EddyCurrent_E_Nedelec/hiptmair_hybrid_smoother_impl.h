@@ -10,7 +10,8 @@ namespace Electromagnetism{
 
 /**
  * Gets the correspondence between the edge DoFs and the vertex DoFs
- * (i.e. fills the tEdgeInfo-structures in m_vEdgeInfo).
+ * (i.e. fills the tEdgeInfo-structures in m_vEdgeInfo). Furthermore,
+ * this function marks edges at Dirichlet boundaries.
  *
  * \tparam TDomain	type of domain in the class
  * \tparam TAlgebra	type of algebra in the class
@@ -28,8 +29,9 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iter;
 	
 	m_vEdgeInfo.resize (pEdgeDD->num_indices (), false);
-	
 	std::vector<size_t> vEdgeInd (1), vVertInd (1);
+	
+//	Get the edge-to-vertex correspondence
 	t_edge_iter edgeIterEnd = pEdgeDD->end<Edge> ();
 	for (t_edge_iter edgeIter = pEdgeDD->begin<Edge> (); edgeIter != edgeIterEnd; ++edgeIter)
 	{
@@ -38,12 +40,33 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 			UG_THROW (name () << ": Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 		tEdgeInfo & EdgeInfo = m_vEdgeInfo [vEdgeInd [0]];
 		
+		EdgeInfo.Dirichlet = false;
+		
 		for (size_t i = 0; i < 2; i++)
 		{
 			VertexBase * pVertex = pEdge->vertex (i);
 			if (pVertDD->inner_algebra_indices (pVertex, vVertInd) != 1)
 				UG_THROW (name () << ": Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
 			EdgeInfo.vrt_index [i] = vVertInd [0];
+		}
+	}
+	
+	if (m_spDirichlet.invalid ()) return; // no Dirichlet boundaries specified
+	
+//	Mark Dirichlet edges
+	SubsetGroup dirichlet_ssgrp (pEdgeDD->subset_handler ());
+	m_spDirichlet->get_dirichlet_subsets (dirichlet_ssgrp);
+	for (size_t j = 0; j < dirichlet_ssgrp.size (); j++)
+	{
+		int si = dirichlet_ssgrp [j];
+	//	Loop the edges in the subset
+		t_edge_iter iterEnd = pEdgeDD->end<Edge> (si);
+		for (t_edge_iter iter = pEdgeDD->begin<Edge> (si); iter != iterEnd; iter++)
+		{
+			EdgeBase * pEdge = *iter;
+			if (pEdgeDD->inner_algebra_indices (pEdge, vEdgeInd) != 1)
+				UG_THROW (name () << ": Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
+			m_vEdgeInfo[vEdgeInd[0]].Dirichlet = true;
 		}
 	}
 }
@@ -107,6 +130,16 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::compute_GtMG ()
 		// Mark the 'conductive' nodes:
 		if (conductive_edge)
 			m_vConductiveVertex[startVert[0]] = m_vConductiveVertex[startVert[1]] = true;
+	}
+	
+	// 2. Unmark vertices at the Dirichlet boundary:
+	// Loop over the rows:
+	for (size_t row = 0; row < N_edges; row++)
+	{
+		tEdgeInfo & EdgeInfo = m_vEdgeInfo [row];
+		if (EdgeInfo.Dirichlet)
+			m_vConductiveVertex[EdgeInfo.vrt_index[0]]
+			 = m_vConductiveVertex[EdgeInfo.vrt_index[1]] = false;
 	}
 	
 	// 2. Assemble the identity matrix for the 'non-conductive' vertices
@@ -374,20 +407,27 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 //---- Numerics:
 
 //	Apply the edge-based smoother:
-	if (! m_spEdgeSmoother->apply (c, d))
-		return false;
+	if (! m_bSkipEdge)
+	{
+		if (! m_spEdgeSmoother->apply (c, d))
+			return false;
+	}
+	else c = 0.0;
 	
-//	Compute the 'vertex defect' of the potential:
-	collect_edge_defect (d);
-	
-//	Apply the vertex-centered smoother:
-	if (! m_spVertSmoother->apply (m_potCorRe, *m_pPotDefIm))
-		return false;
-	if (! m_spVertSmoother->apply (m_potCorIm, *m_pPotDefRe))
-		return false;	
-	
-//	Add the vertex-centered correction into the edge-centered one:
-	distribute_vertex_correction (c);
+	if (! m_bSkipVertex)
+	{
+	//	Compute the 'vertex defect' of the potential:
+		collect_edge_defect (d);
+		
+	//	Apply the vertex-centered smoother:
+		if (! m_spVertSmoother->apply (m_potCorRe, *m_pPotDefIm))
+			return false;
+		if (! m_spVertSmoother->apply (m_potCorIm, *m_pPotDefRe))
+			return false;	
+		
+	//	Add the vertex-centered correction into the edge-centered one:
+		distribute_vertex_correction (c);
+	}
 	
 //	Damping (the standard way, like for IPreconditioner):
 	number kappa = this->damping()->damping (c, d, m_spSysMat);
