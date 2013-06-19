@@ -234,6 +234,9 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
 		m_GridLevel = m_spEdgeDD->grid_level ();
 		m_spVertDD = m_spVertApproxSpace->dof_distribution (m_GridLevel);
 		
+	// Allocate the vector for the intermediate defect:
+		m_auxEdgeDef.resize (u.size ());
+		
 	// Compute the matrix of the potential equation:
 		compute_potential_matrix (m_spEdgeDD.get (), m_spVertDD.get ());
 	
@@ -259,6 +262,7 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
 	catch (...)
 	{
 		m_bInit = false;
+		m_auxEdgeDef.resize (0);
 		delete m_pPotDefRe; m_pPotDefRe = 0;
 		delete m_pPotDefIm; m_pPotDefIm = 0;
 		m_potCorRe.resize (0);
@@ -406,10 +410,12 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 
 //---- Numerics:
 
+	m_auxEdgeDef = d;
+	
 //	Apply the edge-based smoother:
 	if (! m_bSkipEdge)
 	{
-		if (! m_spEdgeSmoother->apply (c, d))
+		if (! m_spEdgeSmoother->apply_update_defect (c, m_auxEdgeDef))
 			return false;
 	}
 	else c = 0.0;
@@ -417,7 +423,7 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 	if (! m_bSkipVertex)
 	{
 	//	Compute the 'vertex defect' of the potential:
-		collect_edge_defect (d);
+		collect_edge_defect (m_auxEdgeDef);
 		
 	//	Apply the vertex-centered smoother:
 		if (! m_spVertSmoother->apply (m_potCorRe, *m_pPotDefIm))

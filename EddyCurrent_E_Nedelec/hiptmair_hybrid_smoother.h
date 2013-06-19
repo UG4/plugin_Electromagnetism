@@ -84,6 +84,9 @@ private:
 	
 /// Vertex-centered matrix for the potential
 	SmartPtr<pot_matrix_operator_type> m_spPotMat;
+	
+///	Auxiliary vector for the intermediate edge defect
+	vector_type m_auxEdgeDef;
 
 /// Vertex-centered grid functions (these are GridFunction to allow geometry-dependent smoothers)
 ///\{
@@ -191,17 +194,6 @@ public:
 		return true;
 	}
 
-///	Clone the smoother by copying the data
-	SmartPtr<ILinearIterator<vector_type, vector_type> > clone ()
-	{
-		SmartPtr<this_type> newInst
-			(new this_type (m_spVertApproxSpace,
-				m_spEdgeSmoother->clone (), m_spVertSmoother->clone ()));
-		newInst->set_debug (this->debug_writer ());
-		newInst->set_damp (this->damping ());
-		return newInst;
-	}
-	
 ///	Sets the Dirichlet boundary
 	void set_Dirichlet
 	(
@@ -216,6 +208,20 @@ public:
 ///	Skip flag the vertex smoother
 	void set_skip_vertex_smoother (bool skip_vertex) {m_bSkipVertex = skip_vertex;}
 
+///	Clone the smoother by copying the data
+	SmartPtr<ILinearIterator<vector_type, vector_type> > clone ()
+	{
+		SmartPtr<this_type> newInst
+			(new this_type (m_spVertApproxSpace,
+				m_spEdgeSmoother->clone (), m_spVertSmoother->clone ()));
+		newInst->set_Dirichlet (m_spDirichlet);
+		newInst->set_skip_edge_smoother (m_bSkipEdge);
+		newInst->set_skip_vertex_smoother (m_bSkipVertex);
+		newInst->set_debug (this->debug_writer ());
+		newInst->set_damp (this->damping ());
+		return newInst;
+	}
+	
 private: // Auxiliary functions:
 
 ///	Computes the matrix for the smoother in the potential space and marks the "conductive nodes"
