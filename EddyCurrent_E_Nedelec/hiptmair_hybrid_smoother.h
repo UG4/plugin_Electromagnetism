@@ -85,16 +85,10 @@ private:
 /// Vertex-centered matrix for the potential
 	SmartPtr<pot_matrix_operator_type> m_spPotMat;
 	
-///	Auxiliary vector for the intermediate edge defect
-	vector_type m_auxEdgeDef;
-
-/// Vertex-centered grid functions (these are GridFunction to allow geometry-dependent smoothers)
+/// Vertex-centered grid functions for potential corrections (these are GridFunction to allow geometry-dependent smoothers)
 ///\{
-	pot_vector_type * m_pPotDefRe;
-	pot_vector_type * m_pPotDefIm;
-	
-	pot_vector_type m_potCorRe;
-	pot_vector_type m_potCorIm;
+	pot_vector_type * m_pPotCorRe;
+	pot_vector_type * m_pPotCorIm;
 ///\}
 	
 /// DoF distribution for the Nedelec elements
@@ -145,7 +139,7 @@ public:
 		SmartPtr<ILinearIterator<pot_vector_type> > vertSmoother ///< the vertex-centered smoother
 	)
 	: m_spPotMat (new pot_matrix_operator_type),
-	  m_pPotDefRe (0), m_pPotDefIm (0),
+	  m_pPotCorRe (NULL), m_pPotCorIm (NULL),
 	  m_spVertApproxSpace (vertApproxSpace),
 	  m_spEdgeSmoother (edgeSmoother), m_spVertSmoother (vertSmoother),
 	  m_bInit (false),
@@ -162,7 +156,7 @@ public:
 /// Destructor
 	~TimeHarmonicNedelecHybridSmoother ()
 	{
-		delete m_pPotDefRe; delete m_pPotDefIm;
+		delete m_pPotCorRe; delete m_pPotCorIm;
 	}
 
 /// Returns the name
@@ -241,15 +235,19 @@ private: // Auxiliary functions:
 /// Computes the product \f$ G^T M^{(1)}_h G \f$
 	void compute_GtMG ();
 
-/// Computes the vertex-centered defect \f$ d_{pot} G^T d \f$
+/// Computes the vertex-centered defect \f$ d_{pot} = G^T d \f$
 	void collect_edge_defect
 	(
-		const vector_type & d ///< the original (edge-centered) defect
+		const vector_type & d, ///< the original (edge-centered) defect
+		pot_vector_type & potDefRe, ///< real part of \f$ d_{pot} \f$
+		pot_vector_type & potDefIm ///< imaginary part of \f$ d_{pot} \f$
 	);
 
 /// Adds the vertex-centered correction to the edge-centered one:
 	void distribute_vertex_correction
 	(
+		pot_vector_type & potCorRe, ///< real part of the potential correction
+		pot_vector_type & potCorIm, ///< imaginary part of the potential correction
 		vector_type & c ///< the final (edge-centered) correction
 	);
 

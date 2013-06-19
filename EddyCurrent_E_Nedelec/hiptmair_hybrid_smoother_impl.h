@@ -234,25 +234,18 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
 		m_GridLevel = m_spEdgeDD->grid_level ();
 		m_spVertDD = m_spVertApproxSpace->dof_distribution (m_GridLevel);
 		
-	// Allocate the vector for the intermediate defect:
-		m_auxEdgeDef.resize (u.size ());
-		
 	// Compute the matrix of the potential equation:
 		compute_potential_matrix (m_spEdgeDD.get (), m_spVertDD.get ());
 	
 	// Allocate the grid functions for the defect in the potential space:
-		delete m_pPotDefRe; m_pPotDefRe = 0;
-		delete m_pPotDefIm; m_pPotDefIm = 0;
-		m_pPotDefRe = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
-		m_pPotDefIm = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
-	
-	// Prepare the vectors for the potential space:
-		m_potCorRe.resize (m_pPotDefRe->size ());
-		m_potCorIm.resize (m_pPotDefIm->size ());
+		delete m_pPotCorRe; m_pPotCorRe = 0;
+		delete m_pPotCorIm; m_pPotCorIm = 0;
+		m_pPotCorRe = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
+		m_pPotCorIm = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
 	
 	// Initialize the subordinated smoother for the vertex dof:
-		*m_pPotDefRe = 0;
-		if (! m_spVertSmoother->init (m_spPotMat, *m_pPotDefRe))
+		*m_pPotCorRe = 0;
+		if (! m_spVertSmoother->init (m_spPotMat, *m_pPotCorRe))
 			UG_THROW (name() << ", init: Failed to initialize the subordinated vertex-based smoother.");
 		
 	// Initialize the subordinated smoother for the edge dofs:
@@ -262,11 +255,8 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
 	catch (...)
 	{
 		m_bInit = false;
-		m_auxEdgeDef.resize (0);
-		delete m_pPotDefRe; m_pPotDefRe = 0;
-		delete m_pPotDefIm; m_pPotDefIm = 0;
-		m_potCorRe.resize (0);
-		m_potCorIm.resize (0);
+		delete m_pPotCorRe; m_pPotCorRe = 0;
+		delete m_pPotCorIm; m_pPotCorIm = 0;
 		m_vEdgeInfo.resize (0, false);
 		m_vConductiveVertex.resize (0, false);
 		m_spPotMat->resize_and_clear (0, 0);
@@ -284,17 +274,21 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
  * \f$ d \f$ is the defect of the original system. This is done only for the
  * 'conductive' vertices. At the other vertices, \f$ d_{pot} \f$ is set to 0.
  *
- * \param[in] d	the original (edge-centered) defect
+ * \param[in]	d			the original (edge-centered) defect
+ * \param[out]	potDefRe	real part of \f$ d_{pot} \f$
+ * \param[out]	potDefIm	imaginary part of \f$ d_{pot} \f$
  */
 template <typename TDomain, typename TAlgebra>
 void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::collect_edge_defect
 (
-	const vector_type & d
+	const vector_type & d,
+	pot_vector_type & potDefRe,
+	pot_vector_type & potDefIm
 )
 {
 	size_t N_edges = m_vEdgeInfo.size ();
 	
-	*m_pPotDefRe = 0; *m_pPotDefIm = 0;
+	potDefRe = 0; potDefIm = 0;
 	
 	// Loop over the edges:
 	for (size_t edge = 0; edge < N_edges; edge++)
@@ -306,14 +300,14 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::collect_edge_defect
 		
 		if (m_vConductiveVertex [i = EdgeInfo.vrt_index[0]])
 		{
-			(* m_pPotDefRe) [i] -= Re_d;
-			(* m_pPotDefIm) [i] -= Im_d;
+			potDefRe [i] -= Re_d;
+			potDefIm [i] -= Im_d;
 		}
 		
 		if (m_vConductiveVertex [i = EdgeInfo.vrt_index[1]])
 		{
-			(* m_pPotDefRe) [i] += Re_d;
-			(* m_pPotDefIm) [i] += Im_d;
+			potDefRe [i] += Re_d;
+			potDefIm [i] += Im_d;
 		}
 	}
 }
@@ -321,11 +315,15 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::collect_edge_defect
 /**
  * Updates the edge-centered correction: \f$ c := c_{edge} + G c_{pot} \f$.
  *
- * \param[out] c	the final, edge-centered correction
+ * \param[in]	potCorRe	real part of \f$ c_{pot} \f$
+ * \param[in]	potCorIm	imaginary part of \f$ c_{pot} \f$
+ * \param[out]	c			the final, edge-centered correction
  */
 template <typename TDomain, typename TAlgebra>
 void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::distribute_vertex_correction
 (
+	pot_vector_type & potCorRe,
+	pot_vector_type & potCorIm,
 	vector_type & c
 )
 {
@@ -336,11 +334,11 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::distribute_vertex_corr
 	{
 		tEdgeInfo & EdgeInfo = m_vEdgeInfo [edge];
 		
-		BlockRef (c [edge], 0) += m_potCorRe [EdgeInfo.vrt_index[1]]
-									- m_potCorRe [EdgeInfo.vrt_index[0]];
+		BlockRef (c [edge], 0) += potCorRe [EdgeInfo.vrt_index[1]]
+									- potCorRe [EdgeInfo.vrt_index[0]];
 		
-		BlockRef (c [edge], 1) += m_potCorIm [EdgeInfo.vrt_index[1]]
-									- m_potCorIm [EdgeInfo.vrt_index[0]];
+		BlockRef (c [edge], 1) += potCorIm [EdgeInfo.vrt_index[1]]
+									- potCorIm [EdgeInfo.vrt_index[0]];
 	}
 }
 
@@ -408,14 +406,19 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 		UG_THROW("ERROR in '"<<name()<<"::apply': Vector [d size= "<<d.size()<<
 					", c size = " << c.size() << "] sizes have to match!");
 
+//	Temporary vectors:
+	vector_type auxEdgeDef (d.size ());
+	pot_vector_type potDefRe (m_pPotCorRe->size ());
+	pot_vector_type potDefIm (m_pPotCorIm->size ());
+	
 //---- Numerics:
 
-	m_auxEdgeDef = d;
+	auxEdgeDef = d;
 	
 //	Apply the edge-based smoother:
 	if (! m_bSkipEdge)
 	{
-		if (! m_spEdgeSmoother->apply_update_defect (c, m_auxEdgeDef))
+		if (! m_spEdgeSmoother->apply_update_defect (c, auxEdgeDef))
 			return false;
 	}
 	else c = 0.0;
@@ -423,16 +426,16 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 	if (! m_bSkipVertex)
 	{
 	//	Compute the 'vertex defect' of the potential:
-		collect_edge_defect (m_auxEdgeDef);
+		collect_edge_defect (auxEdgeDef, potDefRe, potDefIm);
 		
 	//	Apply the vertex-centered smoother:
-		if (! m_spVertSmoother->apply (m_potCorRe, *m_pPotDefIm))
+		if (! m_spVertSmoother->apply (*m_pPotCorRe, potDefIm))
 			return false;
-		if (! m_spVertSmoother->apply (m_potCorIm, *m_pPotDefRe))
+		if (! m_spVertSmoother->apply (*m_pPotCorIm, potDefRe))
 			return false;	
 		
 	//	Add the vertex-centered correction into the edge-centered one:
-		distribute_vertex_correction (c);
+		distribute_vertex_correction (*m_pPotCorRe, *m_pPotCorIm, c);
 	}
 	
 //	Damping (the standard way, like for IPreconditioner):
