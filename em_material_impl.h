@@ -157,20 +157,38 @@ template <typename TDomain>
 void EMaterial<TDomain>::analyze_topology ()
 {
 //	Get the connectivity:
-	connectivity (m_minCondInd);
+	connectivity (m_minCondSsI);
 
 //	Compose the list of the minimum conductor subset indices:
-	std::vector<bool> is_min_index (m_minCondInd.size ());
-	for (size_t i = 0; i < m_minCondInd.size (); i++)
+	std::vector<bool> is_min_index (m_minCondSsI.size ());
+	for (size_t i = 0; i < m_minCondSsI.size (); i++)
 	{
-		is_min_index [i] = false; // note that (m_minCondInd[i] <= i)
-		if (m_minCondInd[i] >= 0)
-			is_min_index [m_minCondInd[i]] = true;
+		is_min_index [i] = false; // note that (m_minCondSsI[i] <= i)
+		if (m_minCondSsI[i] >= 0)
+			is_min_index [m_minCondSsI[i]] = true;
 	}
 	m_baseConductors.clear ();
 	for (size_t i = 0; i < is_min_index.size (); i++)
 		if (is_min_index [i])
 			m_baseConductors.push_back (i);
+	
+//	Compose the references to the base conductors
+	m_baseCondInd.resize (m_minCondSsI.size ());
+	for (size_t i = 0; i < m_minCondSsI.size (); i++)
+	{
+		int min_cond_ssi = m_minCondSsI [i];
+		if (min_cond_ssi <= -2)
+			m_baseCondInd [i] = min_cond_ssi;
+		else
+			m_baseCondInd [i] = -1; // to be on the safe side
+	}
+	for (size_t base_cond = 0; base_cond < m_baseConductors.size (); base_cond++)
+	{
+		int base_cond_si = m_baseConductors [base_cond];
+		for (size_t i = 0; i < m_minCondSsI.size (); i++)
+			if (m_minCondSsI [i] == base_cond_si)
+				m_baseCondInd [i] = base_cond;
+	}
 }
 
 /**

@@ -73,6 +73,12 @@ public:
 /// finalizes the object
 	void close ();
 	
+///	constant access to the subset handler
+	ConstSmartPtr<subset_handler_type> subset_handler () const
+	{
+		return m_spDomain->subset_handler ();
+	}
+
 /// returns the string of the subset names
 	const char * subset_names () const
 	{
@@ -97,31 +103,69 @@ public:
 
 /** 
  * The connectivity of the conductors:
- * This array is indexed by the subset indices, so that
- * every entry of a conductor is initialized by the
- * smallest conductor subset id connected to it
- * (and by -1 for insulators as well as <= -2 the other subdomains)
+ * This function returns the array indexed by the subset indices, so that
+ * to every subset index of a conductor, it assignes the smallest conductor
+ * subset index connected to it (and -1 to insulators as well as <= -2 to
+ * the other subdomains)
  */
-	const std::vector<int> & min_conductor_index () const
+	const std::vector<int> & min_conductor_ssi () const
 	{
-		return m_minCondInd;
+		return m_minCondSsI;
+	}
+	
+/** 
+ * For every subset index of a conductor, this function returns the smallest
+ * conductor subset index connected to the given conductor (and -1 for
+ * insulators as well as <= -2 for the other subdomains)
+ */
+	int min_conductor_ssi
+	(
+		int si ///< the subset index of the conductor
+	) const
+	{
+		return m_minCondSsI [si];
 	}
 	
 /**
- * Base conductor indices: The list of the smallest indices
- * of the subsets occupied by conductors. The length of this
- * list is the 2nd Betti number: the number of the insulator
- * separated subdomains occupied by the conductors. Note that
- * the Dirichlet BC is not taken into account here.
+ * This function returns the array of the base conductor subset indices:
+ * The list of the smallest indices of the subsets representing conductors.
+ * The length of this array is the 2nd Betti number: the number of the
+ * insulator-separated subdomains occupied by the conductors. Note that
+ * the Dirichlet BC is not taken into account here and some of the conductors
+ * may be grounded.
  */
 	const std::vector<int> & base_conductors () const
 	{
 		return m_baseConductors;
 	}
 	
-	/// constant access to the subset handler
-	ConstSmartPtr<subset_handler_type> subset_handler () const {return m_spDomain->subset_handler ();};
-
+/**
+ * This function returns the array that assignes to every subset index of
+ * a conductor the index of its base conductor in the list of based
+ * conductors (as returned by base_conductors). Thus, for a conductor
+ * in subset si, min_conductor_ssi (si) == base_conductors ()
+ * [base_conductor_index () [si]]. If the subset represents an
+ * insulator, the array assignes -1 to it. To other subsets, the
+ * array assignes <= -2.
+ */
+	const std::vector<int> & base_conductor_index () const
+	{
+		return m_baseCondInd;
+	}
+	
+/**
+ * Returns index of the base conductor in base_conductors () for a conductor
+ * identified by the subset index of its subset. If the subset represents an
+ * insulator, the function returns -1. For other subsets, <= -2 is returned.
+ */
+	int base_conductor_index
+	(
+		int si ///< the subset index of the conductor
+	) const
+	{
+		return m_baseCondInd [si];
+	}
+	
 private:
 	
 	/// computes the connectivity of the conductions
@@ -141,11 +185,11 @@ private:
 	struct GetElemConnectivity
 	{
 		this_type * m_pThis;
-		std::vector<int> & m_minCondInd;
+		std::vector<int> & m_minCondSsI;
 		GetElemConnectivity (this_type* pThis, std::vector<int> & minCondInd)
-		 : m_pThis (pThis), m_minCondInd (minCondInd) {}
+		 : m_pThis (pThis), m_minCondSsI (minCondInd) {}
 		template <typename TElem> void operator() (TElem &)
-			{m_pThis->get_elem_connectivity<TElem> (m_minCondInd);}
+			{m_pThis->get_elem_connectivity<TElem> (m_minCondSsI);}
 	};
 	
 	/// analyzes the conductor topology of the domain
@@ -194,21 +238,31 @@ private:
 	
 	/** 
 	 * The connectivity of the conductors:
-	 * This array is indexed by the subset indices, so that
-	 * every entry of a conductor is initialized by the
-	 * smallest conductor subset id connected to it
-	 * (and by -1 for insulators as well as <= -2 for the other subdomains)
+	 * This array is indexed by the subset indices and assignes to
+	 * every subset of a conductor the smallest conductor subset index
+	 * connected to this conductor (and -1 to insulators as well
+	 * as <= -2 to the other subdomains)
 	 */
-	std::vector<int> m_minCondInd;
+	std::vector<int> m_minCondSsI;
 	
 	/**
-	 * Base conductor indices: The list of the smalles indices
-	 * of the subsets occupied by conductors. The length of this
-	 * list is the 2nd Betti number: the number of the insulator
+	 * Base conductor subset indices: The list of the smallest indices
+	 * of the subsets representing conductors. The length of this
+	 * list is the 2nd Betti number: the number of the insulator-
 	 * separated subdomains occupied by the conductors. Note that
-	 * the Dirichlet BC is not taken into account here.
+	 * the Dirichlet BC is not taken into account here so that some
+	 * of the base conductors may be grounded.
 	 */
 	std::vector<int> m_baseConductors;
+	
+	/**
+	 * Correspondence of subset indices to the indices of the base
+	 * conductors in m_baseConductors: For every conductor with subset
+	 * index si, m_minCondSsI [si] == m_baseConductors [m_baseCondInd [si]].
+	 * For other subsets, this array keeps either -1 (for insulators) or
+	 * <= -2 (for low-dimensional subsets etc).
+	 */
+	std::vector<int> m_baseCondInd;
 };
 
 /// Common interface to get the Dirichlet boundary conditions

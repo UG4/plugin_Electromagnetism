@@ -142,7 +142,7 @@ void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 	const SmartPtr<DoFDistribution> & vertDD ///< [in] the vertex DD
 )
 {
-	const std::vector<int> & cond_index = m_spEmMaterial->min_conductor_index ();
+	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
 	const std::vector<int> & base_cond = m_spEmMaterial->base_conductors ();
 	size_t n_cond = base_cond.size ();
 	std::vector<bool> grounded (n_cond);
@@ -320,7 +320,7 @@ void NedelecProject<TDomain, TAlgebra>::weak_div_elem_type
 	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
 	
 //	Get the conductor distribution and the positions of the grid points:
-	const std::vector<int> & cond_index = m_spEmMaterial->min_conductor_index ();
+	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
 	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();
 
 //	Arrays for the indices in the vectors:
@@ -389,12 +389,12 @@ void NedelecProject<TDomain, TAlgebra>::clear_div_in_conductors
 	if (base_cond.size () == 0) return; // no conductors
 	
 	std::vector<size_t> vVertInd (ref_elem_type::numCorners);
-	const std::vector<int> & cond_index = m_spEmMaterial->min_conductor_index ();
+	const std::vector<int> & base_cond_index = m_spEmMaterial->base_conductor_index ();
 	int ci;
 
 //	Loop over all subsets representing conductors:
 	for (int si = 0; si < vertDD.num_subsets (); si++)
-	if ((ci = cond_index [si]) >= 0)
+	if ((ci = base_cond_index [si]) >= 0)
 	{
 		number & charge_entry = charge [ci];
 		
@@ -636,7 +636,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceLocAss::prepare_element_loop
 )
 {
 //	We assemble in insulators only
-	if (m_master.m_spEmMaterial->min_conductor_index () [si] == -1)
+	if (m_master.m_spEmMaterial->base_conductor_index (si) == -1)
 		m_do_assemble_here = true;
 	else
 		m_do_assemble_here = false;
@@ -862,10 +862,10 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_jacobian
 	
 // Set all matrix rows in conductors to identity:
 	typedef typename domain_traits<WDim>::DimElemList ElemList;
-	const std::vector<int> & min_cond = m_master.m_spEmMaterial->min_conductor_index ();
+	const std::vector<int> & base_cond = m_master.m_spEmMaterial->base_conductor_index ();
 	
-	for (size_t si = 0; si < min_cond.size (); si++)
-	if (min_cond [si] >= 0)
+	for (size_t si = 0; si < base_cond.size (); si++)
+	if (base_cond [si] >= 0)
 		boost::mpl::for_each<ElemList> (SetIdentityOnSubset (this, si, J, dd.get ()));
 }
 
@@ -887,10 +887,10 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_defect
 	
 // Set all entries in conductors to zero:
 	typedef typename domain_traits<WDim>::DimElemList ElemList;
-	const std::vector<int> & min_cond = m_master.m_spEmMaterial->min_conductor_index ();
+	const std::vector<int> & base_cond = m_master.m_spEmMaterial->base_conductor_index ();
 	
-	for (size_t si = 0; si < min_cond.size (); si++)
-	if (min_cond [si] >= 0)
+	for (size_t si = 0; si < base_cond.size (); si++)
+	if (base_cond [si] >= 0)
 		boost::mpl::for_each<ElemList> (SetValueOnSubset (this, si, 0, d, dd.get ()));
 }
 
@@ -910,13 +910,13 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_solution
 	
 //	Set all entries in conductors to 0 or 1:
 	typedef typename domain_traits<WDim>::DimElemList ElemList;
-	const std::vector<int> & min_cond = m_master.m_spEmMaterial->min_conductor_index ();
+	const std::vector<int> & base_cond = m_master.m_spEmMaterial->base_conductor_index ();
 	
-	for (size_t si = 0; si < min_cond.size (); si++)
+	for (size_t si = 0; si < base_cond.size (); si++)
 	{
-		int base_cond = min_cond [si];
-		if (base_cond < 0) continue;
-		number val = (base_cond == m_base_cond)? 1 : 0;
+		int the_base_cond = base_cond [si];
+		if (the_base_cond < 0) continue;
+		number val = (the_base_cond == m_base_cond)? 1 : 0;
 		boost::mpl::for_each<ElemList> (SetValueOnSubset (this, si, val, u, dd.get ()));
 	}
 }
@@ -939,7 +939,7 @@ void NedelecProject<TDomain, TAlgebra>::mark_cond_vert_elem_type
 	int base_cond_ind;
 	
 //	Get the conductor distribution and the positions of the grid points:
-	const std::vector<int> & cond_index = m_spEmMaterial->min_conductor_index ();
+	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
 
 //	Array for the indices in the vectors:
 	std::vector<size_t> vVertInd (ref_elem_type::numCorners);
@@ -984,7 +984,7 @@ void NedelecProject<TDomain, TAlgebra>::integrate_div_DVF_elem_type
 	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();
 
 //	Get the conductor distribution and the positions of the grid points:
-	const std::vector<int> & cond_index = m_spEmMaterial->min_conductor_index ();
+	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
 
 //	Array for the indices in the vectors:
 	std::vector<size_t> vVertInd (ref_elem_type::numCorners);
