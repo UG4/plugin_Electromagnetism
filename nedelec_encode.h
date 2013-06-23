@@ -140,7 +140,7 @@ void ComputeNedelecDoFs
 		UG_THROW("ComputeNedelecDoFs: Component with name '" << cmp << "' not found.");
 	
 //	Check the basis type
-	if (spGridFct->local_finite_element_id (fct) != LFEID (LFEID::NEDELEC, 1))
+	if (spGridFct->local_finite_element_id (fct).type() != LFEID::NEDELEC)
 		UG_THROW ("ComputeNedelecDoFs: Illegal grid function. It should be based on the Nedelec element.");
 	
 //	Create the subset group

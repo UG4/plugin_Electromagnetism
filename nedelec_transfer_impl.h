@@ -362,7 +362,7 @@ void NedelecTransfer<TDomain, TAlgebra>::check_approximation_space ()
 		UG_THROW ("NedelecTransfer: Approximation space not set.");
 	
 	for (size_t fct = 0; fct < m_spApproxSpace->num_fct (); fct++)
-		if (m_spApproxSpace->local_finite_element_id (fct) != LFEID (LFEID::NEDELEC, 1))
+		if (m_spApproxSpace->local_finite_element_id (fct). type() != LFEID::NEDELEC)
 			UG_THROW ("NedelecTransfer: "
 						"All the functions should be based on the Nedelec element "
 						"but function #" << fct << " is not.");

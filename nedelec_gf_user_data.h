@@ -63,7 +63,7 @@ public:
 						" a function with name " << cmp << ".");
 
 		//	Get local finite element id and check whether this is the Nedelec element:
-			if (m_spGF->local_finite_element_id (m_fct) != LFEID (LFEID::NEDELEC, 1))
+			if (m_spGF->local_finite_element_id (m_fct).type() != LFEID::NEDELEC)
 				UG_THROW ("NedelecGridFunctionData: Function " << cmp
 						<< "is not based on the Nedelec element.");
 		};
@@ -153,7 +153,7 @@ public:
 						" a function with name " << cmp << ".");
 
 		//	Get local finite element id and check whether this is the Nedelec element:
-			if (m_spGF->local_finite_element_id (m_fct) != LFEID (LFEID::NEDELEC, 1))
+			if (m_spGF->local_finite_element_id (m_fct).type() != LFEID::NEDELEC)
 				UG_THROW ("NedelecCurlData: Function " << cmp
 						<< "is not based on the Nedelec element.");
 		};

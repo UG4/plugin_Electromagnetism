@@ -83,7 +83,7 @@ void NedelecProject<TDomain, TAlgebra>::apply
 	UG_CATCH_THROW (" Functions '" << fct_names << "' not all contained in the edge approximation space.");
 	
 	for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
-		if (u.local_finite_element_id (fctGrp[i_fct]) != LFEID (LFEID::NEDELEC, 1))
+		if (u.local_finite_element_id (fctGrp[i_fct]).type() != LFEID::NEDELEC)
 			UG_THROW ("NedelecProject: Not a Nedelec-element-based grid function specified for the projection.");
 	
 //	Get the DoF distributions:
@@ -592,7 +592,8 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceLocAss::prepare_setting
 		UG_THROW ("NedelecProject:"
 			" Only scalar grid functions are supported for the potential");
 
-	if (vLfeID[0] != LFEID (LFEID::LAGRANGE, 1))
+	if (vLfeID[0].type() != LFEID::LAGRANGE ||
+			vLfeID[0].order() !=  1)
 		UG_THROW ("NedelecProject:"
 			" Only Largange-1 functions are supported for the potential");
 }

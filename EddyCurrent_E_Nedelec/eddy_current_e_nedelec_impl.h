@@ -38,8 +38,8 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_setting
 		/* one component for the real part and one for the imaginary part */
 
 //	check that these are the Nedelec elements
-	if (vLfeID[0] != LFEID (LFEID::NEDELEC, 1)
-		|| vLfeID[1] != LFEID (LFEID::NEDELEC, 1))
+	if (vLfeID[0].type() != LFEID::NEDELEC
+		|| vLfeID[1].type() != LFEID::NEDELEC)
 		UG_THROW ("EddyCurrent_E_Nedelec: This discretization works with the Nedelec-elements only.");
 }
 
@@ -322,7 +322,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::set_generator_current
 	
 //	check the function space of the grid function
 	for (int i = 0; i < 2; i++)
-		if (spgfJG->local_finite_element_id(m_vfctJG[i]) != LFEID(LFEID::NEDELEC, 1))
+		if (spgfJG->local_finite_element_id(m_vfctJG[i]).type() != LFEID::NEDELEC)
 			UG_THROW ("EddyCurrent_E_Nedelec: The function space of component "
 							<< tokens[i] << " of the grid function does not correspond "
 							"to the Nedelec element.");
