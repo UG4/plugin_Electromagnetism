@@ -221,7 +221,7 @@ struct Functionality
 			#endif
 		}
 	
-	//	Computation of the vector and curl fields for a given Nedelec-element based grid function
+	//	Computation of the vector and curl fields for a given Nedelec-element based grid function, etc
 		{
 			static const int dim = TDomain::dim;
 			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
@@ -245,6 +245,18 @@ struct Functionality
 				.template add_constructor<void (*)(SmartPtr<TFct>, const char*)>("GridFunction#Components")
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "NedelecCurlData", tag);
+		}
+		{
+			static const int dim = TDomain::dim;
+			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			string name = string("NedelecSigmaEData").append(suffix);
+			typedef NedelecSigmaEData<TFct> T;
+			typedef UserData<MathVector<dim>, dim> TBase;
+			
+			reg.add_class_<T, TBase> (name, grp)
+				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, SmartPtr<EMaterial<TDomain> >)>("GridFunction#Components#Materials")
+				.set_construct_as_smart_pointer(true);
+			reg.add_class_to_group(name, "NedelecSigmaEData", tag);
 		}
 	};
 	

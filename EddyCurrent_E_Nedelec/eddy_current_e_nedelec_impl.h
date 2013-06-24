@@ -38,8 +38,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_setting
 		/* one component for the real part and one for the imaginary part */
 
 //	check that these are the Nedelec elements
-	if (vLfeID[0].type() != LFEID::NEDELEC
-		|| vLfeID[1].type() != LFEID::NEDELEC)
+	if (vLfeID[0].type() != LFEID::NEDELEC || vLfeID[1].type() != LFEID::NEDELEC)
 		UG_THROW ("EddyCurrent_E_Nedelec: This discretization works with the Nedelec-elements only.");
 }
 
@@ -297,32 +296,32 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::set_generator_current
 )
 {
 //	get strings
-	std::string fctString = std::string(cmp);
+	std::string fctString = std::string (cmp);
 
 //	tokenize strings and select functions
 	std::vector<std::string> tokens;
-	TokenizeString(fctString, tokens, ',');
+	TokenizeString (fctString, tokens, ',');
 
-	if((int)tokens.size() != 2)
+	if ((int) tokens.size () != 2)
 		UG_THROW("EddyCurrent_E_Nedelec: Needed 2 components "
 				 "in symbolic function names for the generator current (for Re and Im), "
 				 "but given: " << cmp);
 
-	for (size_t i = 0; i < tokens.size(); i++)
-		RemoveWhitespaceFromString(tokens[i]);
+	for (size_t i = 0; i < tokens.size (); i++)
+		RemoveWhitespaceFromString (tokens [i]);
 
-//	get function id of name
+//	get function id's by names
 	for (int i = 0; i < 2; i++)
-		try
-		{
-			m_vfctJG[i] = spgfJG->fct_id_by_name(tokens[i].c_str());
-		}
-		UG_CATCH_THROW ("EddyCurrent_E_Nedelec: Cannot find symbolic function "
-						"component for the name '" << tokens[i] << "'.");
+	try
+	{
+		m_vfctJG [i] = spgfJG->fct_id_by_name (tokens[i].c_str ());
+	}
+	UG_CATCH_THROW ("EddyCurrent_E_Nedelec: Cannot find symbolic function "
+					"component for the name '" << tokens[i] << "'.");
 	
 //	check the function space of the grid function
 	for (int i = 0; i < 2; i++)
-		if (spgfJG->local_finite_element_id(m_vfctJG[i]).type() != LFEID::NEDELEC)
+		if (spgfJG->local_finite_element_id(m_vfctJG[i]) != LFEID(LFEID::NEDELEC, dim, 1))
 			UG_THROW ("EddyCurrent_E_Nedelec: The function space of component "
 							<< tokens[i] << " of the grid function does not correspond "
 							"to the Nedelec element.");
@@ -347,8 +346,8 @@ EddyCurrent_E_Nedelec
 	m_spSubsetData (spSubsetData)
 {
 //	check number of functions
-	if(this->num_fct() != 2)
-		UG_THROW("Wrong number of functions: The ElemDisc 'EddyCurrent_E_Nedelec'"
+	if (this->num_fct () != 2)
+		UG_THROW ("Wrong number of functions: The ElemDisc 'EddyCurrent_E_Nedelec'"
 					" needs exactly 2 symbolic function"
 					" (one for the real part and one for the imaginary one).");
 

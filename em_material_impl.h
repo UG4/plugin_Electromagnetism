@@ -28,7 +28,7 @@ EMaterial<TDomain>::EMaterial
  * Gets the data from a subset data item. This function returns true if the
  * specified subset index is not listed in the object, or the required data
  * are not supplied for this subset. (For example, it should return true for
- * low-dimensional subdomains.) Otherwise the function returns false.
+ * low-dimensional subsets.) Otherwise the function returns false.
  * If the object is not finalized, the function throws and exception.
  */
 template <typename TDomain>
