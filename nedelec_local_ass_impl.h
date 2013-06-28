@@ -11,6 +11,7 @@
 
 /* UG4 headers: */
 #include "lib_disc/common/geometry_util.h"
+#include "lib_disc/reference_element/reference_mapping.h"
 
 namespace ug{
 namespace Electromagnetism{
