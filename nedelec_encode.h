@@ -13,7 +13,7 @@
 
 #include "lib_disc/common/subset_group.h"
 #include "lib_disc/common/groups_util.h"
-#include "lib_disc/local_finite_element/local_shape_function_set.h"
+#include "lib_disc/local_finite_element/local_finite_element_provider.h"
 #include "lib_disc/spatial_disc/user_data/const_user_data.h"
 
 #ifdef UG_FOR_LUA
