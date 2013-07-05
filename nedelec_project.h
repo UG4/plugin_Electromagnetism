@@ -102,10 +102,18 @@ public:
 ///	Performs the projection
 	void apply
 	(
-		SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u, ///< the grid function to project
-		const char * fct_name ///< the function name
+		SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u, ///< [in] the grid function to project
+		const char * fct_name ///< [in] the function name
 	);
-
+	
+///	Computes the weak divergence in insulators
+	void compute_div
+	(
+		SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u, ///< [in] the vector field grid function
+		const char * u_fct_name, ///< [in] the function name of the Nedelec DoFs
+		SmartPtr<GridFunction<TDomain, TPotAlgebra> > sp_div ///< [out] the grid function for the divergence
+	);
+	
 private:
 	
 	///	Initializes the auxiliary solver

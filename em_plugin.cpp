@@ -27,6 +27,9 @@
 /* projection: */
 #include "nedelec_project.h"
 
+/* divergence-free sources */
+#include "nedelec_source.h"
+
 using namespace std;
 using namespace ug::bridge;
 
@@ -199,6 +202,8 @@ struct Functionality
 							"Sets the object of the Dirichlet BC", "Dirichlet BC")
 				.add_method("apply", static_cast<void (T::*)(SmartPtr<GridFunction<TDomain, TAlgebra> >, const char *)>(&T::apply),
 							"Projects given functions", "GridFunction#Function names")
+				.add_method("compute_div", static_cast<void (T::*)(SmartPtr<GridFunction<TDomain, TAlgebra> >, const char *,SmartPtr<GridFunction<TDomain, typename T::TPotAlgebra> >)>(&T::compute_div),
+							"Compute weak div in insulators", "GridFunction for u#Function names#GridFunction for div")
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "NedelecProject", tag);
 		}
@@ -219,6 +224,26 @@ struct Functionality
 			reg.add_function("ComputeNedelecDoFs", static_cast<void (*)(const char*, SmartPtr<TFct>, const char*, const char*)>(&ComputeNedelecDoFs<TFct>), grp, "Nedelec DoFs for given vector field", "LuaFunction#GridFunction#Component#Subsets");
 			reg.add_function("ComputeNedelecDoFs", static_cast<void (*)(const char*, SmartPtr<TFct>, const char*)>(&ComputeNedelecDoFs<TFct>), grp, "Nedelec DoFs for given vector field", "LuaFunction#GridFunction#Component");
 			#endif
+		}
+	
+	//	Computation of divergence-free sources
+		{
+			typedef NedelecLoopCurrent<TDomain, TAlgebra> T;
+			string name = string("NedelecLoopCurrent").append(suffix);
+			reg.add_class_<T>(name, grp)
+				.template add_constructor
+					<
+						void (*)
+						(
+							std::string, std::string, std::string,
+							SmartPtr<ApproximationSpace<TDomain> >,
+							SmartPtr<ILinearOperatorInverse<typename NedelecProject<TDomain, TAlgebra>::pot_vector_type> >
+						)
+					>("Source subsets#Pos. dir. subsets#Cut subsets#Vert. approx. space#Lin. solver for potential")
+				.add_method("compute", static_cast<void (T::*)(SmartPtr<GridFunction<TDomain, TAlgebra> >, const char *)>(&T::compute),
+							"Evaluates the source field", "GridFunction#Function names")
+				.set_construct_as_smart_pointer(true);
+			reg.add_class_to_group(name, "NedelecLoopCurrent", tag);
 		}
 	
 	//	Computation of the vector and curl fields for a given Nedelec-element based grid function, etc

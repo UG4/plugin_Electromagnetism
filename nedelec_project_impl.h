@@ -1,6 +1,6 @@
 /**
- * nedelec_project.h - implementation of class members of the classes for the
- * projection of the functions based on the Nedelec element to the space of
+ * nedelec_project_impl.h - implementation of class members of the classes for
+ * the projection of the functions based on the Nedelec element to the space of
  * the divergence-free functions.
  * 
  * Created on: 07.04.2013
@@ -67,23 +67,23 @@ void NedelecProject<TDomain, TAlgebra>::apply
 	GridFunction<TDomain, TAlgebra> & u = * sp_u.get ();
 	
 	if (! m_spEmMaterial->finalized ())
-		UG_THROW ("The material data structure has not been finalized.");
+		UG_THROW ("NedelecProject: The material data structure has not been finalized.");
 	
-//	Get the edge approximation space:
+//	Get the domain:
 	SmartPtr<domain_type> domain = u.domain ();
 	if (domain.get () != m_spVertApproxSpace->domain().get ())
 		UG_THROW ("NedelecProject: The approximation spaces are based on different domains.");
 	
-//	Get the function index:
+//	Get the function indices:
 	FunctionGroup fctGrp;
 	try
 	{
 		fctGrp = u.fct_grp_by_name (fct_names);
 	}
-	UG_CATCH_THROW (" Functions '" << fct_names << "' not all contained in the edge approximation space.");
+	UG_CATCH_THROW ("NedelecProject: Functions '" << fct_names << "' not all contained in the edge approximation space.");
 	
 	for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
-		if (u.local_finite_element_id (fctGrp[i_fct]).type() != LFEID::NEDELEC)
+		if (u.local_finite_element_id(fctGrp[i_fct]).type () != LFEID::NEDELEC)
 			UG_THROW ("NedelecProject: Not a Nedelec-element-based grid function specified for the projection.");
 	
 //	Get the DoF distributions:
@@ -105,6 +105,57 @@ void NedelecProject<TDomain, TAlgebra>::apply
 //	Project every function:
 	for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
 		project_func (domain, edgeDD, u, fctGrp[i_fct], vertDD);
+}
+
+/**
+ * Computes weak divergence in insulators and saves it in a vertex-centered grid function
+ */
+template <typename TDomain, typename TAlgebra>
+void NedelecProject<TDomain, TAlgebra>::compute_div
+(
+	SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u, ///< [in] the vector field grid function
+	const char * u_fct_name, ///< [in] the function name of the Nedelec DoFs
+	SmartPtr<GridFunction<TDomain, TPotAlgebra> > sp_div ///< [out] the grid function for the divergence
+)
+{
+//	Check the data:
+	if (sp_u.invalid ())
+		UG_THROW ("NedelecProject: Illegal input grid function specification.");
+	GridFunction<TDomain, TAlgebra> & u = * sp_u.get ();
+	
+	if (sp_div.invalid ())
+		UG_THROW ("NedelecProject: Illegal output grid function specification.");
+	pot_vector_type & div = * sp_div.get ();
+	
+	if (! m_spEmMaterial->finalized ())
+		UG_THROW ("The material data structure has not been finalized.");
+	
+//	Get the domain:
+	SmartPtr<domain_type> domain = u.domain ();
+	if (domain.get () != m_spVertApproxSpace->domain().get ())
+		UG_THROW ("NedelecProject: The approximation spaces are based on different domains.");
+	
+//	Get the function index of the vector field:
+	size_t u_fct;
+	try
+	{
+		u_fct = u.fct_id_by_name (u_fct_name);
+	}
+	UG_CATCH_THROW (" Function '" << u_fct_name << "' not contained in the edge approximation space.");
+	
+	if (u.local_finite_element_id(u_fct).type () != LFEID::NEDELEC)
+		UG_THROW ("NedelecProject: Not a Nedelec-element-based input grid function.");
+	
+//	Get the DoF distributions:
+	SmartPtr<DoFDistribution> edgeDD = u.dof_distribution ();
+	SmartPtr<DoFDistribution> vertDD = sp_div->dof_distribution ();
+	if (vertDD.get () != m_spVertApproxSpace->dof_distribution(u.grid_level ()).get ())
+		UG_THROW ("NedelecProject: DoFDistribution mismatch, illegal output grid function.");
+	
+//	Compute the weak divergence:
+	DenseVector<VariableArray1<number> > charge;
+	div = 0.0;
+	assemble_div (* domain.get(), * edgeDD.get(), u, u_fct, * vertDD.get(), div, charge);
 }
 
 /**
@@ -592,8 +643,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceLocAss::prepare_setting
 		UG_THROW ("NedelecProject:"
 			" Only scalar grid functions are supported for the potential");
 
-	if (vLfeID[0].type() != LFEID::LAGRANGE ||
-			vLfeID[0].order() !=  1)
+	if (vLfeID[0].type() != LFEID::LAGRANGE || vLfeID[0].order() !=  1)
 		UG_THROW ("NedelecProject:"
 			" Only Largange-1 functions are supported for the potential");
 }
@@ -671,8 +721,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceLocAss::ass_JA_elem
 /*----- Assembling the auxiliary Poisson problems 2: class AuxLaplaceRHS -----*/
 
 /**
- * Class constructor that gets the master NedelecProject object and extracts
- * the data necessary for the base class:
+ * Class constructor:
  */
 template <typename TDomain, typename TAlgebra>
 NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::AuxLaplaceRHS

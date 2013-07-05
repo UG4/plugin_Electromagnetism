@@ -127,7 +127,7 @@ void ComputeNedelecDoFs
 (
 	SmartPtr<UserData<MathVector<TGridFunction::dim>, TGridFunction::dim> > spFunction, ///< the function to encode
 	SmartPtr<TGridFunction> spGridFct, ///< the grid function to store the result
-	const char* cmp, ///< names of the components
+	const char* cmp, ///< name of the component
     const char* subsets, ///< names of the subsets (may be NULL meaning "all")
     number time ///< the time argument
 )
@@ -159,7 +159,7 @@ void ComputeNedelecDoFs
 (
 	SmartPtr<UserData<MathVector<TGridFunction::dim>, TGridFunction::dim> > spFunction, ///< the function to encode
 	SmartPtr<TGridFunction> spGridFct, ///< the grid function to store the result
-	const char* cmp, ///< names of the components
+	const char* cmp, ///< name of the component
     number time ///< the time argument
 )
 {
@@ -171,7 +171,7 @@ void ComputeNedelecDoFs
 (
 	SmartPtr<UserData<MathVector<TGridFunction::dim>, TGridFunction::dim> > spFunction, ///< the function to encode
 	SmartPtr<TGridFunction> spGridFct, ///< the grid function to store the result
-	const char* cmp, ///< names of the components
+	const char* cmp, ///< name of the component
     const char* subsets ///< names of the subsets (may be NULL meaning "all")
 )
 {
@@ -183,7 +183,7 @@ void ComputeNedelecDoFs
 (
 	SmartPtr<UserData<MathVector<TGridFunction::dim>, TGridFunction::dim> > spFunction, ///< the function to encode
 	SmartPtr<TGridFunction> spGridFct, ///< the grid function to store the result
-	const char* cmp ///< names of the components
+	const char* cmp ///< name of the component
 )
 {
 	ComputeNedelecDoFs (spFunction, spGridFct, cmp, NULL, 0.0);
@@ -204,7 +204,7 @@ void ComputeNedelecDoFs
 (
 	const char* LuaFunction, ///< the simpolic lua function
     SmartPtr<TGridFunction> spGridFct, ///< the grid function to initialize
-    const char* cmp, ///< names of the components of the grid function
+    const char* cmp, ///< name of the component of the grid function
 	const char* subsets, ///< subsets where to compute the DoFs
 	number time ///< time argument
 )
@@ -219,7 +219,7 @@ void ComputeNedelecDoFs
 (
 	const char* LuaFunction, ///< the simpolic lua function
     SmartPtr<TGridFunction> spGridFct, ///< the grid function to initialize
-    const char* cmp, ///< names of the components of the grid function
+    const char* cmp, ///< name of the component of the grid function
 	number time ///< time argument
 )
 {
@@ -230,7 +230,7 @@ void ComputeNedelecDoFs
 (
 	const char* LuaFunction, ///< the simpolic lua function
     SmartPtr<TGridFunction> spGridFct, ///< the grid function to initialize
-    const char* cmp, ///< names of the components of the grid function
+    const char* cmp, ///< name of the component of the grid function
 	const char* subsets ///< subsets where to compute the DoFs
 )
 {
@@ -241,7 +241,7 @@ void ComputeNedelecDoFs
 (
 	const char* LuaFunction, ///< the simpolic lua function
     SmartPtr<TGridFunction> spGridFct, ///< the grid function to initialize
-    const char* cmp ///< names of the components of the grid function
+    const char* cmp ///< name of the component of the grid function
 )
 {
 	ComputeNedelecDoFs (LuaFunction, spGridFct, cmp, NULL, 0);
