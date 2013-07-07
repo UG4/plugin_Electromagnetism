@@ -286,7 +286,8 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_jacobian
 	const vector_type & u,
 	ConstSmartPtr<DoFDistribution> dd,
 	number time,
-	ConstSmartPtr<VectorTimeSeries<vector_type> > vSol
+	ConstSmartPtr<VectorTimeSeries<vector_type> > vSol,
+	const number s_a0
 )
 {
 	std::vector<MultiIndex<2> >  multInd;
@@ -328,7 +329,9 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_defect
 	const vector_type& u,
 	ConstSmartPtr<DoFDistribution> dd,
 	number time,
-	ConstSmartPtr<VectorTimeSeries<vector_type> > vSol
+	ConstSmartPtr<VectorTimeSeries<vector_type> > vSol,
+	const std::vector<number> * vScaleMass,
+	const std::vector<number> * vScaleStiff
 )
 {
 	std::vector<MultiIndex<2> >  multInd;

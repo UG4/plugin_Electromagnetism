@@ -904,7 +904,8 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_jacobian
 	const pot_vector_type & u,
 	ConstSmartPtr<DoFDistribution> dd,
 	number time,
-	ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol
+	ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol,
+	const number s_a0
 )
 {
 //	Set all matrix rows at Dirichlet boundaries to identity:
@@ -929,7 +930,9 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_defect
 	const pot_vector_type & u,
 	ConstSmartPtr<DoFDistribution> dd,
 	number time,
-	ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol
+	ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol,
+	const std::vector<number> * vScaleMass,
+	const std::vector<number> * vScaleStiff
 )
 {
 //	Set all entries at Dirichlet boundaries to zero:

@@ -398,7 +398,8 @@ private:
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL,
+			const number s_a0 = 1.0
 		);
 	
 	/// sets a zero value in the defect for all conductor indices
@@ -408,7 +409,9 @@ private:
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL,
+			const std::vector<number> * vScaleMass = NULL,
+			const std::vector<number> * vScaleStiff = NULL
 		);
 	
 	/// sets the value in the solution for all conductor indices

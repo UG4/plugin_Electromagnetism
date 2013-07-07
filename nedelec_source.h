@@ -19,6 +19,7 @@
 #include "lib_disc/spatial_disc/constraints/constraint_interface.h"
 #include "lib_disc/operator/linear_operator/assembled_linear_operator.h"
 #include "lib_algebra/operator/interface/linear_operator_inverse.h"
+#include "lib_algebra/operator/debug_writer.h"
 
 #ifdef UG_PARALLEL
 #include "lib_disc/parallelization/parallelization_util.h"
@@ -321,7 +322,8 @@ private:
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL,
+			const number s_a0 = 1.0
 		)
 		{
 			VariableArray1<bool> in_source (dd->num_indices ());
@@ -336,7 +338,9 @@ private:
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL,
+			const std::vector<number> * vScaleMass = NULL,
+			const std::vector<number> * vScaleStiff = NULL
 		)
 		{
 			VariableArray1<bool> in_source (dd->num_indices ());

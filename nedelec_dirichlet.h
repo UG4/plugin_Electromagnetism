@@ -297,7 +297,8 @@ public:
 		const vector_type & u,
 		ConstSmartPtr<DoFDistribution> dd,
 		number time = 0.0,
-		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = NULL
+		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = NULL,
+		const number s_a0 = 1.0
 	);
 
 	/// sets a zero value in the defect for all dirichlet indices
@@ -307,7 +308,9 @@ public:
 		const vector_type & u,
 		ConstSmartPtr<DoFDistribution> dd,
 		number time = 0.0,
-		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = NULL
+		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = NULL,
+		const std::vector<number> * vScaleMass = NULL,
+		const std::vector<number> * vScaleStiff = NULL
 	);
 
 	/// sets the dirichlet value in the solution for all dirichlet indices

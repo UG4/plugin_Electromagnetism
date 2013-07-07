@@ -191,7 +191,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute_potential
 	pot_u = 0.0;
 	m_auxLaplaceOp->set_level (grid_lev);
 	m_auxLaplaceOp->init_op_and_rhs (pot_rhs);
-
+	
 //	Initizlize the solver:
 	m_potSolver->init (m_auxLaplaceOp);
 	
