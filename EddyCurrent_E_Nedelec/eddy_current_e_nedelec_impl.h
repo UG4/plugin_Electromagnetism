@@ -55,16 +55,28 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element_loop
 	int si // and only in this subdomain
 )
 {
-//	get the data for the subdomain
+//	Get the data for the subset:
 	if (m_spSubsetData->get_mu_sigma (si, m_permeability, m_conductivity))
 		UG_THROW ("Cannot get material data for subset " << si << ".");
+	
+//	Get the source for this subset
+	m_pSsJG = NULL;
+	for (size_t i = 0; i < m_vJG.size (); i++)
+	if (m_vJG[i].m_everywhere || m_vJG[i].m_ssGrp.contains (si))
+	{
+		if (m_pSsJG != NULL)
+			UG_THROW ("More than one specification of the generator current in subset " << si << ".");
+		m_pSsJG = & (m_vJG[i]);
+	}
 }
 
-// finishes the loop over the elements: nothing to do
+// finishes the loop over the elements: clear the source
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::finish_element_loop ()
-{}
+{
+	m_pSsJG = NULL;
+}
 
 // prepares a given element for assembling: computes the discretization of the rot-rot operator
 template<typename TDomain, typename TAlgebra>
@@ -192,19 +204,19 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem
 	const position_type vCornerCoords []
 )
 {
-	if (m_spgfJG.invalid ()) return; // no rhs
+	if (m_pSsJG == NULL) return; // no rhs
 	
-//	the generator current at the dofs
+//	The generator current (source) at the dofs
 	MathVector<2> vJG [NedelecT1_LDisc<TDomain, TElem>::numEdges];
 	
-//	get the generator currend from the grid function
+//	Get the generator current from the grid functions
 	TElem * pElem = static_cast<TElem*> (elem);
-	for (size_t i = 0; i < 2; i++) // Re and Im
+	for (size_t part = 0; part < 2; part++) // Re and Im
 	{
 		std::vector<MultiIndex<2> > ind;
-		m_spgfJG->multi_indices (pElem, m_vfctJG[i], ind);
+		m_pSsJG->m_spGf->multi_indices (pElem, m_pSsJG->m_vFct[part], ind);
 		for (size_t e = 0; e < NedelecT1_LDisc<TDomain, TElem>::numEdges; e++)
-			vJG[e][i] = DoFRef (*m_spgfJG, ind[e]);
+			vJG[e][part] = DoFRef (* (m_pSsJG->m_spGf), ind[e]);
 	}
 	
 /* BEGIN code essential for the numerics */
@@ -287,19 +299,29 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_loc_discr_func ()
 //	obtaining the parameters
 ////////////////////////////////////////////////////////////////////////////////
 
-// the generator current \f$ \mathbf{J}_{G,h} \f$
+// adds a generator current item \f$ \mathbf{J}_{G,h} \f$ to the discretization
 template<typename TDomain, typename TAlgebra>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::set_generator_current
 (
 	SmartPtr<TGridFunction> spgfJG, ///< pointer to the grid function
-	const char* cmp ///< names of the components
+	const char * cmp, ///< names of the components
+	const char * ss_names ///< names of the subsets (or NULL if defined everywhere)
 )
 {
-//	get strings
-	std::string fctString = std::string (cmp);
-
-//	tokenize strings and select functions
 	std::vector<std::string> tokens;
+	
+	if (spgfJG.invalid ())
+		UG_THROW("EddyCurrent_E_Nedelec: Invalid grid function for the generator source");
+	
+//	Data to get:
+	size_t vfctJG [2];
+	bool ew;
+	SubsetGroup ssGrp (spgfJG->approx_space()->subset_handler ());
+	
+//	Get function names:
+	std::string fctString (cmp);
+
+//	Tokenize the strings and select functions
 	TokenizeString (fctString, tokens, ',');
 
 	if ((int) tokens.size () != 2)
@@ -307,27 +329,45 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::set_generator_current
 				 "in symbolic function names for the generator current (for Re and Im), "
 				 "but given: " << cmp);
 
-	for (size_t i = 0; i < tokens.size (); i++)
+	for (size_t i = 0; i < 2; i++)
 		RemoveWhitespaceFromString (tokens [i]);
 
-//	get function id's by names
+//	Get function id's by names:
 	for (int i = 0; i < 2; i++)
 	try
 	{
-		m_vfctJG [i] = spgfJG->fct_id_by_name (tokens[i].c_str ());
+		vfctJG [i] = spgfJG->fct_id_by_name (tokens[i].c_str ());
 	}
 	UG_CATCH_THROW ("EddyCurrent_E_Nedelec: Cannot find symbolic function "
 					"component for the name '" << tokens[i] << "'.");
 	
-//	check the function space of the grid function
+//	Check the function space of the grid function:
 	for (int i = 0; i < 2; i++)
-		if (spgfJG->local_finite_element_id(m_vfctJG[i]) != LFEID(LFEID::NEDELEC, dim, 1))
+		if (spgfJG->local_finite_element_id(vfctJG[i]) != LFEID(LFEID::NEDELEC, dim, 1))
 			UG_THROW ("EddyCurrent_E_Nedelec: The function space of component "
 							<< tokens[i] << " of the grid function does not correspond "
 							"to the Nedelec element.");
 	
-//	set the inner pointer to the grid function
-	m_spgfJG = spgfJG;
+//	Get the subsets:
+	if (ss_names == NULL)
+		ew = true;
+	else
+	{
+		ew = false;
+		std::string ssString (ss_names);
+		TokenizeString (ssString, tokens, ',');
+		for (size_t i = 0; i < tokens.size (); i++)
+			RemoveWhitespaceFromString (tokens [i]);
+		try
+		{
+			ssGrp.add (tokens);
+		}
+		UG_CATCH_THROW
+			("EddyCurrent_E_Nedelec: Failed to add subsets to the source");
+	}
+		
+//	Create the source:
+	m_vJG.push_back (tGeneratorCurrent (spgfJG, vfctJG[_Re_], vfctJG[_Im_], ssGrp, ew));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -337,7 +377,7 @@ template<typename TDomain, typename TAlgebra>
 EddyCurrent_E_Nedelec<TDomain,TAlgebra>::
 EddyCurrent_E_Nedelec
 (
-	const char* functions, ///< grid function names
+	const char * functions, ///< grid function names
 	ConstSmartPtr<EMaterial<domain_type> > spSubsetData, ///< material data object
 	number frequency ///< frequency \f$\omega\f$
 )

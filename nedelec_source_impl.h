@@ -46,7 +46,7 @@ NedelecLoopCurrent<TDomain, TAlgebra>::NedelecLoopCurrent
 	
 //	Fill the subset groups:
 	std::vector<std::string> vssNames;
-	ConstSmartPtr<subset_handler_type> spIsh = vertApproxSpace->subset_handler();
+	ConstSmartPtr<subset_handler_type> spIsh = vertApproxSpace->subset_handler ();
 	
 	TokenizeString (m_allSsNames, vssNames);
 	for (size_t i = 0; i < vssNames.size(); i++)

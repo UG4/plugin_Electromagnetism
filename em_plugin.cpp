@@ -104,7 +104,12 @@ struct Functionality
 							number
 						)
 					>("Function(s)#Material data#Frequency")
-				.add_method("set_generator_current",static_cast<void (T::*)(SmartPtr<GridFunction<TDomain,TAlgebra> >, const char*)>(&T::set_generator_current), "", "Generator current")
+				.add_method("set_generator_current",
+					static_cast<void (T::*)(SmartPtr<GridFunction<TDomain,TAlgebra> >, const char*)>(&T::set_generator_current),
+						"Sets the generator current source", "GridFunc#Cmps")
+				.add_method("set_generator_current",
+					static_cast<void (T::*)(SmartPtr<GridFunction<TDomain,TAlgebra> >, const char*, const char*)>(&T::set_generator_current),
+						"Sets the generator current source in subsets", "GridFunc#Cmps#Subssets")
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "EddyCurrent_E_Nedelec", tag);
 		}

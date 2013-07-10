@@ -93,28 +93,32 @@ public:
 ///	constructor
 	EddyCurrent_E_Nedelec
 	(
-		const char* functions,
+		const char * functions,
 		ConstSmartPtr<EMaterial<domain_type> > spSubsetData,
 		number frequency
 	);
 
-private:
-/// frequency \f$\omega\f$ for the discretization
-	number m_omega;
-
-/// parameters of the materials in the domain
-	ConstSmartPtr<EMaterial<domain_type> > m_spSubsetData;
-	
-/// the generator current \f$ \mathbf{J}_{G,h} \f$
-	SmartPtr<TGridFunction> m_spgfJG; ///< the grid function
-	size_t m_vfctJG[2]; ///< components of the grid function
-
 public:
-/// sets the generator current \f$ \mathbf{J}_{G,h} \f$
-	void set_generator_current(SmartPtr<TGridFunction> spgfJG, const char* cmp);
+/// adds a generator current item \f$ \mathbf{J}_{G,h} \f$ to the discretization
+	void set_generator_current
+	(
+		SmartPtr<TGridFunction> spgfJG, ///< grid function with the data
+		const char * cmp, ///< grid function components
+		const char * ss_names = NULL ///< names of the subsets where the current is defined (NULL for "everywhere")
+	);
+/// adds a generator current item \f$ \mathbf{J}_{G,h} \f$ to the discretization
+	void set_generator_current
+	(
+		SmartPtr<TGridFunction> spgfJG, ///< grid function with the data
+		const char * cmp ///< grid function components
+	)
+	{
+		set_generator_current (spgfJG, cmp, NULL);
+	}
 
 //---- Local discretization interface: ----
 private:
+	
 ///	check type of the grid and the trial space
 	virtual void prepare_setting
 	(
@@ -149,22 +153,23 @@ private:
 	void ass_rhs_elem(LocalVector& d, GeometricObject* elem, const position_type vCornerCoords[]);
 /// \}
 
-	private:
 //---- Registration of the template functions: ----
+private:
+	
 	void register_all_loc_discr_funcs();
 
 	struct RegisterLocalDiscr {
-			RegisterLocalDiscr(this_type* pThis) : m_pThis(pThis){}
-			this_type* m_pThis;
-			template< typename TElem > void operator()(TElem&)
-			{m_pThis->register_loc_discr_func<TElem>();}
+			RegisterLocalDiscr(this_type * pThis) : m_pThis(pThis){}
+			this_type * m_pThis;
+			template< typename TElem > void operator() (TElem &)
+			{m_pThis->register_loc_discr_func<TElem> ();}
 	};
 
 	template <typename TElem>
-	void register_loc_discr_func();
+	void register_loc_discr_func ();
 
-	private:
 //---- Auxiliary functions: ----
+private:
 
 /// composes the stiffness matrix of the stationary problem
 	template<size_t numEdges>
@@ -175,7 +180,44 @@ private:
 		number S [2][numEdges] [2][numEdges] ///< for the composed matrix
 	);
 
+//---- Physical parameters of the problem: ----
+private:
+/// frequency \f$\omega\f$ for the discretization
+	number m_omega;
+
+/// parameters of the materials in the domain
+	ConstSmartPtr<EMaterial<domain_type> > m_spSubsetData;
+	
+///	class for a generator current (source) in a subdomain
+	struct tGeneratorCurrent
+	{
+		SmartPtr<TGridFunction> m_spGf; ///< the grid function of the current
+		size_t m_vFct[2]; ///< components of the grid function
+		bool m_everywhere; ///< true iff the source is defined everywhere
+		SubsetGroup m_ssGrp; ///< subsets where the source is defined (if ! m_everywhere)
+		
+	///	constructor
+		tGeneratorCurrent
+		(
+			SmartPtr<TGridFunction> & spGf,
+			size_t vFct_Re, size_t vFct_Im,
+			SubsetGroup & ssGrp,
+			bool ew = false
+		)
+		: m_spGf (spGf), m_everywhere (ew), m_ssGrp (ssGrp)
+		{
+			m_vFct[_Re_] = vFct_Re; m_vFct[_Im_] = vFct_Im;
+		}
+	};
+	
+///	array of all the sources (generator currents)
+	std::vector<tGeneratorCurrent> m_vJG;
+
+///	the source active in the current (assembled) subset
+	tGeneratorCurrent * m_pSsJG;
+
 //---- Temporary data used in the local discretization ----
+private:
 	
 /// local stiffness matrix of the rot-rot operator
 	number m_rot_rot_S [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES];
