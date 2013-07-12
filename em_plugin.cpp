@@ -11,6 +11,7 @@
 #include "em_material.h"
 #include "nedelec_encode.h"
 #include "nedelec_gf_user_data.h"
+#include "EddyCurrent_E_Nedelec/eddy_current_gf_user_data.h"
 
 /* discretizations' headers: */
 #include "EddyCurrent_E_Nedelec/eddy_current_e_nedelec.h"
@@ -287,6 +288,18 @@ struct Functionality
 				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, SmartPtr<EMaterial<TDomain> >)>("GridFunction#Components#Materials")
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "NedelecSigmaEData", tag);
+		}
+		{
+			static const int dim = TDomain::dim;
+			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			string name = string("EddyCurrentHeat").append(suffix);
+			typedef EddyCurrentHeat<TFct> T;
+			typedef UserData<number, dim> TBase;
+			
+			reg.add_class_<T, TBase> (name, grp)
+				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, SmartPtr<EMaterial<TDomain> >)>("GridFunction#Components#Materials")
+				.set_construct_as_smart_pointer(true);
+			reg.add_class_to_group(name, "EddyCurrentHeat", tag);
 		}
 	};
 	
