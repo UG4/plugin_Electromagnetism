@@ -72,9 +72,9 @@ public:
 ///	Constructor
 	NedelecLoopCurrent
 	(
-		std::string ssNames, ///< names of the subsets of the source (up to the subset of the pos. dir.)
-		std::string posSsNames, ///< names of the subsets of the positive direction
-		std::string cutSsNames, ///< names of the surfaces on the cut of the loop
+		const char * ssNames, ///< names of the subsets of the source (up to the subset of the pos. dir.)
+		const char * posSsNames, ///< names of the subsets of the positive direction
+		const char * cutSsNames, ///< names of the surfaces on the cut of the loop
 		SmartPtr<ApproximationSpace<TDomain> > vertApproxSpace, ///< vertex-centered approx. space
 		SmartPtr<ILinearOperatorInverse<pot_vector_type> > potSolver ///< linear solver for the potential
 	);

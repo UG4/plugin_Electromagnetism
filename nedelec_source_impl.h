@@ -19,13 +19,13 @@ namespace Electromagnetism{
 template <typename TDomain, typename TAlgebra>
 NedelecLoopCurrent<TDomain, TAlgebra>::NedelecLoopCurrent
 (
-	std::string ssNames, ///< names of the subsets of the source (up to the subset of the pos. dir.)
-	std::string posSsNames, ///< names of the subsets of the positive direction
-	std::string cutSsNames, ///< names of the surfaces on the cut of the loop
+	const char * ssNames, ///< names of the subsets of the source (up to the subset of the pos. dir.)
+	const char * posSsNames, ///< names of the subsets of the positive direction
+	const char * cutSsNames, ///< names of the surfaces on the cut of the loop
 	SmartPtr<ApproximationSpace<TDomain> > vertApproxSpace, ///< vertex-centered approx. space
 	SmartPtr<ILinearOperatorInverse<pot_vector_type> > potSolver ///< linear solver for the potential
 )
-:	m_allSsNames (ssNames + ',' + posSsNames), m_posSsNames (posSsNames), m_cutSsNames (cutSsNames),
+:	m_allSsNames ((std::string (ssNames) + ',') + posSsNames), m_posSsNames (posSsNames), m_cutSsNames (cutSsNames),
 	m_spVertApproxSpace (vertApproxSpace),
 	m_auxLocLaplace (new AuxLaplaceLocAss (*this)),
 	m_outOfSource (new OutOfSource (*this)),

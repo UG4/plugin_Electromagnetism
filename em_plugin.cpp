@@ -72,6 +72,18 @@ struct Functionality
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "EMaterial", tag);
 		}
+	// Further tools
+		{
+			static const int dim = TDomain::dim;
+			string name = string("SubsetIndicatorUserData").append(suffix);
+			typedef SubsetIndicatorUserData<TDomain> T;
+			typedef UserData<number, dim> TBase;
+			
+			reg.add_class_<T, TBase> (name, grp)
+				.template add_constructor<void (*)(ConstSmartPtr<TDomain>, const char*)>("Domain#Subsets")
+				.set_construct_as_smart_pointer(true);
+			reg.add_class_to_group(name, "SubsetIndicatorUserData", tag);
+		}
 	}
 	
 	/**
@@ -241,7 +253,7 @@ struct Functionality
 					<
 						void (*)
 						(
-							std::string, std::string, std::string,
+							const char *, const char *, const char *,
 							SmartPtr<ApproximationSpace<TDomain> >,
 							SmartPtr<ILinearOperatorInverse<typename NedelecProject<TDomain, TAlgebra>::pot_vector_type> >
 						)

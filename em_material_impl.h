@@ -96,16 +96,19 @@ void EMaterial<TDomain>::close ()
 		{
 			TSubdomData & sdD = m_vSdD [i];
 			TokenizeString (sdD.ssNames, vssNames);
-			for (size_t k = 0; k < vssNames.size(); k++)
+			for (size_t k = 0; k < vssNames.size (); k++)
 				RemoveWhitespaceFromString (vssNames [k]);
 			sdD.ssGrp.clear ();
 			sdD.ssGrp.add (vssNames);
 		}
 	} UG_CATCH_THROW ("EMaterial::close: Failed to parse subset names.");
+	
+// Get the subset handler:
+	const subset_handler_type * ss_handler = subset_handler().get ();
 
 // Fill the map with the appropriate subsets:
-	for (int si = 0; si < subset_handler()->num_subsets (); si++)
-		if (DimensionOfSubset (*subset_handler(), si) == dim) // do not consider low-dimensional subsets
+	for (int si = 0; si < ss_handler->num_subsets (); si++)
+		if (DimensionOfSubset (*ss_handler, si) == dim) // do not consider low-dimensional subsets
 			m_mUserDataBC [si] = 0;
 	
 // Fill the map with the data items:
@@ -129,7 +132,7 @@ void EMaterial<TDomain>::close ()
 		 iter != m_mUserDataBC.end (); ++iter)
 		if (iter->second == NULL)
 			UG_THROW ("EMaterial::close: Subset "
-				<< subset_handler()->get_subset_name (iter->first)
+				<< ss_handler->get_subset_name (iter->first)
 					<< " not mentioned in the description.");
 	
 // Analyze the topology

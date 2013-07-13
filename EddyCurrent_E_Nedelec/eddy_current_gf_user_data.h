@@ -102,7 +102,7 @@ public:
 ///	The vector field retrieved from the Nedelec-type 1 (Whitney-1) dofs are not continuous
 	virtual bool continuous () const {return false;}
 
-///	returns if grid function is needed for evaluation
+///	Returns true to get the grid element in the evaluation routine
 	virtual bool requires_grid_fct () const {return true;}
 
 /// Performs the main computations:
