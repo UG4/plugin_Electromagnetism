@@ -20,6 +20,8 @@
 // Nedelec-type-1 headers:
 #include "../nedelec_local_ass.h"
 
+// Further local headers
+#include "eddy_current_traits.h"
 #include "../em_material.h"
 
 namespace ug{
@@ -34,13 +36,9 @@ namespace Electromagnetism{
  */
 template <typename TGridFunc>
 class EddyCurrentHeat
-	: public StdDependentUserData<EddyCurrentHeat<TGridFunc>, number, TGridFunc::dim>
+:	public StdDependentUserData<EddyCurrentHeat<TGridFunc>, number, TGridFunc::dim>,
+	public EddyCurrentTraits
 {
-/// index of the real part in the grid functions
-	static const size_t _Re_ = 0;
-/// index of the imaginary part in the grid functions
-	static const size_t _Im_ = 1;
-
 public:
 ///	Type of domain
 	typedef typename TGridFunc::domain_type domain_type;
@@ -66,7 +64,7 @@ public:
 	EddyCurrentHeat
 	(
 		SmartPtr<TGridFunc> spGridFct, ///< grid function with the DoFs
-		const char* cmp, ///< the components (Re and Im) of the grid function keeping the scalar DoFs
+		const char * cmp, ///< the components (Re and Im) of the grid function keeping the scalar DoFs
 		SmartPtr<EMaterial<domain_type> > emMatherial ///< properties of the materials
 	)
 	: m_spGF (spGridFct), m_spEMaterial (emMatherial)
@@ -167,6 +165,214 @@ public:
 		for (size_t i = 0; i < nip; i++)
 			vValue [i] = sigma * (VecTwoNormSq (E[_Re_][i]) + VecTwoNormSq (E[_Im_][i])) / 2;
 	};
+};
+
+/**
+ * Template of UserData based classes for computation of vector fields that
+ * depend on curls of components of E. The TImpl class should implement function
+ * 'void get_value (const MathVector<dim> & curlE, MathVector<dim> & value) const'
+ * that transforms \f$ \mathbf{rot} \, \mathbf {E} \f$ to the value.
+ *
+ * \tparam TImpl	implementation of the class (should be derived from EddyCurrentCurlEDependentCmpUserData)
+ * \tparam ReIm		whether the UserData depends on \f$ \mathrm{Re} \mathbf{rot} \, \mathbf {E} \f$ or \f$ \mathrm{Im} \mathbf{rot} \, \mathbf {E} \f$
+ * \tparam TGFunc	grid function type
+ */
+template <typename TImpl, size_t ReIm, typename TGFunc>
+class EddyCurrentCurlEDependentCmpUserData
+:	public StdDependentUserData <TImpl, MathVector<TGFunc::dim>, TGFunc::dim>,
+	public EddyCurrentTraits
+{
+public:
+///	Type of domain
+	typedef typename TGFunc::domain_type domain_type;
+
+///	World dimension
+	static const int dim = domain_type::dim;
+
+///	Type of position coordinates (e.g. position_type)
+	typedef typename domain_type::position_type position_type;
+
+protected:
+///	grid function
+	SmartPtr<TGFunc> m_spGF;
+	
+///	components (Re and Im) of the grid function
+	size_t m_fct [2];
+
+private:
+///	const 'this' pointer of the implementation class
+	const TImpl * this_impl () const {return static_cast<const TImpl*> (this);}
+
+public:
+/// constructor
+	EddyCurrentCurlEDependentCmpUserData
+	(
+		SmartPtr<TGFunc> spGridFct, ///< grid function with the DoFs
+		const char * cmp ///< the components (Re and Im) of the grid function keeping the scalar DoFs
+	)
+	: m_spGF (spGridFct)
+	{
+	//	get strings, tokenize them and select functions
+		std::string fctString = std::string (cmp);
+		std::vector<std::string> tokens;
+		TokenizeString (fctString, tokens, ',');
+		if ((int) tokens.size () != 2)
+			UG_THROW("EddyCurrentReB: Needed 2 components "
+						"in symbolic function names (for Re and Im), "
+							"but given: " << cmp);
+		for (size_t i = 0; i < tokens.size (); i++)
+			RemoveWhitespaceFromString (tokens [i]);
+	
+	//	get function id's by names
+		for (int i = 0; i < 2; i++)
+		try
+		{
+			m_fct [i] = m_spGF->fct_id_by_name (tokens[i].c_str ());
+		}
+		UG_CATCH_THROW ("EddyCurrent: Cannot find symbolic function "
+						"component for the name '" << tokens[i] << "'.");
+		
+	//	check the function space of the grid function
+		for (int i = 0; i < 2; i++)
+			if (m_spGF->local_finite_element_id(m_fct[i]).type () != LFEID::NEDELEC)
+				UG_THROW ("EddyCurrent: The function space of component "
+							<< tokens[i] << " of the grid function does not correspond "
+								"to the Nedelec element.");
+	};
+	
+///	The vector field retrieved from the Nedelec-type 1 (Whitney-1) dofs are not continuous
+	virtual bool continuous () const {return false;}
+
+///	Returns true to get the grid element in the evaluation routine
+	virtual bool requires_grid_fct () const {return true;}
+
+/// Performs the main computations:
+	template <int refDim>
+	void eval_and_deriv
+	(
+		MathVector<dim> vValue[], ///< for the computed value
+		const MathVector<dim> vGlobIP[],
+		number time,
+		int si,
+		GeometricObject * elem,
+		const MathVector<dim> vCornerCoords[],
+		const MathVector<refDim> vLocIP[],
+		const size_t nip,
+		LocalVector * u,
+		bool bDeriv,
+		int s,
+		std::vector<std::vector<MathVector<dim> > > vvvDeriv[],
+		const MathMatrix<refDim, dim> * vJT = NULL
+	) const
+	{
+	//	Derivatives are not implemented
+		if (bDeriv)
+			UG_THROW ("EddyCurrentReB: Derivatives are not implemented.");
+		
+	//	Get multiindices of element
+		std::vector<MultiIndex<2> > ind;
+		m_spGF->multi_indices (elem, m_fct [ReIm], ind);
+	
+	//	The DoF values of the grid function
+		std::vector<number> dofValues (ind.size());
+		for (size_t sh = 0; sh < dofValues.size (); ++sh)
+			dofValues[sh] = DoFRef (*m_spGF, ind[sh]);
+		
+	//	Compute the curl
+		MathVector<dim> curl;
+		NedelecInterpolation<domain_type, refDim>::curl
+			(*(m_spGF->domain().get()), elem, vCornerCoords, &(dofValues[0]), curl);
+		for (size_t ip = 0; ip < nip; ip++)
+			this_impl()->get_value (curl, vValue [ip]);
+	};
+};
+
+/**
+ * UserData based class for the computation of the real part of the magnetic field
+ * \f$ \mathbf{B} = \frac{i}{\omega} \mathrb{rot} \, \mathbf{E} =
+ * - \frac{1}{\omega} \mathrb{rot} \, \mathrm{Re} \mathbf{E}
+ * + i \frac{1}{\omega} \mathrb{rot} \, \mathrm{Im} \mathbf{E} \f$,
+ * i.e. the vector field \f$ \mathrm{Re} \mathbf{B} = - \frac{1}{\omega}
+ * \mathrb{rot} \, \mathrm{Im} \mathbf{E} \f$.
+ */
+template <typename TGridFunc>
+class EddyCurrentReBofEUserData
+	: public EddyCurrentCurlEDependentCmpUserData
+		<EddyCurrentReBofEUserData<TGridFunc>, EddyCurrentTraits::_Im_, TGridFunc>
+{
+///	Type of domain
+	typedef typename TGridFunc::domain_type domain_type;
+
+///	World dimension
+	static const int dim = domain_type::dim;
+
+private:
+///	Frequency \f$ \omega \f$
+	number m_omega;
+
+public:
+/// constructor
+	EddyCurrentReBofEUserData
+	(
+		SmartPtr<TGridFunc> spGridFct, ///< grid function with the DoFs
+		const char * cmp, ///< the components (Re and Im) of the grid function keeping the scalar DoFs
+		number omega ///< the frequency of the field
+	)
+	:	EddyCurrentCurlEDependentCmpUserData
+		 <EddyCurrentReBofEUserData<TGridFunc>, EddyCurrentTraits::_Im_, TGridFunc> (spGridFct, cmp),
+		m_omega (omega)
+	{};
+
+///	\f$ \mathrm{Re} \mathbf{B} = - \frac{1}{\omega} * \mathrb{rot} \, \mathrm{Im} \mathbf{E} \f$
+	inline void get_value (const MathVector<dim> & ImCurlE, MathVector<dim> & ReB) const
+	{
+		ReB = ImCurlE;
+		ReB /= - m_omega;
+	}
+};
+
+/**
+ * UserData based class for the computation of the imaginary part of the magnetic
+ * field \f$ \mathbf{B} = \frac{i}{\omega} \mathrb{rot} \, \mathbf{E} =
+ * - \frac{1}{\omega} \mathrb{rot} \, \mathrm{Re} \mathbf{E}
+ * + i \frac{1}{\omega} \mathrb{rot} \, \mathrm{Im} \mathbf{E} \f$,
+ * i.e. the vector field \f$ \mathrm{Im} \mathbf{B} = \frac{1}{\omega}
+ * \mathrb{rot} \, \mathrm{Re} \mathbf{E} \f$.
+ */
+template <typename TGridFunc>
+class EddyCurrentImBofEUserData
+	: public EddyCurrentCurlEDependentCmpUserData
+		<EddyCurrentReBofEUserData<TGridFunc>, EddyCurrentTraits::_Re_, TGridFunc>
+{
+///	Type of domain
+	typedef typename TGridFunc::domain_type domain_type;
+
+///	World dimension
+	static const int dim = domain_type::dim;
+
+private:
+///	Frequency \f$ \omega \f$
+	number m_omega;
+
+public:
+/// constructor
+	EddyCurrentImBofEUserData
+	(
+		SmartPtr<TGridFunc> spGridFct, ///< grid function with the DoFs
+		const char * cmp, ///< the components (Re and Im) of the grid function keeping the scalar DoFs
+		number omega ///< the frequency of the field
+	)
+	:	EddyCurrentCurlEDependentCmpUserData
+		 <EddyCurrentReBofEUserData<TGridFunc>, EddyCurrentTraits::_Re_, TGridFunc> (spGridFct, cmp),
+		m_omega (omega)
+	{};
+
+///	\f$ \mathrm{Im} \mathbf{B} = \frac{1}{\omega} * \mathrb{rot} \, \mathrm{Re} \mathbf{E} \f$
+	inline void get_value (const MathVector<dim> & ReCurlE, MathVector<dim> & ImB) const
+	{
+		ImB = ReCurlE;
+		ImB /= m_omega;
+	}
 };
 
 } // end namespace Electromagnetism

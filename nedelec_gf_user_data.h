@@ -45,10 +45,10 @@ public:
 	typedef typename domain_type::position_type position_type;
 
 private:
-// grid function
+///	grid function
 	SmartPtr<TGridFunc> m_spGF;
 
-//	component of function
+///	component of function
 	size_t m_fct;
 
 public:
@@ -56,7 +56,7 @@ public:
 	NedelecGridFunctionData
 	(
 		SmartPtr<TGridFunc> spGridFct, ///< grid function with the DoFs
-		const char* cmp ///< the component of the grid function keeping the scalar DoFs
+		const char * cmp ///< the component of the grid function keeping the scalar DoFs
 	)
 	: m_spGF (spGridFct)
 	{
@@ -88,15 +88,15 @@ public:
 		const MathVector<dim> vGlobIP[],
 		number time,
 		int si,
-		GeometricObject* elem,
+		GeometricObject * elem,
 		const MathVector<dim> vCornerCoords[],
 		const MathVector<refDim> vLocIP[],
 		const size_t nip,
-		LocalVector* u,
+		LocalVector * u,
 		bool bDeriv,
 		int s,
 		std::vector<std::vector<MathVector<dim> > > vvvDeriv[],
-		const MathMatrix<refDim, dim>* vJT = NULL
+		const MathMatrix<refDim, dim> * vJT = NULL
 	) const
 	{
 	//	Derivatives are not implemented
@@ -138,10 +138,10 @@ public:
 	typedef typename domain_type::position_type position_type;
 
 private:
-// grid function
+///	grid function
 	SmartPtr<TGridFunc> m_spGF;
 
-//	component of function
+///	component of function
 	size_t m_fct;
 
 public:
@@ -149,7 +149,7 @@ public:
 	NedelecCurlData
 	(
 		SmartPtr<TGridFunc> spGridFct, ///< grid function with the DoFs
-		const char* cmp ///< the component of the grid function keeping the scalar DoFs
+		const char * cmp ///< the component of the grid function keeping the scalar DoFs
 	)
 	: m_spGF (spGridFct)
 	{
@@ -181,15 +181,15 @@ public:
 		const MathVector<dim> vGlobIP[],
 		number time,
 		int si,
-		GeometricObject* elem,
+		GeometricObject * elem,
 		const MathVector<dim> vCornerCoords[],
 		const MathVector<refDim> vLocIP[],
 		const size_t nip,
-		LocalVector* u,
+		LocalVector * u,
 		bool bDeriv,
 		int s,
 		std::vector<std::vector<MathVector<dim> > > vvvDeriv[],
-		const MathMatrix<refDim, dim>* vJT = NULL
+		const MathMatrix<refDim, dim> * vJT = NULL
 	) const
 	{
 	//	Derivatives are not implemented
@@ -237,13 +237,13 @@ public:
 	typedef typename domain_type::position_type position_type;
 
 private:
-//	grid function
+///	grid function
 	SmartPtr<TGridFunc> m_spGF;
 
-//	component of function
+///	component of function
 	size_t m_fct;
 	
-//	subdomain-dependent data (propertiels of the materials)
+///	subdomain-dependent data (propertiels of the materials)
 	SmartPtr<EMaterial<domain_type> > m_spEMaterial;
 
 public:
@@ -251,7 +251,7 @@ public:
 	NedelecSigmaEData
 	(
 		SmartPtr<TGridFunc> spGridFct, ///< grid function with the DoFs
-		const char* cmp, ///< the component of the grid function keeping the scalar DoFs
+		const char * cmp, ///< the component of the grid function keeping the scalar DoFs
 		SmartPtr<EMaterial<domain_type> > emMatherial ///< properties of the materials
 	)
 	: m_spGF (spGridFct), m_spEMaterial (emMatherial)
@@ -284,15 +284,15 @@ public:
 		const MathVector<dim> vGlobIP[],
 		number time,
 		int si,
-		GeometricObject* elem,
+		GeometricObject * elem,
 		const MathVector<dim> vCornerCoords[],
 		const MathVector<refDim> vLocIP[],
 		const size_t nip,
-		LocalVector* u,
+		LocalVector * u,
 		bool bDeriv,
 		int s,
 		std::vector<std::vector<MathVector<dim> > > vvvDeriv[],
-		const MathMatrix<refDim, dim>* vJT = NULL
+		const MathMatrix<refDim, dim> * vJT = NULL
 	) const
 	{
 	//	Derivatives are not implemented

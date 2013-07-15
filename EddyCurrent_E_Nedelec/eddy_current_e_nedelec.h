@@ -20,6 +20,7 @@
 #include "lib_disc/function_spaces/grid_function.h"
 
 /* Discretization's headers: */
+#include "eddy_current_traits.h"
 #include "../em_material.h"
 #include "../nedelec_local_ass.h"
 
@@ -63,7 +64,7 @@ namespace Electromagnetism{
  */
 template <typename TDomain, typename TAlgebra>
 class EddyCurrent_E_Nedelec
-	: public IElemDisc<TDomain>
+	: public IElemDisc<TDomain>, public EddyCurrentTraits
 {
 private:
 ///	base class type
@@ -83,11 +84,6 @@ private:
 
 ///	position type
 	typedef typename base_type::position_type position_type;
-
-/// index of the real part in the grid functions
-	static const size_t _Re_ = 0;
-/// index of the imaginary part in the grid functions
-	static const size_t _Im_ = 1;
 
 public:
 ///	constructor

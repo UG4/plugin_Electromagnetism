@@ -313,6 +313,30 @@ struct Functionality
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "EddyCurrentHeat", tag);
 		}
+		{
+			static const int dim = TDomain::dim;
+			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			string name = string("EddyCurrentReBofEUserData").append(suffix);
+			typedef EddyCurrentReBofEUserData<TFct> T;
+			typedef UserData<MathVector<dim>, dim> TBase;
+			
+			reg.add_class_<T, TBase> (name, grp)
+				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, number)>("GridFunction#Components#Frequency")
+				.set_construct_as_smart_pointer(true);
+			reg.add_class_to_group(name, "EddyCurrentReBofEUserData", tag);
+		}
+		{
+			static const int dim = TDomain::dim;
+			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			string name = string("EddyCurrentImBofEUserData").append(suffix);
+			typedef EddyCurrentImBofEUserData<TFct> T;
+			typedef UserData<MathVector<dim>, dim> TBase;
+			
+			reg.add_class_<T, TBase> (name, grp)
+				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, number)>("GridFunction#Components#Frequency")
+				.set_construct_as_smart_pointer(true);
+			reg.add_class_to_group(name, "EddyCurrentImBofEUserData", tag);
+		}
 	};
 	
 };
