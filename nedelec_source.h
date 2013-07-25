@@ -78,13 +78,22 @@ public:
 		SmartPtr<ApproximationSpace<TDomain> > vertApproxSpace, ///< vertex-centered approx. space
 		SmartPtr<ILinearOperatorInverse<pot_vector_type> > potSolver ///< linear solver for the potential
 	);
+	
+///	Setting the electric current value
+	void set
+	(
+		const char * fctNames, ///< names of the components
+		number I ///< electric current for the functions
+	);
 
-///	Computation of the source
+///	Computation of the source (only if 'init'ialized): distributes the potential
 	void compute
 	(
-		SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u, ///< the grid function for the source
-		const char * fct_names ///< the function name
+		SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u ///< the grid function for the source
 	);
+	
+///	Returns the subsets where the source is defined
+	std::string subsets () {return m_allSsNames;};
 	
 private:
 	
@@ -397,8 +406,61 @@ private:
 		NedelecLoopCurrent & m_master;
 	};
 	
+///	Computes the flux of of the gradient of the potential over the cut (for one type of elements)
+	template <typename TElem>
+	void get_flux_of_pot
+	(
+		const TDomain & domain, ///< [in] the domain
+		const pot_vector_type & pot, ///< [in] the potential field
+		const DoFDistribution & vertDD, ///< [in] the vertex DD
+		number & flux ///< [out] the flux to update
+	);
+	/// Helper class for computation of the flux of potential over the cut
+	struct GetFluxOfPotential
+	{
+		this_type * m_pThis;
+		const domain_type & m_domain;
+		const pot_vector_type & m_pot;
+		const DoFDistribution & m_vertDD;
+		number & m_flux;
+		
+		GetFluxOfPotential
+		(
+			this_type * pThis, ///< [in] pointer to the master class
+			const TDomain & domain, ///< [in] the domain
+			const pot_vector_type & pot, ///< [in] the potential field
+			const DoFDistribution & vertDD, ///< [in] the vertex DD
+			number & flux ///< [out] the flux to update
+		)
+		: m_pThis (pThis), m_domain (domain), m_pot (pot), m_vertDD (vertDD), m_flux (flux)
+		{
+			m_flux = 0;
+		}
+		
+		template <typename TElem> void operator() (TElem &)
+		{
+			m_pThis->template get_flux_of_pot<TElem> (m_domain, m_pot, m_vertDD, m_flux);
+		}
+	};
+	
 private:
+	
+///	Structure for keeping electric current data
+	struct TSrcData
+	{
+		std::string fctNames; ///< function names for the value
+		number I; ///< value of the electric current
+		
+		/// Constructor
+		TSrcData (const char * the_fctNames, number the_I)
+			: fctNames (the_fctNames), I (the_I) {};
+	};
+	
+///	Array of the electric current data
+	std::vector<TSrcData> m_vSrcData;
 
+///	Generator current in the source
+	number m_generatorCurrent;
 ///	Names of all the subsets of the source
 	std::string m_allSsNames;
 ///	Names of the subsets of the positive direction
@@ -413,6 +475,7 @@ private:
 ///	Group of the surfaces of the cut of the loop
 	SubsetGroup m_cutSsGrp;
 	
+///	Vertex-centered approximation space
 	SmartPtr<ApproximationSpace<TDomain> > m_spVertApproxSpace;
 	
 ///	Local discretization of the auxiliary equations

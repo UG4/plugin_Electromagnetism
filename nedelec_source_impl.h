@@ -31,8 +31,7 @@ NedelecLoopCurrent<TDomain, TAlgebra>::NedelecLoopCurrent
 	m_outOfSource (new OutOfSource (*this)),
 	m_auxLaplaceAss (new DomainDiscretization<TDomain, TPotAlgebra> (vertApproxSpace)),
 	m_auxLaplaceOp (new AssembledLinearOperator<TPotAlgebra> (SmartPtr<IAssemble<TPotAlgebra> >(m_auxLaplaceAss))),
-	m_potSolver (potSolver),
-	m_pot_scaling (1.0)
+	m_potSolver (potSolver)
 {
 //	Check the parameters:
 	if (m_spVertApproxSpace.invalid ())
@@ -70,45 +69,75 @@ NedelecLoopCurrent<TDomain, TAlgebra>::NedelecLoopCurrent
 }
 
 /**
- * Computation of the source
+ * Setting the electric current value 
+ */
+template <typename TDomain, typename TAlgebra>
+void NedelecLoopCurrent<TDomain, TAlgebra>::set
+(
+	const char * fctNames, ///< names of the components
+	number I ///< electric current for the functions
+)
+{
+	m_vSrcData.push_back (TSrcData (fctNames, I));
+}
+
+/**
+ * Computation of the source by updating a given grid function
  */
 template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::compute
 (
-	SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u, ///< the grid function for the source
-	const char * fct_names ///< the function name
+	SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u ///< the grid function for the source
 )
 {
-//	Check the data:
+	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	
+//	Do we have data to compute?
+	if (m_vSrcData.size () == 0)
+		UG_THROW ("NedelecLoopCurrent: No electric currents specified.");
+	
+//	Check the grid function:
 	if (sp_u.invalid ())
 		UG_THROW ("NedelecLoopCurrent: Illegal grid function specification.");
-	GridFunction<TDomain, TAlgebra> & u = * sp_u.get ();
-	
-//	Get the function indices:
-	FunctionGroup fctGrp;
-	try
-	{
-		fctGrp = u.fct_grp_by_name (fct_names);
-	}
-	UG_CATCH_THROW ("NedelecLoopCurrent: Functions '" << fct_names << "' not all contained in the edge approximation space.");
-	
-	for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
-		if (u.local_finite_element_id(fctGrp[i_fct]).type () != LFEID::NEDELEC)
-			UG_THROW ("NedelecLoopCurrent: Not a Nedelec-element-based grid function specified for the source.");
 	
 //	Get the DoF distributions:
+	GridFunction<TDomain, TAlgebra> & u = * sp_u.get ();
 	SmartPtr<DoFDistribution> edgeDD = u.dof_distribution ();
-	SmartPtr<DoFDistribution> vertDD = m_spVertApproxSpace->dof_distribution
-		(u.grid_level ());
+	const GridLevel g_lev (u.grid_level ());
+	SmartPtr<DoFDistribution> vertDD = m_spVertApproxSpace->dof_distribution (g_lev);
 	
 //	Compute the potential of the source:
 	pot_vector_type pot_u;
-	compute_potential (* vertDD.get (), u.grid_level (), pot_u);
+	compute_potential (* vertDD.get (), g_lev, pot_u);
 	
-//	Compute the gradients of the potential
-	for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
-		distribute_source_potential (* vertDD.get (), pot_u, * edgeDD.get (),
-			fctGrp[i_fct], 1.0, u);
+//	Compute the normalization factor of the potential (to scale the current to 1)
+	boost::mpl::for_each<ElemList>
+		(GetFluxOfPotential (this, * m_spVertApproxSpace->domain().get (), pot_u,
+			* vertDD.get (), m_pot_scaling));
+	
+//	Loop over the source data
+	for (size_t i_data = 0; i_data < m_vSrcData.size (); i_data++)
+	{
+	//	Get the component indices:
+		FunctionGroup fctGrp;
+		try
+		{
+			fctGrp = u.fct_grp_by_name (m_vSrcData[i_data].fctNames.c_str ());
+		}
+		UG_CATCH_THROW ("NedelecLoopCurrent: Functions '" << m_vSrcData[i_data].fctNames <<
+			"' not all contained in the edge approximation space.");
+		
+	//	Check the functions
+		for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
+			if (u.local_finite_element_id(fctGrp[i_fct]).type () != LFEID::NEDELEC)
+				UG_THROW ("NedelecLoopCurrent: Not a Nedelec-element-based grid function specified for the source.");
+		
+	//	Compute the gradients of the potential
+		number value = m_vSrcData[i_data].I;
+		for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
+			distribute_source_potential (* vertDD.get (), pot_u, * edgeDD.get (),
+				fctGrp[i_fct], value, u);
+	}
 }
 
 /**
@@ -223,6 +252,9 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 	memset (& (in_source.at (0)), 0, in_source.size () * sizeof (char));
 	boost::mpl::for_each<ElemList> (MarkSourceEdges (this, edgeDD, in_source));
 	
+//	Scaling of the potential:
+	value /= m_pot_scaling;
+	
 //	Compute the gradient:
 	std::vector<size_t> vVertInd (1);
 	std::vector<MultiIndex<2> > vEdgeInd (1);
@@ -250,7 +282,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 				UG_THROW ("NedelecLoopCurrent: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
 			nd_pot [i] = src_pot [vVertInd [0]];
 			if ((edge_flag & (2 << i)) != 0)
-				nd_pot [i] += m_pot_scaling;
+				nd_pot [i] += 1.0;
 		}
 		
 		// Compute the gradient:
@@ -553,6 +585,70 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_vector
 	for (size_t i = 0; i < in_source.size (); i++)
 	if (! in_source[i])
 		u [i] = 0;
+}
+
+/*----- Computation of the flux of the potential over the cut -----*/
+
+/**
+ * Computes the flux of the gradient of the potential over the cut
+ * (for one type of elements)
+ */
+template <typename TDomain, typename TAlgebra>
+template <typename TElem>
+void NedelecLoopCurrent<TDomain, TAlgebra>::get_flux_of_pot
+(
+	const domain_type & domain, ///< [in] the domain
+	const pot_vector_type & pot, ///< [in] the potential field
+	const DoFDistribution & vertDD, ///< [in] the vertex DD
+	number & flux ///< [out] the flux to update
+)
+{
+	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	
+//	Get the positions of the grid points:
+	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();
+
+//	Get the 'negative' subset indices
+	SubsetGroup negSsGrp (m_allSsGrp);
+	negSsGrp.remove (m_posSsGrp);
+	
+//	Loop the elements in the subset group:
+	for (size_t i = 0; i < negSsGrp.size (); i++)
+	{
+		int si = negSsGrp [i];
+		iterator e_end = vertDD.template end<TElem> (si);
+		for (iterator elem_iter = vertDD.template begin<TElem> (si);
+			elem_iter != e_end; ++elem_iter)
+		{
+			TElem * pElem = *elem_iter;
+			bool bnd_flag [ref_elem_type::numCorners];
+			
+		//	Check whether we are at the cut
+			if (! LocLaplaceA<TElem>::bnd_corners (pElem, m_cutSsGrp, bnd_flag))
+				continue; // this is not the case
+			
+		//	Get the corner positions:
+			position_type aCorners [ref_elem_type::numCorners];
+			for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
+				aCorners [co] = aaPos [pElem->vertex (co)];
+			
+		//	Assemble the local Laplacian:
+			number loc_A [ref_elem_type::numCorners] [ref_elem_type::numCorners];
+			LocLaplaceA<TElem>::stiffness (pElem, aCorners, loc_A);
+		
+		//	Compute the local contributions to the flux:
+			std::vector<size_t> vVertInd (1);
+			for (size_t i = 0; i < (size_t) ref_elem_type::numCorners; i++)
+			if (bnd_flag [i]) // consider only the corners at the cut
+				for (size_t j = 0; j < (size_t) ref_elem_type::numCorners; j++)
+				{
+					if (vertDD.inner_algebra_indices (pElem->vertex (j), vVertInd) != 1)
+						UG_THROW ("NedelecLoopCurrent: Illegal vertex-centered DoF distribution");
+					flux += loc_A [i] [j] * pot [vVertInd [0]];
+				}
+		}
+	}
 }
 
 } // end namespace Electromagnetism

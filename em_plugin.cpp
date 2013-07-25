@@ -258,8 +258,12 @@ struct Functionality
 							SmartPtr<ILinearOperatorInverse<typename NedelecProject<TDomain, TAlgebra>::pot_vector_type> >
 						)
 					>("Source subsets#Pos. dir. subsets#Cut subsets#Vert. approx. space#Lin. solver for potential")
-				.add_method("compute", static_cast<void (T::*)(SmartPtr<GridFunction<TDomain, TAlgebra> >, const char *)>(&T::compute),
-							"Evaluates the source field", "GridFunction#Function names")
+				.add_method("set", static_cast<void (T::*)(const char *, number)>(&T::set),
+							"Sets the electric current", "Component#Value")
+				.add_method("compute", static_cast<void (T::*)(SmartPtr<GridFunction<TDomain, TAlgebra> >)>(&T::compute),
+							"Evaluates the source field", "GridFunction")
+				.add_method("subsets", static_cast<std::string (T::*)()>(&T::subsets),
+							"Returns the source's subsets", "")
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "NedelecLoopCurrent", tag);
 		}
