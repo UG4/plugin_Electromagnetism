@@ -47,6 +47,15 @@ class NedelecProlongationMatrixHelper
 /// position type in the domain
 	typedef typename TDomain::position_type position_type;
 
+///	computes the local coordinates of a vertex according to the assumption of the regular refinement
+	static void GetRegularLocalCoordinate
+	(
+		const MultiGrid & mg, ///< [in] the grid hierarchy
+		VertexBase * vrt, ///< [in] the vertex
+		TElem * base, ///< [in] the base element (for the local coordinates)
+		MathVector<TElem::dim> & local ///< [out] to save the local coordinates
+	);
+	
 public:
 
 /// assembles the prolongation matrix for one type of the grid elements
@@ -161,7 +170,7 @@ private:
 	
 /// checks the approximation space
 	void check_approximation_space ();
-
+	
 /// assembles the prolongation matrix for one type of the grid elements
 	template <typename TElem>
 	void assemble_prolongation_matrix

@@ -13,6 +13,51 @@ namespace ug{
 namespace Electromagnetism{
 
 /**
+ * Computes the local coordinates of a vertex according to the assumption
+ * of the regular refinement. The local coordinates are computed w.r.t.
+ * a given basis element that should be associated with the parent of
+ * the vertex whose all corners must be corners of the base element.
+ * (Otherwise an exception is thrown.) The vector of the local coordinates
+ * of the given vertex is the arithmetical average of the vectors of the
+ * local coordinates of its parent w.r.t. the base element.
+ *
+ * Acknowledgements to S. Reiter.
+ */
+template <typename TDomain, typename TAlgebra, typename TElem>
+void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::GetRegularLocalCoordinate
+(
+	const MultiGrid & mg, ///< [in] the grid hierarchy
+	VertexBase * v, ///< [in] the vertex
+	TElem * base, ///< [in] the base element (for the local coordinates)
+	MathVector<TElem::dim> & local ///< [out] to save the local coordinates
+)
+{
+//	Get the parent of the vertex (note that this is typically not the 'base')
+	GeometricObject * parent = mg.get_parent (v);
+	
+//	Get the vertices of the parent
+	Grid::vertex_traits::secure_container vrts;
+	((MultiGrid *) &mg)->associated_elements (vrts, parent);
+	size_t n_co = vrts.size ();
+	UG_ASSERT (n_co != 0, "GetRegularLocalCoordinate: No associated vertices.")
+	
+//	Get the reference element for the base
+	const DimReferenceElement<TElem::dim> & rRefElem = ReferenceElementProvider::get<TElem::dim>
+		(geometry_traits<TElem>::REFERENCE_OBJECT_ID);
+	
+//	Average the local coordinates of the vertices
+	local = 0.0;
+	for (size_t co = 0; co < n_co; co++)
+	{
+		int i = GetVertexIndex (base, vrts[co]);
+		if (i < 0)
+			UG_THROW ("GetRegularLocalCoordinate: No (implicit) parent-child relation between the vertex and the base element.");
+		local += rRefElem.corner (i);
+	}
+	local /= n_co;
+}
+
+/**
  * Assembles the prolongation matrix for the DoFs between the edges
  * for one type of the grid elements. (This instantiation works with edges.)
  * To get the total prolongation matrix, the functions for all the types should
@@ -169,30 +214,35 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 			if (n_children == 0)
 				continue;
 			
-		// Get the reference mapping:
-			DimReferenceMapping<dim, WDim> & map = ReferenceMappingProvider::get<dim, WDim> (roid);
+		// Get the corner positions:
 			position_type aCorners [ref_elem_type::numCorners];
 			for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
 				aCorners [co] = aaPos [c_elem->vertex (co)];
-			map.update (aCorners);
 			
 		// Loop over the child elements:
 			for (size_t child = 0; child < n_children; child++)
 			{
-			// Get the fine grid edge and its position in the global coordinates:
-				MathVector<WDim> edge_vec, edge_center;
+			// Get the fine grid edge:
 				EdgeBase * edge = grid.get_child<EdgeBase, TElem> (c_elem,  child);
-				VecSubtract (edge_vec, aaPos [edge->vertex (1)], aaPos [edge->vertex (0)]);
-				VecAdd (edge_center, aaPos [edge->vertex (1)], aaPos [edge->vertex (0)]);
-				edge_center /= 2;
 				
-			// Convert the global position to the local one w.r.t. the coarse grid element:
-				MathVector<ref_elem_type::dim> local;
-				map.global_to_local (local, edge_center);
+			// Get the local coordinates of the edge center w.r.t. the parent element:
+				MathVector<TElem::dim> loc_0, loc_1, loc_center;
+				GetRegularLocalCoordinate (grid, edge->vertex (0), c_elem, loc_0);
+				GetRegularLocalCoordinate (grid, edge->vertex (1), c_elem, loc_1);
+				VecAdd (loc_center, loc_0, loc_1);
+				loc_center /= 2;
+				
+			// Get the length of the edge according to the local coordinates
+				MathVector<WDim> corner_0, corner_1, edge_vec;
+				DimReferenceMapping<dim, WDim> & map = ReferenceMappingProvider::get<dim, WDim> (roid);
+				map.update (aCorners);
+				map.local_to_global (corner_0, loc_0);
+				map.local_to_global (corner_1, loc_1);
+				VecSubtract (edge_vec, corner_1, corner_0);
 				
 			// Get the shapes and assemble the contribution to the interpolation matrix:
 				MathVector<WDim> shape [ref_elem_type::numEdges];
-				NedelecT1_LDisc<TDomain, TElem>::get_shapes (domain, c_elem, aCorners, local, shape);
+				NedelecT1_LDisc<TDomain, TElem>::get_shapes (domain, c_elem, aCorners, loc_center, shape);
 				for (size_t fct = 0; fct < num_fct; fct++)
 				{
 				//	Get the DoFs:
