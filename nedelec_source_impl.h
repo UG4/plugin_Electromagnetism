@@ -114,6 +114,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute
 	boost::mpl::for_each<ElemList>
 		(GetFluxOfPotential (this, * m_spVertApproxSpace->domain().get (), pot_u,
 			* vertDD.get (), m_pot_scaling));
+	m_pot_scaling = - m_pot_scaling;
 	
 //	Loop over the source data
 	for (size_t i_data = 0; i_data < m_vSrcData.size (); i_data++)
@@ -282,7 +283,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 				UG_THROW ("NedelecLoopCurrent: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
 			nd_pot [i] = src_pot [vVertInd [0]];
 			if ((edge_flag & (2 << i)) != 0)
-				nd_pot [i] += 1.0;
+				nd_pot [i] += 1.0; // the jump of the potential at the cut
 		}
 		
 		// Compute the gradient:
