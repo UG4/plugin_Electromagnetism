@@ -154,7 +154,7 @@ void NedelecProject<TDomain, TAlgebra>::compute_div
 	
 //	Compute the weak divergence:
 	DenseVector<VariableArray1<number> > charge;
-	div = 0.0;
+	div.set (0.0);
 	assemble_div (* domain.get(), * edgeDD.get(), u, u_fct, * vertDD.get(), div, charge);
 }
 
@@ -174,7 +174,7 @@ void NedelecProject<TDomain, TAlgebra>::init_aux_solver
 	m_aux_cor.resize (aux_num_ind);
 	
 //	Assemble the matrix of the auxiliary problem:
-	m_aux_cor = 0.0;
+	m_aux_cor.set (0.0);
 	m_auxLaplaceOp->set_level (grid_lev);
 	m_auxLaplaceOp->init (m_aux_cor);
 
@@ -261,10 +261,10 @@ void NedelecProject<TDomain, TAlgebra>::compute_DVFs
 		
 	// 1. Compose the right-hand side:
 		m_auxLaplaceRHS->set_base_conductor (i);
-		m_aux_rhs = 0.0;
+		m_aux_rhs.set (0.0);
 		m_auxLaplaceAss->adjust_solution (m_aux_rhs, vertDD);
 	// 2. Solve the auxiliary system:
-		*phi = 0.0;
+		phi->set (0.0);
 		m_auxLaplaceAss->adjust_solution (*phi, vertDD);
 		m_potSolver->apply (*phi, m_aux_rhs);
 	}
@@ -331,8 +331,8 @@ void NedelecProject<TDomain, TAlgebra>::project_func
 {
 //--- Compute the correction due to the divergence:
 
-	m_aux_cor = 0.0;
-	m_aux_rhs = 0.0;
+	m_aux_cor.set (0.0);
+	m_aux_rhs.set (0.0);
 	
 	DenseVector<VariableArray1<number> > charge;
 	
@@ -491,7 +491,7 @@ void NedelecProject<TDomain, TAlgebra>::assemble_div
 	if (charge.size () != 0)
 		charge = 0.0;
 	
-	div = 0;
+	div.set (0.0);
 //	Compute the divergence for all the types of the elements:
 	boost::mpl::for_each<ElemList> (WeakDiv (this, domain, edgeDD, u, fct, vertDD, div));
 //	Clear the entries at all the points in the closure of the conductors:

@@ -218,7 +218,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute_potential
 	pot_u.resize (aux_num_ind);
 	
 //	Assemble the matrix of the auxiliary problem:
-	pot_u = 0.0;
+	pot_u.set (0.0);
 	m_auxLaplaceOp->set_level (grid_lev);
 	m_auxLaplaceOp->init_op_and_rhs (pot_rhs);
 	
@@ -344,7 +344,7 @@ bool NedelecLoopCurrent<TDomain, TAlgebra>::LocLaplaceA<TElem>::bnd_corners
 	bool bnd = false;
 	
 	for (size_t i = 0; i < (size_t) numCorners; i++)
-		if (bnd_flag [i] =  bndGrp.contains (pIsh->get_subset_index (pElem->vertex (i))))
+		if ((bnd_flag [i] =  bndGrp.contains (pIsh->get_subset_index (pElem->vertex (i)))))
 			bnd = true;
 	return bnd;
 }

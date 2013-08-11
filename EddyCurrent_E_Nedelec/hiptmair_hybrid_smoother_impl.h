@@ -244,7 +244,7 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
 		m_pPotCorIm = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
 	
 	// Initialize the subordinated smoother for the vertex dof:
-		*m_pPotCorRe = 0;
+		m_pPotCorRe->set (0.0);
 		if (! m_spVertSmoother->init (m_spPotMat, *m_pPotCorRe))
 			UG_THROW (name() << ", init: Failed to initialize the subordinated vertex-based smoother.");
 		
@@ -288,7 +288,7 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::collect_edge_defect
 {
 	size_t N_edges = m_vEdgeInfo.size ();
 	
-	potDefRe = 0; potDefIm = 0;
+	potDefRe.set (0.0); potDefIm.set (0.0);
 	
 	// Loop over the edges:
 	for (size_t edge = 0; edge < N_edges; edge++)
@@ -421,7 +421,7 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 		if (! m_spEdgeSmoother->apply_update_defect (c, auxEdgeDef))
 			return false;
 	}
-	else c = 0.0;
+	else c.set (0.0);
 	
 	if (! m_bSkipVertex)
 	{
