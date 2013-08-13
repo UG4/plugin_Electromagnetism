@@ -174,7 +174,7 @@ public:
  * that transforms \f$ \mathbf{rot} \, \mathbf {E} \f$ to the value.
  *
  * \tparam TImpl	implementation of the class (should be derived from EddyCurrentCurlEDependentCmpUserData)
- * \tparam ReIm		whether the UserData depends on \f$ \mathrm{Re} \mathbf{rot} \, \mathbf {E} \f$ or \f$ \mathrm{Im} \mathbf{rot} \, \mathbf {E} \f$
+ * \tparam ReIm		whether the UserData depends on \f$ \mathrm{Re} \, \mathbf{rot} \, \mathbf {E} \f$ or \f$ \mathrm{Im} \, \mathbf{rot} \, \mathbf {E} \f$
  * \tparam TGFunc	grid function type
  */
 template <typename TImpl, size_t ReIm, typename TGFunc>
@@ -289,11 +289,11 @@ public:
 
 /**
  * UserData based class for the computation of the real part of the magnetic field
- * \f$ \mathbf{B} = \frac{i}{\omega} \mathrb{rot} \, \mathbf{E} =
- * - \frac{1}{\omega} \mathrb{rot} \, \mathrm{Re} \mathbf{E}
- * + i \frac{1}{\omega} \mathrb{rot} \, \mathrm{Im} \mathbf{E} \f$,
- * i.e. the vector field \f$ \mathrm{Re} \mathbf{B} = - \frac{1}{\omega}
- * \mathrb{rot} \, \mathrm{Im} \mathbf{E} \f$.
+ * \f$ \mathbf{B} = \frac{i}{\omega} \mathbf{rot} \, \mathbf{E} =
+ * - \frac{1}{\omega} \mathbf{rot} \, \mathrm{Re} \, \mathbf{E}
+ * + i \frac{1}{\omega} \mathbf{rot} \, \mathrm{Im} \, \mathbf{E} \f$,
+ * i.e. the vector field \f$ \mathrm{Re} \, \mathbf{B} = - \frac{1}{\omega}
+ * \mathbf{rot} \, \mathrm{Im} \, \mathbf{E} \f$.
  */
 template <typename TGridFunc>
 class EddyCurrentReBofEUserData
@@ -323,7 +323,7 @@ public:
 		m_omega (omega)
 	{};
 
-///	\f$ \mathrm{Re} \mathbf{B} = - \frac{1}{\omega} * \mathrb{rot} \, \mathrm{Im} \mathbf{E} \f$
+///	\f$ \mathrm{Re} \, \mathbf{B} = - \frac{1}{\omega} * \mathbf{rot} \, \mathrm{Im} \, \mathbf{E} \f$
 	inline void get_value (const MathVector<dim> & ImCurlE, MathVector<dim> & ReB) const
 	{
 		ReB = ImCurlE;
@@ -333,11 +333,11 @@ public:
 
 /**
  * UserData based class for the computation of the imaginary part of the magnetic
- * field \f$ \mathbf{B} = \frac{i}{\omega} \mathrb{rot} \, \mathbf{E} =
- * - \frac{1}{\omega} \mathrb{rot} \, \mathrm{Re} \mathbf{E}
- * + i \frac{1}{\omega} \mathrb{rot} \, \mathrm{Im} \mathbf{E} \f$,
- * i.e. the vector field \f$ \mathrm{Im} \mathbf{B} = \frac{1}{\omega}
- * \mathrb{rot} \, \mathrm{Re} \mathbf{E} \f$.
+ * field \f$ \mathbf{B} = \frac{i}{\omega} \mathbf{rot} \, \mathbf{E} =
+ * - \frac{1}{\omega} \mathbf{rot} \, \mathrm{Re} \, \mathbf{E}
+ * + i \frac{1}{\omega} \mathbf{rot} \, \mathrm{Im} \, \mathbf{E} \f$,
+ * i.e. the vector field \f$ \mathrm{Im} \, \mathbf{B} = \frac{1}{\omega}
+ * \mathbf{rot} \, \mathrm{Re} \, \mathbf{E} \f$.
  */
 template <typename TGridFunc>
 class EddyCurrentImBofEUserData
@@ -367,7 +367,7 @@ public:
 		m_omega (omega)
 	{};
 
-///	\f$ \mathrm{Im} \mathbf{B} = \frac{1}{\omega} * \mathrb{rot} \, \mathrm{Re} \mathbf{E} \f$
+///	\f$ \mathrm{Im} \, \mathbf{B} = \frac{1}{\omega} * \mathbf{rot} \, \mathrm{Re} \, \mathbf{E} \f$
 	inline void get_value (const MathVector<dim> & ReCurlE, MathVector<dim> & ImB) const
 	{
 		ImB = ReCurlE;

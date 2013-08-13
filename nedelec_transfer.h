@@ -22,7 +22,6 @@ namespace Electromagnetism{
 /**
  * Helper class for assembling the prolongation matrix
  */
-///\{
 template <typename TDomain, typename TAlgebra, typename TElem>
 class NedelecProlongationMatrixHelper
 {
@@ -68,6 +67,10 @@ public:
 		std::vector<bool> & vIsRestricted ///< [out] whether a coarse grid DoF has children
 	);
 };
+
+/**
+ * Helper class for assembling the prolongation matrix: Instantiation for edges.
+ */
 template <typename TDomain, typename TAlgebra>
 class NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>
 {
@@ -95,10 +98,9 @@ public:
 		std::vector<bool> & vIsRestricted ///< [out] whether a coarse grid DoF has children
 	);
 };
-///\}
 
 /**
- * Class of the prolongation and the restriction of the Nedelec DoFs.
+ * \brief Class of the prolongation and the restriction of the Nedelec DoFs.
  *
  * The prolongation is based on the transformation of the Nelelec DoF values
  * into the vector-valued functions using the basis Nedelec (Whitney-1) shape
