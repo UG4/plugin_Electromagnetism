@@ -109,6 +109,26 @@ public:
  *
  * The restriction is the transposed prolongation.
  *
+ * Note the special case of the "projected boundaries", i.e. when after the
+ * regular refinement, new vertices on the boundary sides of the coarse grid
+ * elements (or anywhere else) are moved to the actual geometric boundary. In
+ * this case, this implementation of the transfer operators works as if it
+ * would be applied before moving the new fine grid vertices, i.e. just after
+ * the regular refinement. So, the procedure can be considered as "refine
+ * regularily - transfer - project the boundary". Due to this approach, the
+ * restricted defect belongs to the image of the coarse grid matrix, so that
+ * all the systems in the multigrid hierarchy are solvable. Otherwise this
+ * may not be the case, cf. O. Sterz. Modellierung und Numerik zeitharmonischer
+ * Wirbelstromprobleme in 3D. PhD thesis, 2003.
+ *
+ * To this end, the evaluations of the Nedelec (Whitney-1) shape functions are
+ * performed not according to the geometrical (global) coordinates of the
+ * new vertices, but according to their local coordinates in the full-dim.
+ * parent element, whereas these local coordinates are computed using averaging
+ * of the local coordinates of the corresponding corners. Thus this local
+ * coordinates correspond to the positions "before the moving" and not to
+ * the actual positions in the space.
+ *
  * For grid functions having several Nedelec DoFs on every edge, the
  * prolongation and the restriction is performed separately for every
  * subfunction.
