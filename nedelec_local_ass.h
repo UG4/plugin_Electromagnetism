@@ -18,14 +18,52 @@
 #include "lib_disc/reference_element/reference_element.h"
 #include "lib_disc/local_finite_element/lagrange/lagrangep1.h"
 
+// some additional Boost-C++ headers
+#include <boost/mpl/transform_view.hpp>
+#include <boost/mpl/fold.hpp>
+#include <boost/mpl/min_max.hpp>
+
 namespace ug{
 namespace Electromagnetism{
 
 /// \ingroup lib_disc_elem_disc
 /// @{
 
-// ToDo: Replace this with a central definition
-#define ROT_ROT_MAX_EDGES 12 // maximum number of edges of a grid element
+/// Auxiliary class for counting the edges of all element in a list
+/**
+ * This class gets the maximum number of edges over all the geometric
+ * elements in a given list. The computation is performed at the compile time
+ * so that the result (element_list_traits<ElemList>::max_edges) is a static
+ * constant.
+ *
+ * \tparam ElemList		list of geometric elements
+ */
+template <typename ElemList>
+class element_list_traits
+{
+///	Metafunction class for counting edges in an element type
+	struct mfc_num_edges_of_elem
+	{
+		template <typename TElem> class apply
+		{
+			typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+			
+		public:
+			typedef boost::mpl::size_t<ref_elem_type::numEdges> type; ///< returned type (i.e. result of the metafunction)
+		};
+	};
+	
+public:
+	
+/// Max. number of edges of the elements in the element list (as a constant)
+	static const size_t max_edges
+		= boost::mpl::fold
+			<
+				boost::mpl::transform_view<ElemList, mfc_num_edges_of_elem>,
+				boost::mpl::size_t<0>,
+				boost::mpl::max<boost::mpl::_1,boost::mpl::_2>
+			>::type::value;
+};
 
 /// Tool kit for the Whitney-1 (Nedelec) based FE discretization of the rot-rot operators
 /**
@@ -114,6 +152,9 @@ class NedelecT1_LDisc
 /// total number of the edges
 	static const size_t numEdges = ref_elem_type::numEdges;
 	
+/// max. number of the edges of the full-dimensional elements in the domain
+	static const size_t maxNumEdges = element_list_traits<typename domain_traits<WDim>::DimElemList>::max_edges;
+	
 	private:
 /// computes the gradients of the Whitney-0 (Lagrange P1) shape functions
 	static void compute_W0_grads
@@ -137,8 +178,8 @@ class NedelecT1_LDisc
 		const TDomain & domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
-		number S [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES], /**< [out] local stiffness matrix */
-		number M [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES] /**< [out] local mass matrix */
+		number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
+		number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
 	);
 	
 ///	assembles the discrete weak div operator
@@ -195,6 +236,7 @@ class NedelecT1_LDisc<TDomain, Edge>
 	static const int dim = ref_elem_type::dim;
 	static const size_t numCorners = ref_elem_type::numCorners;
 	static const size_t numEdges = ref_elem_type::numEdges;
+	static const size_t maxNumEdges = element_list_traits<typename domain_traits<WDim>::DimElemList>::max_edges;
 	
 	public:
 	static void local_stiffness_and_mass
@@ -202,8 +244,8 @@ class NedelecT1_LDisc<TDomain, Edge>
 		const TDomain & domain, /**< [in] the domain */
 		Edge * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
-		number S [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES], /**< [out] local stiffness matrix */
-		number M [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES] /**< [out] local mass matrix */
+		number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
+		number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
 	)
 	{
 		UG_THROW ("Whitney-1 (Nedelec) shape functions are not defined for 1d grid elements.");

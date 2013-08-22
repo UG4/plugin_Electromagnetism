@@ -104,13 +104,13 @@ void NedelecT1_LDisc<TDomain, TElem>::local_stiffness_and_mass
 	const TDomain & domain, /** [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
-	number S [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES], /**< [out] local stiffness matrix */
-	number M [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES] /**< [out] local mass matrix */
+	number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
+	number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
 )
 {
 // clear the local matrices:
-	memset (S, 0, ROT_ROT_MAX_EDGES * ROT_ROT_MAX_EDGES * sizeof (number));
-	memset (M, 0, ROT_ROT_MAX_EDGES * ROT_ROT_MAX_EDGES * sizeof (number));
+	memset (S, 0, maxNumEdges * maxNumEdges * sizeof (number));
+	memset (M, 0, maxNumEdges * maxNumEdges * sizeof (number));
 	
 // get volume of the grid element
 	number V = ElementSize<ref_elem_type, WDim> (corners);

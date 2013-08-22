@@ -79,11 +79,14 @@ private:
 ///	domain type
 	typedef typename base_type::domain_type domain_type;
 
+///	position type
+	typedef typename base_type::position_type position_type;
+	
 ///	world dimension
 	static const int dim = base_type::dim;
 
-///	position type
-	typedef typename base_type::position_type position_type;
+/// max. number of the edges of the full-dimensional elements in the domain
+	static const size_t maxNumEdges = element_list_traits<typename domain_traits<dim>::DimElemList>::max_edges;
 
 public:
 ///	constructor
@@ -216,9 +219,9 @@ private:
 private:
 	
 /// local stiffness matrix of the rot-rot operator
-	number m_rot_rot_S [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES];
+	number m_rot_rot_S [maxNumEdges][maxNumEdges];
 /// local mass matrix of the rot-rot operator
-	number m_rot_rot_M [ROT_ROT_MAX_EDGES][ROT_ROT_MAX_EDGES];
+	number m_rot_rot_M [maxNumEdges][maxNumEdges];
 
 ///	the magnetic permeability in the subdomain
 	number m_permeability;
