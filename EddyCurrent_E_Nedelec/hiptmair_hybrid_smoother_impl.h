@@ -15,15 +15,12 @@ namespace Electromagnetism{
  *
  * \tparam TDomain	type of domain in the class
  * \tparam TAlgebra	type of algebra in the class
- *
- * \param[in] pEdgeDD	the current edge-centered DoF distribution of the grid functions
- * \param[in] pVertDD	the currend vertex-centered DoF distribution of the grid functions
  */
 template <typename TDomain, typename TAlgebra>
 void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspondence
 (
-	const DoFDistribution * pEdgeDD,
-	const DoFDistribution * pVertDD
+	const DoFDistribution * pEdgeDD, ///< edge-centered DoF distribution of the grid functions
+	const DoFDistribution * pVertDD ///< vertex-centered DoF distribution of the grid functions
 )
 {
 	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iter;
@@ -171,15 +168,12 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::compute_GtMG ()
  *
  * \tparam TDomain	type of domain in the class
  * \tparam TAlgebra	type of algebra in the class
- *
- * \param[in] pEdgeDD	the current edge-centered DoF distribution of the grid functions
- * \param[in] pVertDD	the currend vertex-centered DoF distribution of the grid functions
  */
 template <typename TDomain, typename TAlgebra>
 void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::compute_potential_matrix
 (
-	const DoFDistribution * pEdgeDD,
-	const DoFDistribution * pVertDD
+	const DoFDistribution * pEdgeDD, ///< current edge-centered DoF distribution of the grid functions
+	const DoFDistribution * pVertDD ///< currend vertex-centered DoF distribution of the grid functions
 )
 {
 	size_t N_edges = pEdgeDD->num_indices ();
@@ -273,17 +267,13 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
  * Computes the defect in the potential space: \f$ d_{pot} = G^T d \f$, where
  * \f$ d \f$ is the defect of the original system. This is done only for the
  * 'conductive' vertices. At the other vertices, \f$ d_{pot} \f$ is set to 0.
- *
- * \param[in]	d			the original (edge-centered) defect
- * \param[out]	potDefRe	real part of \f$ d_{pot} \f$
- * \param[out]	potDefIm	imaginary part of \f$ d_{pot} \f$
  */
 template <typename TDomain, typename TAlgebra>
 void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::collect_edge_defect
 (
-	const vector_type & d,
-	pot_vector_type & potDefRe,
-	pot_vector_type & potDefIm
+	const vector_type & d, ///< original (edge-centered) defect
+	pot_vector_type & potDefRe, ///< real part of \f$ d_{pot} \f$
+	pot_vector_type & potDefIm ///< imaginary part of \f$ d_{pot} \f$
 )
 {
 	size_t N_edges = m_vEdgeInfo.size ();
@@ -314,17 +304,13 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::collect_edge_defect
 
 /**
  * Updates the edge-centered correction: \f$ c := c_{edge} + G c_{pot} \f$.
- *
- * \param[in]	potCorRe	real part of \f$ c_{pot} \f$
- * \param[in]	potCorIm	imaginary part of \f$ c_{pot} \f$
- * \param[out]	c			the final, edge-centered correction
  */
 template <typename TDomain, typename TAlgebra>
 void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::distribute_vertex_correction
 (
-	pot_vector_type & potCorRe,
-	pot_vector_type & potCorIm,
-	vector_type & c
+	pot_vector_type & potCorRe, ///< real part of the potential correction \f$ c_{pot} \f$
+	pot_vector_type & potCorIm, ///< imaginary part of the potential correction \f$ c_{pot} \f$
+	vector_type & c ///< final (edge-centered) correction
 )
 {
 	size_t N_edges = m_vEdgeInfo.size ();

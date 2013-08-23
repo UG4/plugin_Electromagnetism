@@ -1,4 +1,4 @@
-/**
+/*
  * nedelec_project.h - classes for the projection of the functions based
  * on the Nedelec element to the space of the divergence-free functions.
  * 
@@ -29,8 +29,11 @@
 namespace ug{
 namespace Electromagnetism{
 
+/// Projection procedure class
 /**
- * Class for the projection procedure:
+ * This class implements the procedure for projection of vector fields
+ * in the Nedelec-element representation to the divergence-free space
+ * and elimination of the non-zero potentials of conductors.
  */
 template <typename TDomain, typename TAlgebra>
 class NedelecProject

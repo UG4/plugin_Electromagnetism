@@ -16,9 +16,10 @@
 namespace ug{
 namespace Electromagnetism{
 
-/** computes the gradients of the Whitney-0 (Lagrange P1) shape functions
+/**
+ * Computes the gradients of the Whitney-0 (Lagrange P1) shape functions.
  *
- * Note that we assume that the reference mapping is linear: The Nedelec
+ * \remark We assume that the reference mapping is linear: The Nedelec
  * elements are only implemented for simplices.
  */
 template <typename TDomain, typename TElem>
@@ -35,11 +36,11 @@ void NedelecT1_LDisc<TDomain, TElem>::compute_W0_grads
 // Whitney-0 shapes:
 	const W0_shapes_type & W0_shapes = Provider<W0_shapes_type>::get ();
 	
-///	reference mapping
+// Reference mapping
 	ReferenceMapping<ref_elem_type, WDim> ref_mapping;
 	ref_mapping.update (corners);
 
-/// compute the gradients
+// Compute the gradients
 
 	MathVector<dim> local_pos;
 	MathVector<dim> local_grad [numCorners];
@@ -90,12 +91,14 @@ void NedelecT1_LDisc<TDomain, TElem>::get_edge_corners
 	}
 }
 
-/** assembles the stiffness and mass matrices of the rot-rot operator
+/**
+ * Assembles the stiffness and mass matrices of the rot-rot operator
  *
  * The matrices are not premultiplied by any physical factors:
  * these factors are assumed to be constant over the element and must
  * be applied later.
- * Note that we assume that the reference mapping is linear: The Nedelec
+ *
+ * \remark We assume that the reference mapping is linear: The Nedelec
  * elements are only implemented for simplices.
  */
 template <typename TDomain, typename TElem>
@@ -162,8 +165,7 @@ void NedelecT1_LDisc<TDomain, TElem>::local_stiffness_and_mass
 		for (size_t e_2 = e_1 + 1; e_2 < numEdges; e_2++) M[e_1][e_2] = M[e_2][e_1];
 }
 
-/** assembles the discrete weak div operator
- *
+/**
  * This function assembles the local weak divergence operator \f$ \mathbf{B} \f$:
  * \f[
  *  \mathbf{B}_{v,e} = - \int_T w^{(1)}_e \cdot \mathbf{grad} w^{(0)}_v \, dx,
@@ -212,9 +214,10 @@ void NedelecT1_LDisc<TDomain, TElem>::local_div_matrix
 			B[v][e] = VecDot (T_w1_at_center[e], grad_w0[v]);
 }
 
-/** computes the Nedelec shapes at a given point
+/**
+ * Computes the Nedelec shapes at a given point
  * 
- * Note that if the dimensionality of the given element is lower than that of
+ * \remark If the dimensionality of the given element is lower than that of
  * the world then the shapes are projected to the element.
  */
 template <typename TDomain, typename TElem>
@@ -248,7 +251,8 @@ void NedelecT1_LDisc<TDomain, TElem>::get_shapes
 	}
 }
 
-/** computes of the values of the grid functions
+/**
+ * Computes of the values of the grid functions.
  *
  * The values of the DoFs are scalar, but the resulting function is a vector field.
  */
@@ -295,9 +299,10 @@ void NedelecT1_LDisc<TDomain, TElem>::interpolate
 	}
 }
 
-/** computes the curl of the grid functions
+/**
+ * Computes the curl of the grid functions
  *
- * Note that curl is constant over the element.
+ * \remark Note that curl is constant over the element.
  * 
  * In 2d, the value of the curl should have the form \f$(0, 0, z)\f$. But
  * to keep the dimensionality of the output, it is represented as \f$(z, 0)\f$.

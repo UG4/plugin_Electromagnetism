@@ -1,4 +1,4 @@
-/**
+/*
  * The hybrid smoother proposed by R. Hiptmair for the discretizations
  * based on the Nedelec element. The smoother is implemented for the
  * discretizations of the time-harmonic equations.
@@ -85,11 +85,10 @@ private:
 /// Vertex-centered matrix for the potential
 	SmartPtr<pot_matrix_operator_type> m_spPotMat;
 	
-/// Vertex-centered grid functions for potential corrections (these are GridFunction to allow geometry-dependent smoothers)
-///\{
+/// Vertex-centered grid function for the Re-part of potential corrections (this is a GridFunction to allow geometry-dependent smoothers)
 	pot_vector_type * m_pPotCorRe;
+/// Vertex-centered grid function for the Im-part of potential corrections (this is a GridFunction to allow geometry-dependent smoothers)
 	pot_vector_type * m_pPotCorIm;
-///\}
 	
 /// DoF distribution for the Nedelec elements
 	SmartPtr<DoFDistribution> m_spEdgeDD;
@@ -111,15 +110,14 @@ private:
 ///	Dirichlet boundary
 	SmartPtr<EMDirichlet<TDomain, TAlgebra> > m_spDirichlet;
 	
-/// Storage for the information about the edge-vertex interconnections
-/// \{
+/// Structure of the storage for the information about the edge-vertex interconnections
 	struct tEdgeInfo
 	{
 		size_t vrt_index [2]; ///< vertex dof's of the beginning and the end of the edge
 		bool Dirichlet; ///< whether this is a part of a Dirichlet boundary
 	};
+/// Storage for the information about the edge-vertex interconnections
 	VariableArray1<tEdgeInfo> m_vEdgeInfo;
-/// \}
 
 /// Flags of the 'conductive' vertices:
 	VariableArray1<bool> m_vConductiveVertex;
@@ -221,15 +219,15 @@ private: // Auxiliary functions:
 ///	Computes the matrix for the smoother in the potential space and marks the "conductive nodes"
 	void compute_potential_matrix
 	(
-		const DoFDistribution * pEdgeDD, ///< ptr to the DoF distribution for the edge-centered grid func.
-		const DoFDistribution * pVertDD ///< ptr to the DoF distribution for the vertex-centered grid func.
+		const DoFDistribution * pEdgeDD, ///< edge-centered DoF distribution of the grid functions
+		const DoFDistribution * pVertDD ///< vertex-centered DoF distribution of the grid functions
 	);
 
 /// Gets the correspondence between the edges and the vertices
 	void get_edge_vert_correspondence
 	(
-		const DoFDistribution * pEdgeDD, ///< ptr to the DoF distribution for the edge-centered grid func.
-		const DoFDistribution * pVertDD ///< ptr to the DoF distribution for the vertex-centered grid func.
+		const DoFDistribution * pEdgeDD, ///< edge-centered DoF distribution of the grid functions
+		const DoFDistribution * pVertDD ///< vertex-centered DoF distribution of the grid functions
 	);
 
 /// Computes the product \f$ G^T M^{(1)}_h G \f$
@@ -238,7 +236,7 @@ private: // Auxiliary functions:
 /// Computes the vertex-centered defect \f$ d_{pot} = G^T d \f$
 	void collect_edge_defect
 	(
-		const vector_type & d, ///< the original (edge-centered) defect
+		const vector_type & d, ///< original (edge-centered) defect
 		pot_vector_type & potDefRe, ///< real part of \f$ d_{pot} \f$
 		pot_vector_type & potDefIm ///< imaginary part of \f$ d_{pot} \f$
 	);
@@ -246,9 +244,9 @@ private: // Auxiliary functions:
 /// Adds the vertex-centered correction to the edge-centered one:
 	void distribute_vertex_correction
 	(
-		pot_vector_type & potCorRe, ///< real part of the potential correction
-		pot_vector_type & potCorIm, ///< imaginary part of the potential correction
-		vector_type & c ///< the final (edge-centered) correction
+		pot_vector_type & potCorRe, ///< real part of the potential correction \f$ c_{pot} \f$
+		pot_vector_type & potCorIm, ///< imaginary part of the potential correction \f$ c_{pot} \f$
+		vector_type & c ///< final (edge-centered) correction
 	);
 
 }; // class TimeHarmonicNedelecHybridSmoother

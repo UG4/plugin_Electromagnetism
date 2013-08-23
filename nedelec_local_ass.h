@@ -100,6 +100,7 @@ public:
  * The computation of the stiffness matrix is exact. (The integrand is a linear function.)
  * But the computation of the mass matrix is implemented by an inexact quadrature formula.
  *
+ * \remark
  * Note that the definition of the Whitney-1 function depends on the ordering of
  * the nodes in the element. More precisely, for a different ordering, the shape
  * function \f$w^{(1)}_e\f$ may have a different sign. Thus, the ordering should

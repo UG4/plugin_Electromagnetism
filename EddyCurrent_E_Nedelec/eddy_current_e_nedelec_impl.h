@@ -46,13 +46,13 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_setting
 // assembling
 ////////////////////////////////////////////////////////////////////////////////
 
-// prepares the loop over the elements: checks whether the imports are set, ...
+/// prepares the loop over the elements: checks whether the parameters are set, ...
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element_loop
 (
-	ReferenceObjectID roid, // only elements with this roid are looped over
-	int si // and only in this subdomain
+	ReferenceObjectID roid, ///< only elements with this roid are looped over
+	int si ///< and only in this subdomain
 )
 {
 //	Get the data for the subset:
@@ -70,7 +70,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element_loop
 	}
 }
 
-// finishes the loop over the elements: clear the source
+/// finalizes the loop over the elements: clear the source
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::finish_element_loop ()
@@ -78,14 +78,14 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::finish_element_loop ()
 	m_pSsJG = NULL;
 }
 
-// prepares a given element for assembling: computes the discretization of the rot-rot operator
+/// prepares a given element for assembling: computes the discretization of the rot-rot operator
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element
 (
-	const LocalVector & u, // local solution at the dofs associated with elem
-	GeometricObject * elem, // element to prepare
-	const position_type vCornerCoords [] // coordinates of the corners of the element
+	const LocalVector & u, ///< local solution at the dofs associated with elem
+	GeometricObject * elem, ///< element to prepare
+	const position_type vCornerCoords [] ///< coordinates of the corners of the element
 )
 {
 /* BEGIN code essential for the numerics */
@@ -98,7 +98,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element
 /* END code essential for the numerics */
 }
 
-// compose the local stiffness matrix
+/// composes the local stiffness matrix
 /**
  * This function composes the local stiffness matrix of the stationary problem
  * by combining the stiffness and the mass matrix of the discretization
@@ -134,9 +134,9 @@ template<typename TDomain, typename TAlgebra>
 template<size_t numEdges>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_elem_stiffness
 (
-	number perm, // the magnetic permeability
-	number cond, // the electric conductivity
-	number S [2][numEdges] [2][numEdges] // for the composed matrix
+	number perm, ///< the magnetic permeability
+	number cond, ///< the electric conductivity
+	number S [2][numEdges] [2][numEdges] ///< for the composed matrix
 )
 {
 /* BEGIN code essential for the numerics */
@@ -167,7 +167,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_elem_stiffness
 /* END code essential for the numerics */
 }
 
-// transfer the local stiffness matrix to the global discretization
+/// transfers the precomputed local stiffness matrix to the global discretization
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_JA_elem
@@ -194,7 +194,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_JA_elem
 		}
 }
 
-// compute the right-hand side due to the generator currents
+/// computes the right-hand side due to the generator currents
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem
@@ -236,7 +236,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem
 /* END code essential for the numerics */
 }
 
-// compute the local defect and transfer it to the global discretization
+/// computes the local defect and transfer it to the global discretization
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_dA_elem
@@ -245,8 +245,11 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_dA_elem
 )
 {}
 
-// This is a stationary problem, so there is no mass matrix in this sence.
-// For this, the following two functions do nothing.
+/// computes the mass matrix of a time-dependent problem
+/**
+ * This is a stationary problem, so there is no mass matrix in this sence.
+ * For this, the following function does nothing.
+ */
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_JM_elem
@@ -254,6 +257,12 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_JM_elem
 	LocalMatrix & J, const LocalVector & u, GeometricObject * elem, const position_type vCornerCoords []
 )
 {}
+
+/// computes the mass part of the defect of a time-dependent problem
+/**
+ * This is a stationary problem, so there is no mass matrix in this sence.
+ * For this, the following function does nothing.
+ */
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_dM_elem
@@ -266,7 +275,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_dM_elem
 //	register assembling functions
 ////////////////////////////////////////////////////////////////////////////////
 
-// register the local assembler functions for all the elements and dimensions
+/// registers the local assembler functions for all the elements and dimensions
 template<typename TDomain, typename TAlgebra>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_all_loc_discr_funcs ()
 {
@@ -277,7 +286,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_all_loc_discr_funcs ()
 	boost::mpl::for_each<ElemList> (RegisterLocalDiscr (this));
 }
 
-// register the local assembler functions for a given element
+/// registers the local assembler functions for a given element
 template<typename TDomain, typename TAlgebra>
 template<typename TElem> // the element to register for
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_loc_discr_func ()
@@ -299,7 +308,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_loc_discr_func ()
 //	obtaining the parameters
 ////////////////////////////////////////////////////////////////////////////////
 
-// adds a generator current item \f$ \mathbf{J}_{G,h} \f$ to the discretization
+/// adds a generator current item \f$ \mathbf{J}_{G,h} \f$ to the discretization
 template<typename TDomain, typename TAlgebra>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::set_generator_current
 (
@@ -371,7 +380,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::set_generator_current
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//	constructor
+///	class constructor
 ////////////////////////////////////////////////////////////////////////////////
 template<typename TDomain, typename TAlgebra>
 EddyCurrent_E_Nedelec<TDomain,TAlgebra>::

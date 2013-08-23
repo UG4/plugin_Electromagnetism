@@ -1,4 +1,4 @@
-/**
+/*
  * Implementation of the functions for the Dirichlet boundary conditions
  * for the Nedelec-based discretizations of the rot-rot operator.
  *

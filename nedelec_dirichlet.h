@@ -1,4 +1,4 @@
-/**
+/*
  * Dirichlet boundary conditions for the rot-rot-discretizations based on the
  * Nedelec-type-1 elements (the Whitney-1 forms).
  *
@@ -28,7 +28,7 @@
 namespace ug{
 namespace Electromagnetism{
 
-// Dirichlet BC for a rot-rot operator
+/// Dirichlet BC for a rot-rot operator
 /**
  * This class implements a Dirichlet boundary condition for the rot-rot operator.
  * The boundary condition has the form
@@ -47,42 +47,45 @@ namespace Electromagnetism{
  * the component is mentioned in the object of this class. For the components
  * that are not explicitly mentioned in the "add" functions, zero
  * Dirichlet values are imposed (so called "implicit specification").
+ *
+ * \tparam TDomain	domain type
+ * \tparam TAlgebra	algebra type
  */
 template <typename TDomain, typename TAlgebra>
 class NedelecDirichletBC
 	: public EMDirichlet<TDomain, TAlgebra>
 {
 public:
-	///	Base type
+	///	base type
 		typedef IDomainConstraint<TDomain, TAlgebra> base_type;
 		
-	/// This type
+	/// this type
 		typedef NedelecDirichletBC<TDomain, TAlgebra> this_type;
 
-	///	Type of domain
+	///	type of domain
 		typedef TDomain domain_type;
 
-	///	World dimension
+	///	world dimension
 		static const int dim = domain_type::dim;
 
-	///	Type of position coordinates (e.g. position_type)
+	///	type of position coordinates (e.g. position_type)
 		typedef typename domain_type::position_type position_type;
 
-	///	Type of algebra
+	///	type of algebra
 		typedef TAlgebra algebra_type;
 
-	///	Type of algebra matrix
+	///	type of algebra matrix
 		typedef typename algebra_type::matrix_type matrix_type;
 
-	///	Type of algebra vector
+	///	type of algebra vector
 		typedef typename algebra_type::vector_type vector_type;
 	
 private:
-	/// Iterator over edges
+	/// iterator over edges
 		typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
 	
 public:
-	///	Constructor
+	///	class constructor
 		NedelecDirichletBC
 		(
 			const char * funcNames ///< [in] names of the functions for the BC
@@ -90,22 +93,20 @@ public:
 		:	m_vDirichletFunc (TokenizeString (funcNames))
 		{};
 		
-	/// Adds a zero Dirichlet value on a subset
+	/// adds a zero Dirichlet value on a subset
 		void add_0 (const char * subsets);
 	
-	/// Adds a constant Dirichlet value on a subset
-	///\{
+	/// adds a constant Dirichlet value on a subset
 		void add (MathVector<dim> & value, const char * function, const char * subsets);
+	/// adds a constant Dirichlet value on a subset
 		void add (std::vector<number> & vValue, const char * function, const char * subsets);
-	///\}
 	
-	/// Adds a position-dependent Dirichlet BC based on UserData
-	///\{
+	/// adds a position-dependent Dirichlet BC based on UserData
 		void add (SmartPtr<UserData<MathVector<dim>, dim> > & func, const char * function, const char * subsets);
 #ifdef UG_FOR_LUA
+	/// adds a position-dependent Dirichlet BC based on UserData
 		void add (const char * name, const char * function, const char * subsets);
 #endif
-	///\}
 
 	/// composes an array of subset indices of the Dirichlet boundary
 		virtual void get_dirichlet_subsets
@@ -116,28 +117,30 @@ public:
 private:
 // Data, auxiliary types and auxiliary functions:
 	
-	/// Coordinates of the grid vertices
+	/// accessor type for the coordinates of the grid vertices
 	typename domain_type::position_accessor_type m_aaPos;
 	
-	/// Functions for which the Dirichlet conditions are imposed
+	/// functions for which the Dirichlet conditions are imposed
 	std::vector<std::string> m_vDirichletFunc;
 	
-	/** All the subsets with the Dirichlet BC.
+	/// all the subsets with the Dirichlet BC
+	/**
 	 * The map assignes the functions that have not been mentioned
 	 * in the explicit specifications to the subsets with the
 	 * Dirichlet BC.
 	 */
 	std::map<std::string, std::vector<std::string> > m_mDirichletSS;
 	
-	/// Structure for the Dirichlet BC that is constant over a patch
+	/// structure for the Dirichlet BC that is constant over a patch
 	struct TConstBC
 	{
-		MathVector<dim> bcValue; // the boundary condition
-		std::string fctName; // grid function component name
-		size_t fct; // grid function component
-		std::string ssName; // subset name
-		SubsetGroup ssGrp; // subset group
+		MathVector<dim> bcValue; ///< the boundary condition
+		std::string fctName; ///< grid function component name
+		size_t fct; ///< grid function component
+		std::string ssName; ///< subset name
+		SubsetGroup ssGrp; ///< subset group
 		
+		/// constructor
 		TConstBC
 		(
 			MathVector<dim> & the_bcValue,
@@ -147,12 +150,13 @@ private:
 		: bcValue (the_bcValue), fctName (the_fctName), ssName (the_ssName)
 		{}
 		
+		/// evaluator
 		inline number operator ()
 		(
-			EdgeBase * edge, // the edge
-			int si, // subset index
-			typename domain_type::position_accessor_type & aaPos, // vertex coordinates
-			number time // the time argument
+			EdgeBase * edge, ///< the edge
+			int si, ///< subset index
+			typename domain_type::position_accessor_type & aaPos, ///< vertex coordinates
+			number time ///< the time argument
 		)
 		{
 			// Get the vector pointing along the edge from its beginning to its end:
@@ -164,21 +168,21 @@ private:
 		}
 	};
 	
-	/// Constant values as Dirichlet boundary conditions
-	///\{
+	/// Constant values as Dirichlet boundary conditions: the specifications
 	std::vector<TConstBC> m_vConstBCData;
+	/// Constant values as Dirichlet BC: correspondens between the subsets and the specifications
 	std::map<int, std::vector<TConstBC *> > m_mConstBC;
-	///\}
 	
 	/// Structure for the Dirichlet BC that are given by a function
 	struct TUserDataBC
 	{
-		SmartPtr<UserData<MathVector<dim>, dim> > spBCFunc;
-		std::string fctName; // grid function component name
-		size_t fct; // grid function component
-		std::string ssName; // subset name
-		SubsetGroup ssGrp; // subset group
+		SmartPtr<UserData<MathVector<dim>, dim> > spBCFunc; ///< user-defined function for \f$ \mathbf{E}_{\mathrm{bc}} \f$
+		std::string fctName; ///< grid function component name
+		size_t fct; ///< grid function component
+		std::string ssName; ///< subset name
+		SubsetGroup ssGrp; ///< subset group
 		
+		/// constructor
 		TUserDataBC
 		(
 			SmartPtr<UserData<MathVector<dim>, dim> > the_spFunc,
@@ -188,12 +192,13 @@ private:
 		: spBCFunc (the_spFunc), fctName (the_fctName), ssName (the_ssName)
 		{}
 		
+		/// evaluator
 		inline number operator ()
 		(
-			EdgeBase * edge, // the edge
-			int si, // subset index
-			typename domain_type::position_accessor_type & aaPos, // vertex coordinates
-			number time // the time argument
+			EdgeBase * edge, ///< the edge
+			int si, ///< subset index
+			typename domain_type::position_accessor_type & aaPos, ///< vertex coordinates
+			number time ///< the time argument
 		)
 		{
 			number dofValue;
@@ -214,11 +219,10 @@ private:
 		}
 	};
 
-	/// Dirichlet boundary conditions given as functions
-	///\{
+	/// Dirichlet boundary conditions specified as functions: the specifications
 	std::vector<TUserDataBC> m_vUserDataBCData;
+	/// Dirichlet BC specified as functions: correspondens between the subsets and the specifications
 	std::map<int, std::vector<TUserDataBC *> > m_mUserDataBC;
-	///\}
 	
 	/// List of all the Dirichlet subsets with implicitly specified Dirichlet BC: zero values
 	std::map<int, FunctionGroup> m_mZeroBC;

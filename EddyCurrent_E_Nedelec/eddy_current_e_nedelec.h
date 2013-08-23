@@ -1,4 +1,4 @@
-/**
+/*
  * FE-discretization of the time-harmonic E-based formulation of the eddy
  * current model.
  *
@@ -89,7 +89,7 @@ private:
 	static const size_t maxNumEdges = element_list_traits<typename domain_traits<dim>::DimElemList>::max_edges;
 
 public:
-///	constructor
+///	class constructor
 	EddyCurrent_E_Nedelec
 	(
 		const char * functions,
@@ -125,8 +125,8 @@ private:
 		bool bNonRegular
 	);
 
-/// assembling functions
-/// \{
+//---- Assembling functions: ----
+	
 	template <typename TElem>
 	void prepare_element_loop(ReferenceObjectID roid, int si);
 
@@ -150,7 +150,6 @@ private:
 
 	template <typename TElem>
 	void ass_rhs_elem(LocalVector& d, GeometricObject* elem, const position_type vCornerCoords[]);
-/// \}
 
 //---- Registration of the template functions: ----
 private:

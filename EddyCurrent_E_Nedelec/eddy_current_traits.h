@@ -9,9 +9,7 @@
 namespace ug{
 namespace Electromagnetism{
 
-/**
- * Auxiliary class defining some important constants
- */
+/// Auxiliary class defining some important constants
 class EddyCurrentTraits
 {
 public:
