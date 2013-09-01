@@ -49,6 +49,7 @@ namespace Electromagnetism{
  * <li> \f$ i = \sqrt{-1} \f$
  * </ul>
  *
+ * \remark
  * Note that every Nedelec shape function requires a scalar (complex) dof value.
  * These functions are thus vector-valued for the scalar dofs, each dof storing
  * two doubles (one for the real and one for the imaginary part of the value).

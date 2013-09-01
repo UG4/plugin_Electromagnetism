@@ -28,8 +28,48 @@
 namespace ug{
 namespace Electromagnetism{
 
+/// Class for computation of loop currents
 /**
- * Class for computation of loop currents
+ * Class for computation of weakly divergence-free loop currents.
+ *
+ * The range (image) of the stiffness matrix of the discrete
+ * \f$\mathbf{rot} \, \mathbf{rot}\f$ operator is the subspace of all
+ * functions othrogonal to all the gradients \f$ \mathbf{G} \psi \f$, where
+ * \f$ \mathbf{G} \f$ is the indicence matrix between the vertices and the edges,
+ * and \f$ \psi \f$ is any vertex-centered grid function. Thus, for the
+ * solvability of the discretized system (for ex. of the E-based formulation of
+ * the eddy-current model), its right-hand side \f$ J \f$ must satisfy
+ * \f{eqnarray*}{
+ *  ( \mathbf{G}_{i}^T J, \psi ) = ( J, \mathbf{G}_{i} \psi ) = 0
+ * \f}
+ * where \f$ \mathbf{G}_{i} \f$ is the matrix obtained from \f$ \mathbf{G}_{i} \f$
+ * by setting the lines corresponding to conductor nodes to zero. (In conductors,
+ * a mass matrix is added to the \f$\mathbf{rot} \, \mathbf{rot}\f$ operator
+ * operator, so that the kernel is trivial.) This equation implies
+ * \f{eqnarray*}{
+ *  \mathbf{G}_{i}^T J = 0,
+ * \f}
+ * i.e. the weak divergence of the rhs must be zero.
+ *
+ * This class implements a computation of such a weakly divergence-free
+ * current \f$J\f$ in a given set of insulators constituting (topologically) a
+ * ring (torus) by specifying a cut with the jump of the potential and a
+ * part adjacent to this cut that specifies the positive direction of the
+ * current. The current is represented as \f$J = \mathbf{G} \phi\f$ and the
+ * potential \f$\phi\f$ is computed as the solution of a discretized Laplace
+ * with the special boundary conditions.
+ *
+ * The computed \f$J\f$ is rescaled so that the current over the cut is
+ * equal to the given value. Different values of the currents can be used for
+ * different function names: cf. the 'set' functions of this class.
+ *
+ * References:
+ * <ul>
+ * <li> O. Sterz. Modellierung und Numerik zeitharmonischer Wirbelstromprobleme in 3D. PhD thesis, 2003.
+ * </ul>
+ *
+ * \tparam	TDomain		Domain type
+ * \tparam	TAlgebra	Algebra type
  */
 template <typename TDomain, typename TAlgebra>
 class NedelecLoopCurrent
@@ -170,6 +210,11 @@ private:
 	};
 	
 	/// Class for local assembling of the auxiliary Laplace operator
+	/**
+	 * This class assembles the local discretization of the Laplace operator
+	 * in the closure of the subdomain of the source. (Out of this closure,
+	 * the constraint of class OutOfSource is used.)
+	 */
 	class AuxLaplaceLocAss : public IElemDisc<TDomain>
 	{
 	private:
@@ -258,6 +303,12 @@ private:
 	};
 	
 ///	Constraint that sets the problem to 0-identity out of the source
+/**
+ *	This class restricts the discretized Laplace equation to the subsets
+ *	of the source: In the parts of the domain that do not belong to the
+ *	closure of the source, the discretization matrix is set to identity,
+ *	and the right-hand side is set to zero.
+ */
 	class OutOfSource : public IDomainConstraint<TDomain, TPotAlgebra>
 	{
 	private:
@@ -276,7 +327,7 @@ private:
 			const DoFDistribution & vertDD, ///< [in] the vertex DD
 			VariableArray1<bool> & in_source ///< [out] the arrays of flags to update
 		);
-	/// Helper class for marking the vertices in the source
+	/// Helper class for marking the vertices in the closure of the source subdomain
 		struct MarkSourceVertices
 		{
 			OutOfSource * m_pThis;
@@ -303,14 +354,14 @@ private:
 			VariableArray1<bool> & in_source ///< [out] the arrays of flags
 		);
 	
-	///	sets to identity all the matrix rows that do not belong to the closure of the source domain
+	///	sets to identity all the matrix rows that do not belong to the closure of the source subdomain
 		void adjust_matrix
 		(
 			VariableArray1<bool> & in_source, ///< the arrays of flags
 			pot_matrix_type & A ///< the matrix to adjust
 		);
 		
-	///	sets to 0 all the entries of a vector that do not belong to the closure of the source domain
+	///	sets to 0 all the entries of a vector that do not belong to the closure of the source subdomain
 		void adjust_vector
 		(
 			VariableArray1<bool> & in_source, ///< the arrays of flags
@@ -483,6 +534,12 @@ private:
 ///	Extension of the matrices and vectors to the whole domain
 	SmartPtr<OutOfSource> m_outOfSource;
 ///	Global discretization of the auxiliary equations
+/**
+ *	This discretization object uses m_auxLocLaplace and m_outOfSource
+ *	to assemble the Laplace equation and the jump right-hand side in the
+ *	subsets of the source, as well as the identity equations in the other
+ *	parts of the domain.
+ */
 	SmartPtr<DomainDiscretization<TDomain, TPotAlgebra> > m_auxLaplaceAss;
 ///	Matrix of the discretization
 	SmartPtr<AssembledLinearOperator<TPotAlgebra> > m_auxLaplaceOp;

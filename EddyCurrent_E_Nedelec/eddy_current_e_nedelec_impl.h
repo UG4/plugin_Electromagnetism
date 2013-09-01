@@ -120,15 +120,22 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element
  * =
  * \left (
  *  \begin{array} {c}
- *   - \omega \mathbf{Im} \mathbf{J}_{Gh} \\
- *   - \omega \mathbf{Re} \mathbf{J}_{Gh}
+ *   - \omega M^{(1)}_h (1) \mathbf{Im} \mathbf{J}_{Gh} \\
+ *   - \omega M^{(1)}_h (1) \mathbf{Re} \mathbf{J}_{Gh}
  *  \end{array}
  * \right ),
  * \f}
- * where \f$S_h (\mu^{-1})\f$ is the stiffness matrix of the \f$\mathbf{rot}\mu^{-1}\mathbf{rot}\f$,
- * \f$ M^{(1)}_h (\sigma)\f$ the mass matrix of the \f$\sigma I\f$ operator,
- * \f$\mathbf{E}_h\f$ the unknown electric field grid function,
- * \f$\mathbf{J}_{Gh}\f$ the generator current.
+ * where
+ * <ul>
+ * <li> \f$S_h (\mu^{-1})\f$		the stiffness matrix of the \f$\mathbf{rot}\mu^{-1}\mathbf{rot}\f$,
+ * <li> \f$ M^{(1)}_h (\sigma)\f$	the mass matrix of the \f$\sigma I\f$ operator,
+ * <li> \f$\mathbf{E}_h\f$			the unknown electric field grid function (represented using the Nedelec element),
+ * <li> \f$\mathbf{J}_{Gh}\f$		the generator current (represented using the Nedelec element).
+ * </ul>
+ *
+ * \remark
+ * For the solvability of the problem, the generator current must be numerically
+ * weakly divergence free.
  */
 template<typename TDomain, typename TAlgebra>
 template<size_t numEdges>
@@ -195,6 +202,26 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_JA_elem
 }
 
 /// computes the right-hand side due to the generator currents
+/**
+ * The right-hand side has the form
+ * \f{eqnarray*}{
+ * \left (
+ *  \begin{array} {c}
+ *   - \omega M^{(1)}_h \mathbf{Im} \mathbf{J}_{Gh} \\
+ *   - \omega M^{(1)}_h \mathbf{Re} \mathbf{J}_{Gh}
+ *  \end{array}
+ * \right ),
+ * \f}
+ * where
+ * <ul>
+ * <li> \f$ M^{(1)}_h\f$		the mass matrix of the \f$I\f$ (identity) operator,
+ * <li> \f$\mathbf{J}_{Gh}\f$	the generator current (represented using the Nedelec element).
+ * </ul>
+ *
+ * \remark
+ * For the solvability of the problem, the generator current must be numerically
+ * weakly divergence free.
+ */
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem

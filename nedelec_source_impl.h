@@ -556,7 +556,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices
 
 /**
  * Sets to identity all the matrix rows that do not belong to the closure
- * of the source domain
+ * of the source subdomain
  */
 template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_matrix
@@ -573,7 +573,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_matrix
 
 /**
  * Sets to 0 all the entries of a vector that do not belong to the closure
- * of the source domain
+ * of the source subdomain
  */
 template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_vector
