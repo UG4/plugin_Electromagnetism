@@ -16,54 +16,14 @@
 #include "common/common.h"
 #include "lib_grid/lg_base.h"
 #include "lib_disc/reference_element/reference_element.h"
+#include "lib_disc/reference_element/element_list_traits.h"
 #include "lib_disc/local_finite_element/lagrange/lagrangep1.h"
-
-// some additional Boost-C++ headers
-#include <boost/mpl/transform_view.hpp>
-#include <boost/mpl/fold.hpp>
-#include <boost/mpl/min_max.hpp>
 
 namespace ug{
 namespace Electromagnetism{
 
 /// \ingroup lib_disc_elem_disc
 /// @{
-
-/// Auxiliary class for counting the edges of all element in a list
-/**
- * This class gets the maximum number of edges over all the geometric
- * elements in a given list. The computation is performed at the compile time
- * so that the result (element_list_traits<ElemList>::max_edges) is a static
- * constant.
- *
- * \tparam ElemList		list of geometric elements
- */
-template <typename ElemList>
-class element_list_traits
-{
-///	Metafunction class for counting edges in an element type
-	struct mfc_num_edges_of_elem
-	{
-		template <typename TElem> class apply
-		{
-			typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-			
-		public:
-			typedef boost::mpl::size_t<ref_elem_type::numEdges> type; ///< returned type (i.e. result of the metafunction)
-		};
-	};
-	
-public:
-	
-/// Max. number of edges of the elements in the element list (as a constant)
-	static const size_t max_edges
-		= boost::mpl::fold
-			<
-				boost::mpl::transform_view<ElemList, mfc_num_edges_of_elem>,
-				boost::mpl::size_t<0>,
-				boost::mpl::max<boost::mpl::_1,boost::mpl::_2>
-			>::type::value;
-};
 
 /// Tool kit for the Whitney-1 (Nedelec) based FE discretization of the rot-rot operators
 /**
@@ -154,7 +114,7 @@ class NedelecT1_LDisc
 	static const size_t numEdges = ref_elem_type::numEdges;
 	
 /// max. number of the edges of the full-dimensional elements in the domain
-	static const size_t maxNumEdges = element_list_traits<typename domain_traits<WDim>::DimElemList>::max_edges;
+	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
 	
 	private:
 /// computes the gradients of the Whitney-0 (Lagrange P1) shape functions
@@ -237,7 +197,7 @@ class NedelecT1_LDisc<TDomain, Edge>
 	static const int dim = ref_elem_type::dim;
 	static const size_t numCorners = ref_elem_type::numCorners;
 	static const size_t numEdges = ref_elem_type::numEdges;
-	static const size_t maxNumEdges = element_list_traits<typename domain_traits<WDim>::DimElemList>::max_edges;
+	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
 	
 	public:
 	static void local_stiffness_and_mass

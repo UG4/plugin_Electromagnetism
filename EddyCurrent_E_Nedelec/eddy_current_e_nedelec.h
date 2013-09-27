@@ -87,7 +87,7 @@ private:
 	static const int dim = base_type::dim;
 
 /// max. number of the edges of the full-dimensional elements in the domain
-	static const size_t maxNumEdges = element_list_traits<typename domain_traits<dim>::DimElemList>::max_edges;
+	static const size_t maxNumEdges = element_list_traits<typename domain_traits<dim>::DimElemList>::maxEdges;
 
 public:
 ///	class constructor
