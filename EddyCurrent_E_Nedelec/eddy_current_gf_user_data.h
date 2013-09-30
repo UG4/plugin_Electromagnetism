@@ -140,7 +140,7 @@ public:
 		
 	//	Compute the values
 		std::vector<MathVector<dim> > E [2]; // Re and Im parts of E
-		std::vector<MultiIndex<2> > ind;
+		std::vector<DoFIndex> ind;
 		std::vector<number> dofValues;
 	
 		for (size_t part = 0; part < 2; part++) // part: Re or Im
@@ -270,7 +270,7 @@ public:
 			UG_THROW ("EddyCurrentReB: Derivatives are not implemented.");
 		
 	//	Get multiindices of element
-		std::vector<MultiIndex<2> > ind;
+		std::vector<DoFIndex> ind;
 		m_spGF->multi_indices (elem, m_fct [ReIm], ind);
 	
 	//	The DoF values of the grid function

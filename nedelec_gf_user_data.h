@@ -104,7 +104,7 @@ public:
 			UG_THROW ("NedelecGridFunctionData: Derivatives are not implemented.");
 		
 	//	Get multiindices of element
-		std::vector<MultiIndex<2> > ind;
+		std::vector<DoFIndex> ind;
 		m_spGF->multi_indices (elem, m_fct, ind);
 	
 	//	The DoF values of the grid function
@@ -197,7 +197,7 @@ public:
 			UG_THROW ("NedelecCurlData: Derivatives are not implemented.");
 		
 	//	Get multiindices of element
-		std::vector<MultiIndex<2> > ind;
+		std::vector<DoFIndex> ind;
 		m_spGF->multi_indices (elem, m_fct, ind);
 	
 	//	The DoF values of the grid function
@@ -311,7 +311,7 @@ public:
 		}
 		
 	//	Get multiindices of element
-		std::vector<MultiIndex<2> > ind;
+		std::vector<DoFIndex> ind;
 		m_spGF->multi_indices (elem, m_fct, ind);
 	
 	//	The DoF values of the grid function

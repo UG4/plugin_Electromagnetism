@@ -375,7 +375,7 @@ void NedelecProject<TDomain, TAlgebra>::weak_div_elem_type
 	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();
 
 //	Arrays for the indices in the vectors:
-	std::vector<MultiIndex<2> > vEdgeInd (ref_elem_type::numEdges);
+	std::vector<DoFIndex> vEdgeInd (ref_elem_type::numEdges);
 	std::vector<size_t> vVertInd (ref_elem_type::numCorners);
 	
 //	Loop over all subsets representing insulators:
@@ -545,7 +545,7 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 
 //	Arrays for the indices in the vectors:
 	std::vector<size_t> vVertInd (1);
-	std::vector<MultiIndex<2> > vEdgeInd (1);
+	std::vector<DoFIndex> vEdgeInd (1);
 	
 //	Loop over edges:
 	t_edge_iterator iterEnd = edgeDD.end<Edge> ();
@@ -570,7 +570,7 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 		if (edgeDD.inner_multi_indices (pEdge, fct, vEdgeInd) != 1)
 			UG_THROW ("NedelecProject:"
 				"More than one DoF per edge. Not the Nedelec-Type-1 element?");
-		BlockRef (u [vEdgeInd[0][0]], vEdgeInd[0][1])
+		BlockRef (u, vEdgeInd[0])
 			-= corner_val [1] - corner_val [0];
 	}
 }

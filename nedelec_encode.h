@@ -80,7 +80,7 @@ void ComputeNedelecDoFs
 	const typename domain_type::position_accessor_type& aaPos = spGridFct->domain()->position_accessor();
 
 //	Multiindex to access the components
-	std::vector<MultiIndex<2> > ind;
+	std::vector<DoFIndex> ind;
 
 	UG_ASSERT (spFunction.valid (), "Invalid smart pointer to the user data.");
 	
@@ -110,7 +110,7 @@ void ComputeNedelecDoFs
 					"More than one DoF per edge. Not the Nedelec-type-1 element?");
 		
 		//	Compute the value for the edge and write it into the grid function
-			BlockRef ((* spGridFct) [ind[0][0]], ind[0][1])
+			DoFRef ((* spGridFct), ind[0])
 				= ComputeNedelecDoF<domain_type> (spFunction.get(), pEdge, aaPos, si, time);
 		}
 	}

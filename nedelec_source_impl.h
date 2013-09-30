@@ -258,7 +258,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 	
 //	Compute the gradient:
 	std::vector<size_t> vVertInd (1);
-	std::vector<MultiIndex<2> > vEdgeInd (1);
+	std::vector<DoFIndex> vEdgeInd (1);
 	t_edge_iter edgeIterEnd = edgeDD.end<Edge> ();
 	for (t_edge_iter edgeIter = edgeDD.begin<Edge> (); edgeIter != edgeIterEnd; ++edgeIter)
 	{

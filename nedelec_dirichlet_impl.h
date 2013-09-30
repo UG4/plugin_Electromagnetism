@@ -290,7 +290,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_jacobian
 	const number s_a0
 )
 {
-	std::vector<MultiIndex<2> >  multInd;
+	std::vector<DoFIndex>  multInd;
 	SubsetGroup ssGrp (base_type::m_spApproxSpace->subset_handler ());
 	FunctionGroup fctGrp (base_type::m_spApproxSpace->function_pattern (), m_vDirichletFunc);
 	
@@ -314,7 +314,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_jacobian
 						"More than one DoF per edge. Not the Nedelec-type-1 element?");
 	
 			//	Set the Dirichlet row
-				SetDirichletRow (J, multInd[0][0], multInd[0][1]);
+				SetDirichletRow (J, multInd[0]);
 			}
 	}
 }
@@ -334,7 +334,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_defect
 	const std::vector<number> * vScaleStiff
 )
 {
-	std::vector<MultiIndex<2> >  multInd;
+	std::vector<DoFIndex>  multInd;
 	SubsetGroup ssGrp (base_type::m_spApproxSpace->subset_handler ());
 	FunctionGroup fctGrp (base_type::m_spApproxSpace->function_pattern (), m_vDirichletFunc);
 	
@@ -358,7 +358,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_defect
 						"More than one DoF per edge. Not the Nedelec-type-1 element?");
 	
 			//	Set the Dirichlet entry
-				BlockRef (d [multInd[0][0]], multInd[0][1]) = 0.0;
+				DoFRef (d, multInd[0]) = 0.0;
 			}
 	}
 }
@@ -377,7 +377,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution
     number time ///< time argument
 )
 {
-	std::vector<MultiIndex<2> >  multInd;
+	std::vector<DoFIndex>  multInd;
 
 //	Loop the edges
 	t_edge_iterator iterEnd = dd->end<Edge> (si);
@@ -392,7 +392,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution
 					"More than one DoF per edge. Not the Nedelec-type-1 element?");
 
 		//	Set the Dirichlet entry
-			BlockRef (u[multInd[0][0]], multInd[0][1]) = (* vUserData[i]) (pEdge, si, m_aaPos, time);
+			DoFRef (u, multInd[0]) = (* vUserData[i]) (pEdge, si, m_aaPos, time);
 		}
 }
 
@@ -410,7 +410,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution_implicit
 {
 	typedef std::map<int, FunctionGroup> t_ss_map;
 	
-	std::vector<MultiIndex<2> >  multInd;
+	std::vector<DoFIndex>  multInd;
 	
 // Loop the subset names
 	t_ss_map::const_iterator ssIterEnd = m_mZeroBC.end ();
@@ -434,7 +434,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution_implicit
 						"More than one DoF per edge. Not the Nedelec-type-1 element?");
 	
 			//	Set the Dirichlet entry
-				BlockRef (u [multInd[0][0]], multInd[0][1]) = 0;
+				DoFRef (u, multInd[0]) = 0;
 			}
 		}
 	}

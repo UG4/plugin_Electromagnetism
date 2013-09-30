@@ -80,7 +80,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolonga
 	typedef DoFDistribution::traits<EdgeBase>::const_iterator iterator;
 	
 // Multiindices to access the components
-	std::vector<MultiIndex<2> > c_ind (1), f_ind (1);
+	std::vector<DoFIndex> c_ind (1), f_ind (1);
 
 // Get the multigrid:
 	const MultiGrid & grid = coarseDD.multi_grid ();
@@ -188,7 +188,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 	const ReferenceObjectID roid = geometry_traits<TElem>::REFERENCE_OBJECT_ID;
 	
 // Multiindices to access the components
-	std::vector<MultiIndex<2> > c_ind (ref_elem_type::numEdges), f_ind (1);
+	std::vector<DoFIndex> c_ind (ref_elem_type::numEdges), f_ind (1);
 	
 // Get the multigrid:
 	const MultiGrid & grid = coarseDD.multi_grid ();
