@@ -267,7 +267,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 		number nd_pot [2];
 		
 		// Get the edge DoF and check whether the edge is in the source:
-		if (edgeDD.inner_multi_indices (pEdge, func, vEdgeInd) != 1)
+		if (edgeDD.inner_dof_indices (pEdge, func, vEdgeInd) != 1)
 			UG_THROW ("NedelecLoopCurrent: Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 		if ((edge_flag = in_source [vEdgeInd [0] [0]]) == 0)
 		{ // we are not in the source

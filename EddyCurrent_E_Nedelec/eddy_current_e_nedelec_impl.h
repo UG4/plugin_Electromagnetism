@@ -241,7 +241,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem
 	for (size_t part = 0; part < 2; part++) // Re and Im
 	{
 		std::vector<DoFIndex> ind;
-		m_pSsJG->m_spGf->multi_indices (pElem, m_pSsJG->m_vFct[part], ind);
+		m_pSsJG->m_spGf->dof_indices (pElem, m_pSsJG->m_vFct[part], ind);
 		for (size_t e = 0; e < NedelecT1_LDisc<TDomain, TElem>::numEdges; e++)
 			vJG[e][part] = DoFRef (* (m_pSsJG->m_spGf), ind[e]);
 	}

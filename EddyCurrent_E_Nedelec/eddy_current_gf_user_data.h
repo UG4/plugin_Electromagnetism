@@ -148,7 +148,7 @@ public:
 			E[part].resize (nip);
 			
 		//	Get multiindices of element
-			m_spGF->multi_indices (elem, m_fct [part], ind);
+			m_spGF->dof_indices (elem, m_fct [part], ind);
 		
 		//	The DoF values of the grid function
 			dofValues.resize (ind.size ());
@@ -271,7 +271,7 @@ public:
 		
 	//	Get multiindices of element
 		std::vector<DoFIndex> ind;
-		m_spGF->multi_indices (elem, m_fct [ReIm], ind);
+		m_spGF->dof_indices (elem, m_fct [ReIm], ind);
 	
 	//	The DoF values of the grid function
 		std::vector<number> dofValues (ind.size());

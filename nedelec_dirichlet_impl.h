@@ -309,7 +309,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_jacobian
 			for(size_t fct_i = 0; fct_i < fctGrp.size (); fct_i++)
 			{
 			//	Get the multiindices
-				if (dd->inner_multi_indices (*iter, fctGrp [fct_i], multInd) != 1)
+				if (dd->inner_dof_indices (*iter, fctGrp [fct_i], multInd) != 1)
 					UG_THROW ("NedelecDirichletBC: "
 						"More than one DoF per edge. Not the Nedelec-type-1 element?");
 	
@@ -353,7 +353,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_defect
 			for(size_t fct_i = 0; fct_i < fctGrp.size (); fct_i++)
 			{
 			//	Get the multiindices
-				if (dd->inner_multi_indices (*iter, fctGrp [fct_i], multInd) != 1)
+				if (dd->inner_dof_indices (*iter, fctGrp [fct_i], multInd) != 1)
 					UG_THROW ("NedelecDirichletBC: "
 						"More than one DoF per edge. Not the Nedelec-type-1 element?");
 	
@@ -387,7 +387,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution
 		{
 			EdgeBase * pEdge = *iter;
 		//	Get the multiindices
-			if (dd->inner_multi_indices (pEdge, vUserData[i]->fct, multInd) != 1)
+			if (dd->inner_dof_indices (pEdge, vUserData[i]->fct, multInd) != 1)
 				UG_THROW ("NedelecDirichletBC:"
 					"More than one DoF per edge. Not the Nedelec-type-1 element?");
 
@@ -429,7 +429,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution_implicit
 			for(size_t i = 0; i < fctGrp.size (); ++i)
 			{
 			//	Get the multiindices
-				if (dd->inner_multi_indices (pEdge, fctGrp[i], multInd) != 1)
+				if (dd->inner_dof_indices (pEdge, fctGrp[i], multInd) != 1)
 					UG_THROW ("NedelecDirichletBC:"
 						"More than one DoF per edge. Not the Nedelec-type-1 element?");
 	

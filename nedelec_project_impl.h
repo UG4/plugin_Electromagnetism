@@ -400,7 +400,7 @@ void NedelecProject<TDomain, TAlgebra>::weak_div_elem_type
 				(number (*) [ref_elem_type::numEdges]) & (B (0,0)));
 			
 		//	Compute the local contribution to the weak divergence:
-			if (edgeDD.multi_indices (pElem, fct, vEdgeInd) != (size_t) ref_elem_type::numEdges)
+			if (edgeDD.dof_indices (pElem, fct, vEdgeInd) != (size_t) ref_elem_type::numEdges)
 				UG_THROW ("NedelecProject: Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 			for (size_t i = 0; i < (size_t) ref_elem_type::numEdges; i++)
 				loc_u [i] = DoFRef (u, vEdgeInd [i]);
@@ -567,7 +567,7 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 		}
 		
 	//	Compute the gradient:
-		if (edgeDD.inner_multi_indices (pEdge, fct, vEdgeInd) != 1)
+		if (edgeDD.inner_dof_indices (pEdge, fct, vEdgeInd) != 1)
 			UG_THROW ("NedelecProject:"
 				"More than one DoF per edge. Not the Nedelec-Type-1 element?");
 		BlockRef (u, vEdgeInd[0])

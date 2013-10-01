@@ -105,7 +105,7 @@ public:
 		
 	//	Get multiindices of element
 		std::vector<DoFIndex> ind;
-		m_spGF->multi_indices (elem, m_fct, ind);
+		m_spGF->dof_indices (elem, m_fct, ind);
 	
 	//	The DoF values of the grid function
 		std::vector<number> dofValues (ind.size());
@@ -198,7 +198,7 @@ public:
 		
 	//	Get multiindices of element
 		std::vector<DoFIndex> ind;
-		m_spGF->multi_indices (elem, m_fct, ind);
+		m_spGF->dof_indices (elem, m_fct, ind);
 	
 	//	The DoF values of the grid function
 		std::vector<number> dofValues (ind.size());
@@ -312,7 +312,7 @@ public:
 		
 	//	Get multiindices of element
 		std::vector<DoFIndex> ind;
-		m_spGF->multi_indices (elem, m_fct, ind);
+		m_spGF->dof_indices (elem, m_fct, ind);
 	
 	//	The DoF values of the grid function
 		std::vector<number> dofValues (ind.size());

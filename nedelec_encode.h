@@ -105,7 +105,7 @@ void ComputeNedelecDoFs
 			EdgeBase * pEdge = *iter;
 			
 		//	Get the multiindices
-			if (spGridFct->inner_multi_indices (pEdge, fct, ind) != 1)
+			if (spGridFct->inner_dof_indices (pEdge, fct, ind) != 1)
 				UG_THROW ("ComputeNedelecDoFs:"
 					"More than one DoF per edge. Not the Nedelec-type-1 element?");
 		

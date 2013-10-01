@@ -120,8 +120,8 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolonga
 				for (size_t fct = 0; fct < num_fct; fct++)
 				{
 				//	Get the DoFs:
-					if (coarseDD.inner_multi_indices (c_edge, fct, c_ind) != 1
-							|| fineDD.inner_multi_indices (f_edge, fct, f_ind) != 1)
+					if (coarseDD.inner_dof_indices (c_edge, fct, c_ind) != 1
+							|| fineDD.inner_dof_indices (f_edge, fct, f_ind) != 1)
 						UG_THROW ("NedelecTransfer:"
 							"More than one DoF per edge. Not the Nedelec-type-1 element?");
 				//	Assemble the + or - identity matrix here:
@@ -151,8 +151,8 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolonga
 					for (size_t fct = 0; fct < num_fct; fct++)
 					{
 					//	Get the DoFs:
-						if (coarseDD.inner_multi_indices (c_edge, fct, c_ind) != 1
-								|| fineDD.inner_multi_indices (f_edge, fct, f_ind) != 1)
+						if (coarseDD.inner_dof_indices (c_edge, fct, c_ind) != 1
+								|| fineDD.inner_dof_indices (f_edge, fct, f_ind) != 1)
 							UG_THROW ("NedelecTransfer:"
 								"More than one DoF per edge. Not the Nedelec-type-1 element?");
 					//	Assemble the matrix entry:
@@ -246,8 +246,8 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 				for (size_t fct = 0; fct < num_fct; fct++)
 				{
 				//	Get the DoFs:
-					if (coarseDD.multi_indices (c_elem, fct, c_ind) != (size_t) ref_elem_type::numEdges
-							|| fineDD.inner_multi_indices (edge, fct, f_ind) != 1)
+					if (coarseDD.dof_indices (c_elem, fct, c_ind) != (size_t) ref_elem_type::numEdges
+							|| fineDD.inner_dof_indices (edge, fct, f_ind) != 1)
 						UG_THROW ("NedelecTransfer:"
 							"More than one DoF per edge. Not the Nedelec-type-1 element?");
 				//	Add the contributions to the matrix entry:
