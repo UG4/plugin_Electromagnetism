@@ -570,7 +570,7 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 		if (edgeDD.inner_dof_indices (pEdge, fct, vEdgeInd) != 1)
 			UG_THROW ("NedelecProject:"
 				"More than one DoF per edge. Not the Nedelec-Type-1 element?");
-		BlockRef (u, vEdgeInd[0])
+		DoFRef (u, vEdgeInd[0])
 			-= corner_val [1] - corner_val [0];
 	}
 }
