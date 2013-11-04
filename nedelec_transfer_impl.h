@@ -83,7 +83,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolonga
 	std::vector<DoFIndex> c_ind (1), f_ind (1);
 
 // Get the multigrid:
-	const MultiGrid & grid = coarseDD.multi_grid ();
+	const MultiGrid & grid = *coarseDD.multi_grid ();
 	
 // Get the number of the functions:
 	size_t num_fct = coarseDD.num_fct ();
@@ -191,7 +191,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 	std::vector<DoFIndex> c_ind (ref_elem_type::numEdges), f_ind (1);
 	
 // Get the multigrid:
-	const MultiGrid & grid = coarseDD.multi_grid ();
+	const MultiGrid & grid = *coarseDD.multi_grid ();
 	
 // Get position accessor for the integration:
 	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();
@@ -277,8 +277,8 @@ void NedelecTransfer<TDomain, TAlgebra>::init ()
 	check_approximation_space ();
 	
 //	Get the DoF distributions:
-	const DoFDistribution & coarseDD = * m_spApproxSpace->level_dof_distribution (m_coarseLevel.level ());
-	const DoFDistribution & fineDD = * m_spApproxSpace->level_dof_distribution (m_fineLevel.level ());
+	const DoFDistribution & coarseDD = * m_spApproxSpace->dof_distribution (m_coarseLevel);
+	const DoFDistribution & fineDD = * m_spApproxSpace->dof_distribution (m_fineLevel);
 	
 //  Get number of dofs on the grid levels:
 	const size_t numFineDoFs = fineDD.num_indices ();
@@ -291,8 +291,10 @@ void NedelecTransfer<TDomain, TAlgebra>::init ()
 
 //	Assemble the prolongation matrix:
 	m_vIsRestricted.clear (); m_vIsRestricted.resize (numCoarseDoFs, false);
-	if(! m_prolongation_matrix.resize_and_clear (numFineDoFs, numCoarseDoFs))
-		UG_THROW("NedelecTransfer: Failed to allocate the prolongation matrix.");
+	try{
+		m_prolongation_matrix.resize_and_clear (numFineDoFs, numCoarseDoFs);
+	}
+	UG_CATCH_THROW("NedelecTransfer: Failed to allocate the prolongation matrix.");
 	boost::mpl::for_each<ElemList> (AssembleProlongationMatrix (this, coarseDD, fineDD));
 
 //	Done:
