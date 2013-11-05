@@ -184,7 +184,11 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::compute_potential_matr
 		UG_THROW (name () << ": smoother not init. or illegal matrix type");
 	
 	// Allocate the auxiliary matrices and vectors:
-	m_spPotMat->resize_and_clear (N_verts, N_verts);
+	try
+	{
+		m_spPotMat->resize_and_clear (N_verts, N_verts);
+	}
+	UG_CATCH_THROW (name () << ": Failed to allocate the auxiliary matrix for the potential.");
 	
 	// Get the edge-vertex dof correspondence:
 	get_edge_vert_correspondence (pEdgeDD, pVertDD);
