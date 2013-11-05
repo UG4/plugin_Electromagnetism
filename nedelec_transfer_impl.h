@@ -26,18 +26,18 @@ namespace Electromagnetism{
 template <typename TDomain, typename TAlgebra, typename TElem>
 void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::GetRegularLocalCoordinate
 (
-	const MultiGrid & mg, ///< [in] the grid hierarchy
+	const MultiGrid * mg, ///< [in] the grid hierarchy
 	VertexBase * v, ///< [in] the vertex
 	TElem * base, ///< [in] the base element (for the local coordinates)
 	MathVector<TElem::dim> & local ///< [out] to save the local coordinates
 )
 {
 //	Get the parent of the vertex (note that this is typically not the 'base')
-	GeometricObject * parent = mg.get_parent (v);
+	GeometricObject * parent = mg->get_parent (v);
 	
 //	Get the vertices of the parent
 	Grid::vertex_traits::secure_container vrts;
-	((MultiGrid *) &mg)->associated_elements (vrts, parent);
+	((MultiGrid *) mg)->associated_elements (vrts, parent);
 	size_t n_co = vrts.size ();
 	UG_ASSERT (n_co != 0, "GetRegularLocalCoordinate: No associated vertices.")
 	
@@ -83,7 +83,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolonga
 	std::vector<DoFIndex> c_ind (1), f_ind (1);
 
 // Get the multigrid:
-	const MultiGrid & grid = coarseDD.multi_grid ();
+	const MultiGrid * grid = coarseDD.multi_grid().get ();
 	
 // Get the number of the functions:
 	size_t num_fct = coarseDD.num_fct ();
@@ -99,16 +99,16 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolonga
 		{
 			number coef;
 			EdgeBase * c_edge = * edge_iter;
-			const size_t n_children = grid.num_children<EdgeBase, EdgeBase> (c_edge);
+			const size_t n_children = grid->num_children<EdgeBase, EdgeBase> (c_edge);
 			
 			if (n_children == 0)
 				continue;
 			else if (n_children == 1)
 			{
-				EdgeBase * f_edge = grid.get_child<EdgeBase, EdgeBase> (c_edge,  0);
+				EdgeBase * f_edge = grid->get_child<EdgeBase, EdgeBase> (c_edge,  0);
 				
 			//	Check the edge orientation:
-				GeometricObject * corner_0 = grid.get_parent (f_edge->vertex(0));
+				GeometricObject * corner_0 = grid->get_parent (f_edge->vertex(0));
 				if (corner_0 == (GeometricObject *) (c_edge->vertex (0)))
 					coef = 1; // the edges should have the same orientation
 				else if (corner_0 == (GeometricObject *) (c_edge->vertex (1)))
@@ -133,11 +133,11 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolonga
 			{
 				for (size_t child = 0; child < 2; child++)
 				{
-					EdgeBase * f_edge = grid.get_child<EdgeBase, EdgeBase> (c_edge,  child);
+					EdgeBase * f_edge = grid->get_child<EdgeBase, EdgeBase> (c_edge,  child);
 					
 				//	Check the edge orientation:
-					GeometricObject * corner_0 = grid.get_parent (f_edge->vertex(0));
-					GeometricObject * corner_1 = grid.get_parent (f_edge->vertex(1));
+					GeometricObject * corner_0 = grid->get_parent (f_edge->vertex(0));
+					GeometricObject * corner_1 = grid->get_parent (f_edge->vertex(1));
 					if (corner_0 == (GeometricObject *) (c_edge->vertex (0))
 						|| corner_1 == (GeometricObject *) (c_edge->vertex (1)))
 						coef = 0.5; // the edges should have the same orientation
@@ -191,7 +191,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 	std::vector<DoFIndex> c_ind (ref_elem_type::numEdges), f_ind (1);
 	
 // Get the multigrid:
-	const MultiGrid & grid = coarseDD.multi_grid ();
+	const MultiGrid * grid = coarseDD.multi_grid().get ();
 	
 // Get position accessor for the integration:
 	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();
@@ -209,7 +209,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 			elem_iter != e_end; ++elem_iter)
 		{
 			TElem * c_elem = * elem_iter;
-			const size_t n_children = grid.num_children<EdgeBase, TElem> (c_elem);
+			const size_t n_children = grid->num_children<EdgeBase, TElem> (c_elem);
 			
 			if (n_children == 0)
 				continue;
@@ -223,7 +223,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 			for (size_t child = 0; child < n_children; child++)
 			{
 			// Get the fine grid edge:
-				EdgeBase * edge = grid.get_child<EdgeBase, TElem> (c_elem,  child);
+				EdgeBase * edge = grid->get_child<EdgeBase, TElem> (c_elem,  child);
 				
 			// Get the local coordinates of the edge center w.r.t. the parent element:
 				MathVector<TElem::dim> loc_0, loc_1, loc_center;
