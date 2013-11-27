@@ -160,6 +160,9 @@ public:
 /// Returns the name
 	const char* name() const {return "Hiptmair hybrid smoother for Whitney-1 elements";}
 	
+///	Currently returns false because the computation of the potentials is not purely parallel up to now
+	bool supports_parallel() const {return false;}
+	
 /// Initialization using a matrix and a GridFunction (not merely a vector!)
 	bool init(SmartPtr<ILinearOperator<vector_type> > J, const vector_type& u);
 
