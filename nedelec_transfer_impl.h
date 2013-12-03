@@ -447,7 +447,7 @@ void NedelecTransfer<TDomain, TAlgebra>::set_levels
  * Copies parameters from another object
  */
 template <typename TDomain, typename TAlgebra>
-SmartPtr<ITransferOperator<TAlgebra> > NedelecTransfer<TDomain, TAlgebra>::clone ()
+SmartPtr<ITransferOperator<TDomain, TAlgebra> > NedelecTransfer<TDomain, TAlgebra>::clone ()
 {
 	SmartPtr<NedelecTransfer> op (new NedelecTransfer (m_spApproxSpace));
 	

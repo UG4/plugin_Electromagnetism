@@ -136,7 +136,7 @@ public:
  * subfunction.
  */
 template <typename TDomain, typename TAlgebra>
-class NedelecTransfer: public ITransferOperator<TAlgebra>
+class NedelecTransfer: public ITransferOperator<TDomain, TAlgebra>
 {
 public:
 /// This type
@@ -186,7 +186,7 @@ public:
 	void do_restrict (vector_type & uCoarse, const vector_type & uFine);
 	
 ///	returns new instance with same setting
-	SmartPtr<ITransferOperator<TAlgebra> > clone ();
+	SmartPtr<ITransferOperator<TDomain, TAlgebra> > clone ();
 	
 private:
 	

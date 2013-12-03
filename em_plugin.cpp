@@ -187,7 +187,7 @@ struct Functionality
 	// Transfer operators for the Whitney-1 elements
 		{
 			typedef NedelecTransfer<TDomain, TAlgebra> T;
-			typedef ITransferOperator<TAlgebra> TBase;
+			typedef ITransferOperator<TDomain, TAlgebra> TBase;
 			string name = string("NedelecTransfer").append(suffix);
 			reg.add_class_<T, TBase>(name, grp)
 				.template add_constructor
