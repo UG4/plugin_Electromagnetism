@@ -10,7 +10,6 @@
 
 #include "common/common.h"
 #include "lib_disc/operator/linear_operator/transfer_interface.h"
-#include "lib_disc/spatial_disc/constraints/constraint_interface.h"
 
 #ifdef UG_PARALLEL
 #include "lib_disc/parallelization/parallelization_util.h"
@@ -141,7 +140,10 @@ class NedelecTransfer: public ITransferOperator<TDomain, TAlgebra>
 public:
 /// This type
 	typedef NedelecTransfer<TDomain, TAlgebra> this_type;
-	
+
+///	Type of base class
+	typedef ITransferOperator<TDomain, TAlgebra> base_type;
+
 ///	Type of Domain
 	typedef TDomain domain_type;
 	
@@ -161,20 +163,11 @@ public:
 
 ///	Constructor setting approximation space
 	NedelecTransfer (SmartPtr<ApproximationSpace<TDomain> > approxSpace)
-	:	m_bInit (false), m_spApproxSpace (approxSpace)
-		{clear_constraints ();};
+	:	ITransferOperator<TDomain, TAlgebra>(), m_bInit (false), m_spApproxSpace (approxSpace)
+		{};
 	
 ///	Set levels
 	virtual void set_levels (GridLevel coarseLevel, GridLevel fineLevel);
-	
-///	clears dirichlet post processes
-	void clear_constraints () {m_vConstraint.clear();};
-	
-///	adds a dirichlet post process (not added if already registered)
-	void add_constraint (SmartPtr<IConstraint<TAlgebra> > pp);
-	
-///	removes a post process
-	void remove_constraint (SmartPtr<IConstraint<TAlgebra> > pp);
 	
 ///	initializes the operator (computes the prolongation matrix etc)
 	void init ();
@@ -240,7 +233,7 @@ private:
 	std::vector<bool> m_vIsRestricted;
 
 ///	list of post processes
-	std::vector<SmartPtr<IConstraint<TAlgebra> > > m_vConstraint;
+	using base_type::m_vConstraint;
 	
 ///	approximation space
 	SmartPtr<ApproximationSpace<TDomain> > m_spApproxSpace;

@@ -457,33 +457,6 @@ SmartPtr<ITransferOperator<TDomain, TAlgebra> > NedelecTransfer<TDomain, TAlgebr
 	return op;
 }
 
-/**
- * Adds a new constraint to the transfer operators
- */
-template <typename TDomain, typename TAlgebra>
-void NedelecTransfer<TDomain, TAlgebra>::add_constraint
-(
-	SmartPtr<IConstraint<TAlgebra> > pp
-)
-{
-//	add only once
-	if (std::find (m_vConstraint.begin(), m_vConstraint.end(), pp) != m_vConstraint.end ())
-		return;
-	m_vConstraint.push_back (pp);
-}
-
-/**
- * Removes a constraint from the transfer operators
- */
-template <typename TDomain, typename TAlgebra>
-void NedelecTransfer<TDomain, TAlgebra>::remove_constraint
-(
-	SmartPtr<IConstraint<TAlgebra> > pp
-)
-{
-	m_vConstraint.erase (m_vConstraint.begin (),
-	                     std::remove (m_vConstraint.begin (), m_vConstraint.end (), pp));
-}
 
 } // end namespace Electromagnetism
 } // end namespace ug
