@@ -313,7 +313,7 @@ private:
 	{
 	private:
 	/// maximum number of corners of an element
-		static const size_t maxCorners = DimReferenceElement<WDim>::MAXCORNERS;
+		static const size_t maxCorners = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxCorners;
 		
 	/// Iterator over vertices
 		typedef DoFDistribution::traits<Vertex>::const_iterator t_vert_iterator;
@@ -382,7 +382,7 @@ private:
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL,
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = SPNULL,
 			const number s_a0 = 1.0
 		)
 		{
@@ -398,7 +398,7 @@ private:
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL,
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = SPNULL,
 			const std::vector<number> * vScaleMass = NULL,
 			const std::vector<number> * vScaleStiff = NULL
 		)
