@@ -382,7 +382,7 @@ private:
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = ConstSmartPtr<VectorTimeSeries<pot_vector_type> >(),
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL,
 			const number s_a0 = 1.0
 		)
 		{
@@ -398,7 +398,7 @@ private:
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = ConstSmartPtr<VectorTimeSeries<pot_vector_type> >(),
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = NULL,
 			const std::vector<number> * vScaleMass = NULL,
 			const std::vector<number> * vScaleStiff = NULL
 		)

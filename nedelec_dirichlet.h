@@ -301,7 +301,7 @@ public:
 		const vector_type & u,
 		ConstSmartPtr<DoFDistribution> dd,
 		number time = 0.0,
-		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = ConstSmartPtr<VectorTimeSeries<vector_type> > (), // i.e. NULL
+		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = NULL,
 		const number s_a0 = 1.0
 	);
 
@@ -312,7 +312,7 @@ public:
 		const vector_type & u,
 		ConstSmartPtr<DoFDistribution> dd,
 		number time = 0.0,
-		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = ConstSmartPtr<VectorTimeSeries<vector_type> > (), // i.e. NULL
+		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = NULL,
 		const std::vector<number> * vScaleMass = NULL,
 		const std::vector<number> * vScaleStiff = NULL
 	);
