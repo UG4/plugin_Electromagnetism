@@ -185,7 +185,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::mark_source_edges
 				EdgeBase * pEdge = edge_list[e];
 				char flag = 1;
 				if (edgeDD.inner_algebra_indices (pEdge, vEdgeInd) != 1)
-					UG_THROW ("NedelecLoopCurrent: Edge DoF distribution mismatch. Not the Nedelec-type-1 element?");
+					UG_THROW ("NedelecLoopCurrent: RegularEdge DoF distribution mismatch. Not the Nedelec-type-1 element?");
 				if (in_pos)
 				{
 					if (m_cutSsGrp.contains (pIsh->get_subset_index (pEdge->vertex (0))))
@@ -243,7 +243,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 	vector_type & src_field ///< [out] the computed source field
 )
 {
-	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iter;
+	typedef DoFDistribution::traits<RegularEdge>::const_iterator t_edge_iter;
 	
 //	The full-dim. grid element types for this dimension:
 	typedef typename domain_traits<WDim>::DimElemList ElemList;
@@ -259,8 +259,8 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 //	Compute the gradient:
 	std::vector<size_t> vVertInd (1);
 	std::vector<DoFIndex> vEdgeInd (1);
-	t_edge_iter edgeIterEnd = edgeDD.end<Edge> ();
-	for (t_edge_iter edgeIter = edgeDD.begin<Edge> (); edgeIter != edgeIterEnd; ++edgeIter)
+	t_edge_iter edgeIterEnd = edgeDD.end<RegularEdge> ();
+	for (t_edge_iter edgeIter = edgeDD.begin<RegularEdge> (); edgeIter != edgeIterEnd; ++edgeIter)
 	{
 		EdgeBase * pEdge = *edgeIter;
 		char edge_flag;
@@ -268,7 +268,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 		
 		// Get the edge DoF and check whether the edge is in the source:
 		if (edgeDD.inner_dof_indices (pEdge, func, vEdgeInd) != 1)
-			UG_THROW ("NedelecLoopCurrent: Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
+			UG_THROW ("NedelecLoopCurrent: RegularEdge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 		if ((edge_flag = in_source [vEdgeInd [0] [0]]) == 0)
 		{ // we are not in the source
 			DoFRef (src_field, vEdgeInd [0]) = 0;

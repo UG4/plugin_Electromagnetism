@@ -71,7 +71,7 @@ public:
  * Helper class for assembling the prolongation matrix: Instantiation for edges.
  */
 template <typename TDomain, typename TAlgebra>
-class NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>
+class NedelecProlongationMatrixHelper<TDomain, TAlgebra, RegularEdge>
 {
 ///	Type of Domain
 	typedef TDomain domain_type;

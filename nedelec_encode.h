@@ -74,7 +74,7 @@ void ComputeNedelecDoFs
 //	Domain type, position_type and iterators
 	typedef typename TGridFunction::domain_type domain_type;
 	typedef typename domain_type::position_type position_type;
-	typedef typename TGridFunction::template traits<Edge>::const_iterator t_edge_iterator;
+	typedef typename TGridFunction::template traits<RegularEdge>::const_iterator t_edge_iterator;
 
 //	Get position accessor
 	const typename domain_type::position_accessor_type& aaPos = spGridFct->domain()->position_accessor();
@@ -98,8 +98,8 @@ void ComputeNedelecDoFs
 		}
 	
 	//	Loop the edges
-		t_edge_iterator iter = spGridFct->template begin<Edge> (si);
-		t_edge_iterator iterEnd = spGridFct->template end<Edge> (si);
+		t_edge_iterator iter = spGridFct->template begin<RegularEdge> (si);
+		t_edge_iterator iterEnd = spGridFct->template end<RegularEdge> (si);
 		for (; iter != iterEnd; iter++)
 		{
 			EdgeBase * pEdge = *iter;

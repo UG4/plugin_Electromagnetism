@@ -82,7 +82,7 @@ public:
 	
 private:
 	/// iterator over edges
-		typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
+		typedef DoFDistribution::traits<RegularEdge>::const_iterator t_edge_iterator;
 	
 public:
 	///	class constructor

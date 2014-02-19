@@ -68,7 +68,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::GetRegularLocalC
  * prolongation coefficients are computed for the regular refinement.
  */
 template <typename TDomain, typename TAlgebra>
-void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolongation_matrix
+void NedelecProlongationMatrixHelper<TDomain, TAlgebra, RegularEdge>::assemble_prolongation_matrix
 (
 	const domain_type & domain, ///< [in] the domain
 	const DoFDistribution & coarseDD, ///< [in] the coarse grid DD

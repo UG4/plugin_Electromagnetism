@@ -186,12 +186,12 @@ class NedelecT1_LDisc
 };
 /// This class serves as a protection: no Nedelec elements in 1d (i.e. on edges)!
 template <typename TDomain>
-class NedelecT1_LDisc<TDomain, Edge>
+class NedelecT1_LDisc<TDomain, RegularEdge>
 {
 	static const int WDim = TDomain::dim;
 	typedef typename TDomain::grid_type grid_type;
 	typedef typename TDomain::position_type position_type;
-	typedef typename reference_element_traits<Edge>::reference_element_type ref_elem_type;
+	typedef typename reference_element_traits<RegularEdge>::reference_element_type ref_elem_type;
 	typedef LagrangeP1<ref_elem_type> W0_shapes_type;
 	public:
 	static const int dim = ref_elem_type::dim;
@@ -203,7 +203,7 @@ class NedelecT1_LDisc<TDomain, Edge>
 	static void local_stiffness_and_mass
 	(
 		const TDomain & domain, /**< [in] the domain */
-		Edge * elem, /**< [in] element */
+		RegularEdge * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
 		number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
@@ -215,7 +215,7 @@ class NedelecT1_LDisc<TDomain, Edge>
 	static void local_div_matrix
 	(
 		const TDomain & domain, /**< [in] the domain */
-		Edge * elem, /**< [in] element */
+		RegularEdge * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number B [][numEdges] /**< [out] local weak divergence operator matrix */
 	)
@@ -226,7 +226,7 @@ class NedelecT1_LDisc<TDomain, Edge>
 	static void interpolate
 	(
 		const TDomain & domain, /**< [in] the domain */
-		Edge * elem, /**< [in] element */
+		RegularEdge * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
 		const MathVector<dim> local [], /**< [in] local coordinates of the points where to compute */
@@ -240,7 +240,7 @@ class NedelecT1_LDisc<TDomain, Edge>
 	static void curl
 	(
 		const TDomain & domain, /**< [in] the domain */
-		Edge * elem, /**< [in] element */
+		RegularEdge * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
 		MathVector<WDim> & curl /**< [out] where to store the computed curl */

@@ -370,7 +370,7 @@ private:
 	{
 	private:
 	/// Iterator over edges
-		typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
+		typedef DoFDistribution::traits<RegularEdge>::const_iterator t_edge_iterator;
 	
 	/// maximum number of corners of an element
 		static const size_t maxCorners = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxCorners;
