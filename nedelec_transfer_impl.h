@@ -77,7 +77,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, RegularEdge>::assemble_p
 	std::vector<bool> & vIsRestricted ///< [out] whether a coarse grid DoF has children
 )
 {
-	typedef DoFDistribution::traits<EdgeBase>::const_iterator iterator;
+	typedef DoFDistribution::traits<Edge>::const_iterator iterator;
 	
 // Multiindices to access the components
 	std::vector<DoFIndex> c_ind (1), f_ind (1);
@@ -93,19 +93,19 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, RegularEdge>::assemble_p
 	for (int si = 0; si < coarseDD.num_subsets (); si++)
 	{
 	// Loop over all edges in the subset
-		iterator e_end = coarseDD.template end<EdgeBase> (si);
-		for (iterator edge_iter = coarseDD.template begin<EdgeBase> (si);
+		iterator e_end = coarseDD.template end<Edge> (si);
+		for (iterator edge_iter = coarseDD.template begin<Edge> (si);
 			edge_iter != e_end; ++edge_iter)
 		{
 			number coef;
-			EdgeBase * c_edge = * edge_iter;
-			const size_t n_children = grid->num_children<EdgeBase, EdgeBase> (c_edge);
+			Edge * c_edge = * edge_iter;
+			const size_t n_children = grid->num_children<Edge, Edge> (c_edge);
 			
 			if (n_children == 0)
 				continue;
 			else if (n_children == 1)
 			{
-				EdgeBase * f_edge = grid->get_child<EdgeBase, EdgeBase> (c_edge,  0);
+				Edge * f_edge = grid->get_child<Edge, Edge> (c_edge,  0);
 				
 			//	Check the edge orientation:
 				GridObject * corner_0 = grid->get_parent (f_edge->vertex(0));
@@ -133,7 +133,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, RegularEdge>::assemble_p
 			{
 				for (size_t child = 0; child < 2; child++)
 				{
-					EdgeBase * f_edge = grid->get_child<EdgeBase, EdgeBase> (c_edge,  child);
+					Edge * f_edge = grid->get_child<Edge, Edge> (c_edge,  child);
 					
 				//	Check the edge orientation:
 					GridObject * corner_0 = grid->get_parent (f_edge->vertex(0));
@@ -209,7 +209,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 			elem_iter != e_end; ++elem_iter)
 		{
 			TElem * c_elem = * elem_iter;
-			const size_t n_children = grid->num_children<EdgeBase, TElem> (c_elem);
+			const size_t n_children = grid->num_children<Edge, TElem> (c_elem);
 			
 			if (n_children == 0)
 				continue;
@@ -223,7 +223,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 			for (size_t child = 0; child < n_children; child++)
 			{
 			// Get the fine grid edge:
-				EdgeBase * edge = grid->get_child<EdgeBase, TElem> (c_elem,  child);
+				Edge * edge = grid->get_child<Edge, TElem> (c_elem,  child);
 				
 			// Get the local coordinates of the edge center w.r.t. the parent element:
 				MathVector<TElem::dim> loc_0, loc_1, loc_center;

@@ -31,7 +31,7 @@ template <typename TDomain>
 inline number ComputeNedelecDoF
 (
 	UserData<MathVector<TDomain::dim>, TDomain::dim> * function, ///< the function to encode
-	EdgeBase * edge, ///< the edge to compute the DoF for
+	Edge * edge, ///< the edge to compute the DoF for
 	const typename TDomain::position_accessor_type& aaPos, ///< coordinates of the vertices
 	const int si, ///< subset index
 	number time ///< the time argument
@@ -102,7 +102,7 @@ void ComputeNedelecDoFs
 		t_edge_iterator iterEnd = spGridFct->template end<RegularEdge> (si);
 		for (; iter != iterEnd; iter++)
 		{
-			EdgeBase * pEdge = *iter;
+			Edge * pEdge = *iter;
 			
 		//	Get the multiindices
 			if (spGridFct->inner_dof_indices (pEdge, fct, ind) != 1)

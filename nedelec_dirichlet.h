@@ -153,7 +153,7 @@ private:
 		/// evaluator
 		inline number operator ()
 		(
-			EdgeBase * edge, ///< the edge
+			Edge * edge, ///< the edge
 			int si, ///< subset index
 			typename domain_type::position_accessor_type & aaPos, ///< vertex coordinates
 			number time ///< the time argument
@@ -195,7 +195,7 @@ private:
 		/// evaluator
 		inline number operator ()
 		(
-			EdgeBase * edge, ///< the edge
+			Edge * edge, ///< the edge
 			int si, ///< subset index
 			typename domain_type::position_accessor_type & aaPos, ///< vertex coordinates
 			number time ///< the time argument

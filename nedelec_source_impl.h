@@ -182,7 +182,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::mark_source_edges
 				"Mismatch of numbers of corners and vertices of an element");
 			for (size_t e = 0; e < (size_t) ref_elem_type::numEdges; e++)
 			{
-				EdgeBase * pEdge = edge_list[e];
+				Edge * pEdge = edge_list[e];
 				char flag = 1;
 				if (edgeDD.inner_algebra_indices (pEdge, vEdgeInd) != 1)
 					UG_THROW ("NedelecLoopCurrent: RegularEdge DoF distribution mismatch. Not the Nedelec-type-1 element?");
@@ -262,7 +262,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 	t_edge_iter edgeIterEnd = edgeDD.end<RegularEdge> ();
 	for (t_edge_iter edgeIter = edgeDD.begin<RegularEdge> (); edgeIter != edgeIterEnd; ++edgeIter)
 	{
-		EdgeBase * pEdge = *edgeIter;
+		Edge * pEdge = *edgeIter;
 		char edge_flag;
 		number nd_pot [2];
 		

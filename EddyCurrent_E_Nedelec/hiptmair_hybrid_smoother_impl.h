@@ -32,7 +32,7 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 	t_edge_iter edgeIterEnd = pEdgeDD->end<RegularEdge> ();
 	for (t_edge_iter edgeIter = pEdgeDD->begin<RegularEdge> (); edgeIter != edgeIterEnd; ++edgeIter)
 	{
-		EdgeBase * pEdge = *edgeIter;
+		Edge * pEdge = *edgeIter;
 		if (pEdgeDD->inner_algebra_indices (pEdge, vEdgeInd) != 1)
 			UG_THROW (name () << ": RegularEdge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 		tEdgeInfo & EdgeInfo = m_vEdgeInfo [vEdgeInd [0]];
@@ -60,7 +60,7 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 		t_edge_iter iterEnd = pEdgeDD->end<RegularEdge> (si);
 		for (t_edge_iter iter = pEdgeDD->begin<RegularEdge> (si); iter != iterEnd; iter++)
 		{
-			EdgeBase * pEdge = *iter;
+			Edge * pEdge = *iter;
 			if (pEdgeDD->inner_algebra_indices (pEdge, vEdgeInd) != 1)
 				UG_THROW (name () << ": RegularEdge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 			m_vEdgeInfo[vEdgeInd[0]].Dirichlet = true;

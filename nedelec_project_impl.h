@@ -552,7 +552,7 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 	for (t_edge_iterator iter = edgeDD.begin<RegularEdge> (); iter != iterEnd; iter++)
 	{
 		number corner_val [2];
-		EdgeBase * pEdge = *iter;
+		Edge * pEdge = *iter;
 		
 	//	Get the potential the ends of the edge:
 		for(size_t i = 0; i < 2; i++)
@@ -758,7 +758,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::set_zero_Dirichlet
 		t_edge_iterator iterEnd = dd->end<RegularEdge> (si);
 		for (t_edge_iterator iter = dd->begin<RegularEdge> (si); iter != iterEnd; iter++)
 		{
-			EdgeBase * pEdge = *iter;
+			Edge * pEdge = *iter;
 			
 		//	For both the ends of the edge
 			for(size_t i = 0; i < 2; i++)
@@ -802,7 +802,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::set_identity_Dirichlet
 		t_edge_iterator iterEnd = dd->end<RegularEdge> (si);
 		for (t_edge_iterator iter = dd->begin<RegularEdge> (si); iter != iterEnd; iter++)
 		{
-			EdgeBase * pEdge = *iter;
+			Edge * pEdge = *iter;
 			
 		//	For both the ends of the edge
 			for(size_t i = 0; i < 2; i++)

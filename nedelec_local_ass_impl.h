@@ -79,7 +79,7 @@ void NedelecT1_LDisc<TDomain, TElem>::get_edge_corners
 	
 	for (size_t e = 0; e < numEdges; e++)
 	{
-		const EdgeBase * edge = edge_list[e];
+		const Edge * edge = edge_list[e];
 		for (size_t i = 0; i < 2; i++)
 		{
 			const Vertex * vert = edge->vertex (i); size_t co = 0;

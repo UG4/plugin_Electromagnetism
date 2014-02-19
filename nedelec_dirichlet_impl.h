@@ -385,7 +385,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution
 	//	Loop dirichlet functions on this segment
 		for(size_t i = 0; i < vUserData.size (); ++i)
 		{
-			EdgeBase * pEdge = *iter;
+			Edge * pEdge = *iter;
 		//	Get the multiindices
 			if (dd->inner_dof_indices (pEdge, vUserData[i]->fct, multInd) != 1)
 				UG_THROW ("NedelecDirichletBC:"
@@ -423,7 +423,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution_implicit
 		t_edge_iterator iterEnd = dd->end<RegularEdge> (si);
 		for (t_edge_iterator iter = dd->begin<RegularEdge> (si); iter != iterEnd; iter++)
 		{
-			EdgeBase * pEdge = *iter;
+			Edge * pEdge = *iter;
 			
 		//	Loop dirichlet functions on this segment
 			for(size_t i = 0; i < fctGrp.size (); ++i)
