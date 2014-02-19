@@ -49,7 +49,7 @@ class NedelecProlongationMatrixHelper
 	static void GetRegularLocalCoordinate
 	(
 		const MultiGrid * mg, ///< [in] the grid hierarchy
-		VertexBase * vrt, ///< [in] the vertex
+		Vertex * vrt, ///< [in] the vertex
 		TElem * base, ///< [in] the base element (for the local coordinates)
 		MathVector<TElem::dim> & local ///< [out] to save the local coordinates
 	);

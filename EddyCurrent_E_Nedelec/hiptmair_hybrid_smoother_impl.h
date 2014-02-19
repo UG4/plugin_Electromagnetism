@@ -41,7 +41,7 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 		
 		for (size_t i = 0; i < 2; i++)
 		{
-			VertexBase * pVertex = pEdge->vertex (i);
+			Vertex * pVertex = pEdge->vertex (i);
 			if (pVertDD->inner_algebra_indices (pVertex, vVertInd) != 1)
 				UG_THROW (name () << ": Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
 			EdgeInfo.vrt_index [i] = vVertInd [0];

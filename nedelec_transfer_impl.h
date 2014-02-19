@@ -27,7 +27,7 @@ template <typename TDomain, typename TAlgebra, typename TElem>
 void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::GetRegularLocalCoordinate
 (
 	const MultiGrid * mg, ///< [in] the grid hierarchy
-	VertexBase * v, ///< [in] the vertex
+	Vertex * v, ///< [in] the vertex
 	TElem * base, ///< [in] the base element (for the local coordinates)
 	MathVector<TElem::dim> & local ///< [out] to save the local coordinates
 )

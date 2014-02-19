@@ -82,7 +82,7 @@ void NedelecT1_LDisc<TDomain, TElem>::get_edge_corners
 		const EdgeBase * edge = edge_list[e];
 		for (size_t i = 0; i < 2; i++)
 		{
-			const VertexBase * vert = edge->vertex (i); size_t co = 0;
+			const Vertex * vert = edge->vertex (i); size_t co = 0;
 			while (elem->vertex (co) != vert)
 				if ((++co) == numCorners)
 					UG_THROW ("Internal error in Nedelec disc.: vertex-edge mismatch");

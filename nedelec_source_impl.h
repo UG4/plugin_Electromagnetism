@@ -278,7 +278,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 		// Get the values at the ends:
 		for (size_t i = 0; i < 2; i++)
 		{
-			VertexBase * pVertex = pEdge->vertex (i);
+			Vertex * pVertex = pEdge->vertex (i);
 			if (vertDD.inner_algebra_indices (pVertex, vVertInd) != 1)
 				UG_THROW ("NedelecLoopCurrent: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
 			nd_pot [i] = src_pot [vVertInd [0]];
