@@ -273,7 +273,7 @@ public:
 	static void value
 	(
 		const TDomain & domain, /**< [in] the domain */
-		GeometricObject * elem, /**< [in] element */
+		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
 		const MathVector<refDim> local [], /**< [in] local coordinates of the points where to compute */
@@ -296,7 +296,7 @@ public:
 	static void curl
 	(
 		const TDomain & domain, /**< [in] the domain */
-		GeometricObject * elem, /**< [in] element */
+		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
 		MathVector<WDim> & curl /**< [out] where to store the computed n_pnt values */
@@ -320,7 +320,7 @@ public:
 	static void value
 	(
 		const TDomain & domain, /**< [in] the domain */
-		GeometricObject * elem, /**< [in] element */
+		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
 		const MathVector<2> local [], /**< [in] local coordinates of the points where to compute */
@@ -346,7 +346,7 @@ public:
 	static void curl
 	(
 		const TDomain & domain, /**< [in] the domain */
-		GeometricObject * elem, /**< [in] element */
+		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
 		MathVector<2> & curl /**< [out] where to store the computed n_pnt values */
@@ -373,7 +373,7 @@ public:
 	static void value
 	(
 		const TDomain & domain, /**< [in] the domain */
-		GeometricObject * elem, /**< [in] element */
+		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
 		const MathVector<3> local [], /**< [in] local coordinates of the points where to compute */
@@ -398,7 +398,7 @@ public:
 	static void curl
 	(
 		const TDomain & domain, /**< [in] the domain */
-		GeometricObject * elem, /**< [in] element */
+		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
 		MathVector<3> & curl /**< [out] where to store the computed n_pnt values */

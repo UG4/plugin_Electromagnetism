@@ -84,7 +84,7 @@ template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element
 (
 	const LocalVector & u, ///< local solution at the dofs associated with elem
-	GeometricObject * elem, ///< element to prepare
+	GridObject * elem, ///< element to prepare
 	const position_type vCornerCoords [] ///< coordinates of the corners of the element
 )
 {
@@ -181,7 +181,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_JA_elem
 (
 	LocalMatrix & J,
 	const LocalVector & u,
-	GeometricObject * elem,
+	GridObject * elem,
 	const position_type vCornerCoords []
 )
 {
@@ -227,7 +227,7 @@ template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem
 (
 	LocalVector& b,
-	GeometricObject * elem,
+	GridObject * elem,
 	const position_type vCornerCoords []
 )
 {
@@ -268,7 +268,7 @@ template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_dA_elem
 (
-	LocalVector & d, const LocalVector & u, GeometricObject * elem, const position_type vCornerCoords []
+	LocalVector & d, const LocalVector & u, GridObject * elem, const position_type vCornerCoords []
 )
 {}
 
@@ -281,7 +281,7 @@ template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_JM_elem
 (
-	LocalMatrix & J, const LocalVector & u, GeometricObject * elem, const position_type vCornerCoords []
+	LocalMatrix & J, const LocalVector & u, GridObject * elem, const position_type vCornerCoords []
 )
 {}
 
@@ -294,7 +294,7 @@ template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_dM_elem
 (
-	LocalVector & d, const LocalVector & u, GeometricObject * elem, const position_type vCornerCoords []
+	LocalVector & d, const LocalVector & u, GridObject * elem, const position_type vCornerCoords []
 )
 {}
 

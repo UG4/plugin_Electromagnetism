@@ -584,7 +584,7 @@ template <typename TDomain, typename TAlgebra>
 template <typename TElem>
 void NedelecProject<TDomain, TAlgebra>::LocLaplaceA<TElem>::stiffness
 (
-	GeometricObject * elem, ///< [in] element to prepare
+	GridObject * elem, ///< [in] element to prepare
 	const position_type vCornerCoords [], ///< [in] coordinates of the corners of the element
 	number loc_A [numCorners] [numCorners] ///< [out] the local stiffness matrix
 )
@@ -700,7 +700,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceLocAss::ass_JA_elem
 (
 	LocalMatrix & J, ///< [in] the matrix to update
 	const LocalVector & u, ///< [in] the local solution (not used here)
-	GeometricObject * elem, ///< [in] element to prepare
+	GridObject * elem, ///< [in] element to prepare
 	const position_type vCornerCoords [] ///< [in] coordinates of the corners of the element
 )
 {

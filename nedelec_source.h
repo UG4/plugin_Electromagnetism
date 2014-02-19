@@ -195,7 +195,7 @@ private:
 		/// Computes the local discretization of the Laplace operator
 		static void stiffness
 		(
-			GeometricObject * elem, ///< [in] element to compute for
+			GridObject * elem, ///< [in] element to compute for
 			const position_type vCornerCoords [], ///< [in] coordinates of the corners of the element
 			number loc_A [numCorners] [numCorners] ///< [out] the local stiffness matrix
 		);
@@ -203,7 +203,7 @@ private:
 		/// Checks whether corners are on boundary (returns true if yes)
 		static bool bnd_corners
 		(
-			GeometricObject * elem, ///< [in] element to compute for
+			GridObject * elem, ///< [in] element to compute for
 			const SubsetGroup & bndGrp, ///< [in] boundary subsets
 			bool bnd_flag [numCorners] ///< [out] true for bnd nodes, false for others
 		);
@@ -245,29 +245,29 @@ private:
 		void prepare_element_loop (ReferenceObjectID roid, int si);
 
 		template <typename TElem>
-		void ass_JA_elem (LocalMatrix & J, const LocalVector & u, GeometricObject * elem, const position_type vCornerCoords []);
+		void ass_JA_elem (LocalMatrix & J, const LocalVector & u, GridObject * elem, const position_type vCornerCoords []);
 		
 		template <typename TElem>
-		void ass_rhs_elem (LocalVector & d, GeometricObject * elem, const position_type vCornerCoords []);
+		void ass_rhs_elem (LocalVector & d, GridObject * elem, const position_type vCornerCoords []);
 
 		template <typename TElem>
-		void prepare_element (const LocalVector & u, GeometricObject * elem, const position_type vCornerCoords [])
+		void prepare_element (const LocalVector & u, GridObject * elem, const position_type vCornerCoords [])
 			{};
 		template <typename TElem>
 		void finish_element_loop ()
 			{};
 		template <typename TElem>
-		void ass_JM_elem (LocalMatrix & J, const LocalVector & u, GeometricObject * elem, const position_type vCornerCoords [])
+		void ass_JM_elem (LocalMatrix & J, const LocalVector & u, GridObject * elem, const position_type vCornerCoords [])
 			{
 				UG_THROW ("NedelecProject: Attempt to use nonstationary discretization for the potential.");
 			};
 		template <typename TElem>
-		void ass_dA_elem (LocalVector & d, const LocalVector & u, GeometricObject * elem, const position_type vCornerCoords [])
+		void ass_dA_elem (LocalVector & d, const LocalVector & u, GridObject * elem, const position_type vCornerCoords [])
 			{
 				UG_THROW ("NedelecProject: Attempt to assemble non-linear system for the potential.");
 			};
 		template <typename TElem>
-		void ass_dM_elem (LocalVector & d, const LocalVector & u, GeometricObject * elem, const position_type vCornerCoords [])
+		void ass_dM_elem (LocalVector & d, const LocalVector & u, GridObject * elem, const position_type vCornerCoords [])
 			{
 				UG_THROW ("NedelecProject: Attempt to use nonstationary discretization for the potential.");
 			};

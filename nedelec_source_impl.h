@@ -300,7 +300,7 @@ template <typename TDomain, typename TAlgebra>
 template <typename TElem>
 void NedelecLoopCurrent<TDomain, TAlgebra>::LocLaplaceA<TElem>::stiffness
 (
-	GeometricObject * elem, ///< [in] element to prepare
+	GridObject * elem, ///< [in] element to prepare
 	const position_type vCornerCoords [], ///< [in] coordinates of the corners of the element
 	number loc_A [numCorners] [numCorners] ///< [out] the local stiffness matrix
 )
@@ -334,7 +334,7 @@ template <typename TDomain, typename TAlgebra>
 template <typename TElem>
 bool NedelecLoopCurrent<TDomain, TAlgebra>::LocLaplaceA<TElem>::bnd_corners
 (
-	GeometricObject * elem, ///< [in] element to compute for
+	GridObject * elem, ///< [in] element to compute for
 	const SubsetGroup & bndGrp, ///< [in] boundary subsets
 	bool bnd_flag [numCorners] ///< [out] true for bnd nodes, false for others
 )
@@ -442,7 +442,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::AuxLaplaceLocAss::ass_JA_elem
 (
 	LocalMatrix & J, ///< [in] the matrix to update
 	const LocalVector & u, ///< [in] the local solution (not used here)
-	GeometricObject * elem, ///< [in] element to prepare
+	GridObject * elem, ///< [in] element to prepare
 	const position_type vCornerCoords [] ///< [in] coordinates of the corners of the element
 )
 {
@@ -464,7 +464,7 @@ template <typename TElem>
 void NedelecLoopCurrent<TDomain, TAlgebra>::AuxLaplaceLocAss::ass_rhs_elem
 (
 	LocalVector & d, ///< [in] the right-hand side to assemble
-	GeometricObject * elem, ///< [in] element to prepare
+	GridObject * elem, ///< [in] element to prepare
 	const position_type vCornerCoords [] ///< [in] coordinates of the corners of the element
 )
 {

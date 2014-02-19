@@ -33,7 +33,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::GetRegularLocalC
 )
 {
 //	Get the parent of the vertex (note that this is typically not the 'base')
-	GeometricObject * parent = mg->get_parent (v);
+	GridObject * parent = mg->get_parent (v);
 	
 //	Get the vertices of the parent
 	Grid::vertex_traits::secure_container vrts;
@@ -108,10 +108,10 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolonga
 				EdgeBase * f_edge = grid->get_child<EdgeBase, EdgeBase> (c_edge,  0);
 				
 			//	Check the edge orientation:
-				GeometricObject * corner_0 = grid->get_parent (f_edge->vertex(0));
-				if (corner_0 == (GeometricObject *) (c_edge->vertex (0)))
+				GridObject * corner_0 = grid->get_parent (f_edge->vertex(0));
+				if (corner_0 == (GridObject *) (c_edge->vertex (0)))
 					coef = 1; // the edges should have the same orientation
-				else if (corner_0 == (GeometricObject *) (c_edge->vertex (1)))
+				else if (corner_0 == (GridObject *) (c_edge->vertex (1)))
 					coef = -1; // the edges have the inverse orientation
 				else
 					UG_THROW ("NedelecTransfer: Cannot find out the edge orientation.");
@@ -136,13 +136,13 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, Edge>::assemble_prolonga
 					EdgeBase * f_edge = grid->get_child<EdgeBase, EdgeBase> (c_edge,  child);
 					
 				//	Check the edge orientation:
-					GeometricObject * corner_0 = grid->get_parent (f_edge->vertex(0));
-					GeometricObject * corner_1 = grid->get_parent (f_edge->vertex(1));
-					if (corner_0 == (GeometricObject *) (c_edge->vertex (0))
-						|| corner_1 == (GeometricObject *) (c_edge->vertex (1)))
+					GridObject * corner_0 = grid->get_parent (f_edge->vertex(0));
+					GridObject * corner_1 = grid->get_parent (f_edge->vertex(1));
+					if (corner_0 == (GridObject *) (c_edge->vertex (0))
+						|| corner_1 == (GridObject *) (c_edge->vertex (1)))
 						coef = 0.5; // the edges should have the same orientation
-					else if (corner_0 == (GeometricObject *) (c_edge->vertex (1))
-						|| corner_1 == (GeometricObject *) (c_edge->vertex (0)))
+					else if (corner_0 == (GridObject *) (c_edge->vertex (1))
+						|| corner_1 == (GridObject *) (c_edge->vertex (0)))
 						coef = -0.5; // the edges have the inverse orientation
 					else
 						UG_THROW ("NedelecTransfer: Cannot find out the edge orientation.");

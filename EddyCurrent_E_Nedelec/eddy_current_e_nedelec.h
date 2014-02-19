@@ -132,25 +132,25 @@ private:
 	void prepare_element_loop(ReferenceObjectID roid, int si);
 
 	template <typename TElem>
-	void prepare_element(const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
+	void prepare_element(const LocalVector& u, GridObject* elem, const position_type vCornerCoords[]);
 
 	template <typename TElem>
 	void finish_element_loop();
 
 	template <typename TElem>
-	void ass_JA_elem(LocalMatrix& J, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
+	void ass_JA_elem(LocalMatrix& J, const LocalVector& u, GridObject* elem, const position_type vCornerCoords[]);
 
 	template <typename TElem>
-	void ass_JM_elem(LocalMatrix& J, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
+	void ass_JM_elem(LocalMatrix& J, const LocalVector& u, GridObject* elem, const position_type vCornerCoords[]);
 
 	template <typename TElem>
-	void ass_dA_elem(LocalVector& d, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
+	void ass_dA_elem(LocalVector& d, const LocalVector& u, GridObject* elem, const position_type vCornerCoords[]);
 
 	template <typename TElem>
-	void ass_dM_elem(LocalVector& d, const LocalVector& u, GeometricObject* elem, const position_type vCornerCoords[]);
+	void ass_dM_elem(LocalVector& d, const LocalVector& u, GridObject* elem, const position_type vCornerCoords[]);
 
 	template <typename TElem>
-	void ass_rhs_elem(LocalVector& d, GeometricObject* elem, const position_type vCornerCoords[]);
+	void ass_rhs_elem(LocalVector& d, GridObject* elem, const position_type vCornerCoords[]);
 
 //---- Registration of the template functions: ----
 private:

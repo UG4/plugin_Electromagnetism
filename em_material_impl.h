@@ -371,7 +371,7 @@ void EMaterial<TDomain>::get_elem_connectivity
 	std::vector<int> & minCondInd
 )
 {
-	typedef typename geometry_traits<TElem>::geometric_base_object base_object;
+	typedef typename geometry_traits<TElem>::grid_base_object base_object;
 	typedef typename geometry_traits<TElem>::const_iterator elem_iterator;
 	
 	UG_ASSERT (((int) minCondInd.size ()) == subset_handler()->num_subsets (), "get_elem_connectivity: array size mismatch");
