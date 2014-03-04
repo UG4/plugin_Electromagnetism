@@ -107,8 +107,8 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute
 	SmartPtr<DoFDistribution> vertDD = m_spVertApproxSpace->dof_distribution (g_lev);
 	
 //	Compute the potential of the source:
-	pot_vector_type pot_u;
-	compute_potential (* vertDD.get (), g_lev, pot_u);
+	pot_gf_type pot_u (m_spVertApproxSpace, g_lev);
+	compute_potential (pot_u);
 	
 //	Compute the normalization factor of the potential (to scale the current to 1)
 	boost::mpl::for_each<ElemList>
@@ -205,21 +205,14 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::mark_source_edges
 template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::compute_potential
 (
-	const DoFDistribution & vertDD, ///< [in] the vertex DD
-	const GridLevel & grid_lev, ///< [in] grid level of the vector to correct
-	pot_vector_type & pot_u ///< [out] a vector for the potential
+	pot_gf_type & pot_u ///< a grid function for the potential
 )
 {
-	pot_vector_type pot_rhs;
-	
-//	Resize the vectors for the auxiliary system:
-	size_t aux_num_ind = vertDD.num_indices ();
-	pot_rhs.resize (aux_num_ind);
-	pot_u.resize (aux_num_ind);
+	pot_gf_type pot_rhs (pot_u.approx_space (), pot_u.dof_distribution ());
 	
 //	Assemble the matrix of the auxiliary problem:
 	pot_u.set (0.0);
-	m_auxLaplaceOp->set_level (grid_lev);
+	m_auxLaplaceOp->set_level (pot_u.grid_level ());
 	m_auxLaplaceOp->init_op_and_rhs (pot_rhs);
 	
 //	Initizlize the solver:
@@ -369,6 +362,8 @@ NedelecLoopCurrent<TDomain, TAlgebra>::AuxLaplaceLocAss::AuxLaplaceLocAss
 		UG_THROW ("NedelecLoopCurrent: No positive direction subsets specified");
 	if (m_cutSsGrp.empty ())
 		UG_THROW ("NedelecLoopCurrent: No cut specified");
+//	fast assembling
+	this->enable_fast_add_elem (true);
 //	register assemble functions
 	register_all_loc_discr_funcs ();
 }
@@ -412,7 +407,6 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::AuxLaplaceLocAss::register_loc_discr
 {
 	ReferenceObjectID id = geometry_traits<TElem>::REFERENCE_OBJECT_ID;
 
-	this->enable_fast_add_elem (true);
 	this->set_prep_elem_loop_fct(id, & AuxLaplaceLocAss::template prepare_element_loop<TElem>);
 	this->set_prep_elem_fct		(id, & AuxLaplaceLocAss::template prepare_element<TElem>);
 	this->set_fsh_elem_loop_fct	(id, & AuxLaplaceLocAss::template finish_element_loop<TElem>);

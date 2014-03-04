@@ -100,6 +100,8 @@ public:
 	typedef typename TPotAlgebra::vector_type pot_vector_type;
 /// Matrix type for the potential space
 	typedef typename TPotAlgebra::matrix_type pot_matrix_type;
+///	Grid function type for the potential space
+	typedef GridFunction<TDomain, TPotAlgebra> pot_gf_type;
 
 /// world dimention
 	static const int WDim = TDomain::dim;
@@ -168,9 +170,7 @@ private:
 	/// Computes the potential of the source
 	void compute_potential
 	(
-		const DoFDistribution & vertDD, ///< [in] the vertex DD
-		const GridLevel & grid_lev, ///< [in] grid level of the vector to correct
-		pot_vector_type & pot_u ///< [out] a vector for the potential
+		pot_gf_type & pot_u ///< a grid function for the potential
 	);
 	
 	/// Computes the gradient of the potential

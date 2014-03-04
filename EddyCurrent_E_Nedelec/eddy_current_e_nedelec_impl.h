@@ -320,7 +320,6 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_loc_discr_func ()
 {
 	static const ReferenceObjectID id = geometry_traits<TElem>::REFERENCE_OBJECT_ID;
 
-	this->enable_fast_add_elem (true);
 	this->set_prep_elem_loop_fct(id, & this_type::template prepare_element_loop<TElem>);
 	this->set_prep_elem_fct		(id, & this_type::template prepare_element<TElem>);
 	this->set_fsh_elem_loop_fct	(id, & this_type::template finish_element_loop<TElem>);
@@ -427,6 +426,8 @@ EddyCurrent_E_Nedelec
 					" needs exactly 2 symbolic function"
 					" (one for the real part and one for the imaginary one).");
 
+//	fast assembling
+	this->enable_fast_add_elem (true);
 //	register assemble functions
 	register_all_loc_discr_funcs ();
 }

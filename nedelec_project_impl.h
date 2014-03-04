@@ -88,23 +88,39 @@ void NedelecProject<TDomain, TAlgebra>::apply
 	
 //	Get the DoF distributions:
 	SmartPtr<DoFDistribution> edgeDD = u.dof_distribution ();
-	SmartPtr<DoFDistribution> vertDD = m_spVertApproxSpace->dof_distribution
-		(u.grid_level ());
+	SmartPtr<DoFDistribution> vertDD = m_spVertApproxSpace->dof_distribution (u.grid_level ());
 	
-//	Initialize the solver:
-	init_aux_solver (* vertDD.get (), u.grid_level ());
+//	Create temporary grid functions for the auxiliary problem
+	pot_gf_type aux_rhs (m_spVertApproxSpace, vertDD);
+	pot_gf_type aux_cor (m_spVertApproxSpace, vertDD);
 	
+//	Assemble the matrix of the auxiliary problem:
+	aux_cor.set (0.0);
+	m_auxLaplaceOp->set_level (u.grid_level ());
+	m_auxLaplaceOp->init (aux_cor);
+
+//	Initizlize the solver:
+	m_potSolver->init (m_auxLaplaceOp);
+
 //	Compute the Dirichlet vector fields:
 	if (m_bDampDVFs)
 	{
-		alloc_DVFs (domain, vertDD);
-		compute_DVFs (vertDD);
+		alloc_DVFs (domain, aux_rhs);
+		compute_DVFs (aux_rhs);
 		compute_DVF_potential_coeffs (domain, vertDD);
 	}
 	
 //	Project every function:
 	for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
-		project_func (domain, edgeDD, u, fctGrp[i_fct], vertDD);
+		project_func (domain, edgeDD, u, fctGrp[i_fct], vertDD, aux_rhs, aux_cor);
+	
+//	Release the Dirichlet vector fields:
+	if (m_bDampDVFs)
+	{
+		for (size_t i = 0; i < m_DVF_phi.size (); i++)
+			delete m_DVF_phi [i];
+		m_DVF_phi.resize (0);
+	}
 }
 
 /**
@@ -159,30 +175,6 @@ void NedelecProject<TDomain, TAlgebra>::compute_div
 }
 
 /**
- * Initializes the solver
- */
-template <typename TDomain, typename TAlgebra>
-void NedelecProject<TDomain, TAlgebra>::init_aux_solver
-(
-	const DoFDistribution & vertDD, ///< [in] the vertex DD
-	const GridLevel & grid_lev ///< [in] grid level of the vector to correct
-)
-{
-//	Resize the vectors for the auxiliary system:
-	size_t aux_num_ind = vertDD.num_indices ();
-	m_aux_rhs.resize (aux_num_ind);
-	m_aux_cor.resize (aux_num_ind);
-	
-//	Assemble the matrix of the auxiliary problem:
-	m_aux_cor.set (0.0);
-	m_auxLaplaceOp->set_level (grid_lev);
-	m_auxLaplaceOp->init (m_aux_cor);
-
-//	Initizlize the solver:
-	m_potSolver->init (m_auxLaplaceOp);
-}
-
-/**
  * Allocates memory for the DVFs associated with the conductors that
  * do not touch the Dirichlet boundary
  */
@@ -190,9 +182,10 @@ template <typename TDomain, typename TAlgebra>
 void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 (
 	const SmartPtr<TDomain> & domain, ///< [in] the domain
-	const SmartPtr<DoFDistribution> & vertDD ///< [in] the vertex DD
+	pot_gf_type & aux_rhs ///< [in] the grid function of the auxiliary rhs
 )
 {
+	const DoFDistribution * vertDD = aux_rhs.dof_distribution().get ();
 	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
 	const std::vector<int> & base_cond = m_spEmMaterial->base_conductors ();
 	size_t n_cond = base_cond.size ();
@@ -236,13 +229,12 @@ void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 	}
 	
 //	Allocate memory for the conductors
-	size_t aux_num_ind = m_aux_rhs.size ();
 	m_DVF_phi.resize (n_cond);
 	for (size_t i = 0; i < n_cond; i++)
 	if (grounded [i])
 		m_DVF_phi [i] = NULL; // the conductor is grounded, skip it
 	else
-		m_DVF_phi [i] = new pot_vector_type (aux_num_ind);
+		m_DVF_phi [i] = new pot_gf_type (aux_rhs.approx_space (), aux_rhs.dof_distribution ());
 }
 
 /**
@@ -251,22 +243,22 @@ void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 template <typename TDomain, typename TAlgebra>
 void NedelecProject<TDomain, TAlgebra>::compute_DVFs
 (
-	const SmartPtr<DoFDistribution> & vertDD ///< [in] the vertex DD
+	pot_gf_type & aux_rhs //< grid function for the auxiliary rhs
 )
 {
 	for (size_t i = 0; i < m_DVF_phi.size (); i++)
 	{
-		pot_vector_type * phi = m_DVF_phi [i];
+		pot_gf_type * phi = m_DVF_phi [i];
 		if (phi == NULL) continue; // a grounded conductor
 		
 	// 1. Compose the right-hand side:
 		m_auxLaplaceRHS->set_base_conductor (i);
-		m_aux_rhs.set (0.0);
-		m_auxLaplaceAss->adjust_solution (m_aux_rhs, vertDD);
+		aux_rhs.set (0.0);
+		m_auxLaplaceAss->adjust_solution (aux_rhs, aux_rhs.dof_distribution ());
 	// 2. Solve the auxiliary system:
 		phi->set (0.0);
-		m_auxLaplaceAss->adjust_solution (*phi, vertDD);
-		m_potSolver->apply (*phi, m_aux_rhs);
+		m_auxLaplaceAss->adjust_solution (*phi, phi->dof_distribution ());
+		m_potSolver->apply (*phi, aux_rhs);
 	}
 }
 
@@ -326,29 +318,31 @@ void NedelecProject<TDomain, TAlgebra>::project_func
 	const SmartPtr<DoFDistribution> & edgeDD, ///< [in] the edge DD
 	vector_type & u, ///< [in] the vector where to project
 	size_t fct, ///< [in] function in u to compute div for
-	const SmartPtr<DoFDistribution> & vertDD ///< [in] the vertex DD
+	const SmartPtr<DoFDistribution> & vertDD, ///< [in] the vertex DD
+	pot_gf_type & aux_rhs, ///< [in] a grid function for the rhs of the aux. problem
+	pot_gf_type & aux_cor ///< [in] a grid function for the sol. of the aux. problem
 )
 {
 //--- Compute the correction due to the divergence:
 
-	m_aux_cor.set (0.0);
-	m_aux_rhs.set (0.0);
+	aux_cor.set (0.0);
+	aux_rhs.set (0.0);
 	
 	DenseVector<VariableArray1<number> > charge;
 	
 // 1. Compute the weak div:
-	assemble_div (* domain.get(), * edgeDD.get(), u, fct, * vertDD.get(), m_aux_rhs, charge);
+	assemble_div (* domain.get(), * edgeDD.get(), u, fct, * vertDD.get(), aux_rhs, charge);
 // 2. Correct the divergence in the right-hand side:
 	m_auxLaplaceRHS->set_base_conductor (-1);
-	m_auxLaplaceAss->adjust_solution (m_aux_rhs, vertDD);
+	m_auxLaplaceAss->adjust_solution (aux_rhs, vertDD);
 // 3. Solve the auxiliary system:
-	m_auxLaplaceAss->adjust_solution (m_aux_cor, vertDD);
-	m_potSolver->apply (m_aux_cor, m_aux_rhs);
+	m_auxLaplaceAss->adjust_solution (aux_cor, vertDD);
+	m_potSolver->apply (aux_cor, aux_rhs);
 // 4. Damp the Dirichlet vector fields:
 	if (m_bDampDVFs)
-		damp_DVFs (m_aux_cor, charge);
+		damp_DVFs (aux_cor, charge);
 // 5. Merge the correction into the solution:
-	distribute_cor (* domain.get(), * edgeDD.get(), u, fct, * vertDD.get(), m_aux_cor);
+	distribute_cor (* domain.get(), * edgeDD.get(), u, fct, * vertDD.get(), aux_cor);
 }
 
 /**
@@ -512,7 +506,7 @@ void NedelecProject<TDomain, TAlgebra>::damp_DVFs
 	
 	for (size_t i = 0; i < m_DVF_phi.size (); i++)
 	if (m_DVF_phi [i] != NULL) // skip grounded conductors
-		VecScaleAdd (cor, 1.0, cor, factor [i], * m_DVF_phi [i]);
+		VecScaleAdd (cor, 1.0, cor, factor [i], * (pot_vector_type *) m_DVF_phi [i]);
 }
 
 /**
@@ -623,6 +617,8 @@ NedelecProject<TDomain, TAlgebra>::AuxLaplaceLocAss::AuxLaplaceLocAss
 :	IElemDisc<TDomain> (master.m_spVertApproxSpace->name(0).c_str(), master.m_spEmMaterial->subset_names()),
 	m_master (master), m_do_assemble_here (false)
 {
+//	fast assembling
+	this->enable_fast_add_elem (true);
 //	register assemble functions
 	register_all_loc_discr_funcs ();
 }
@@ -666,7 +662,6 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceLocAss::register_loc_discr_fun
 {
 	ReferenceObjectID id = geometry_traits<TElem>::REFERENCE_OBJECT_ID;
 
-	this->enable_fast_add_elem (true);
 	this->set_prep_elem_loop_fct(id, & AuxLaplaceLocAss::template prepare_element_loop<TElem>);
 	this->set_prep_elem_fct		(id, & AuxLaplaceLocAss::template prepare_element<TElem>);
 	this->set_fsh_elem_loop_fct	(id, & AuxLaplaceLocAss::template finish_element_loop<TElem>);

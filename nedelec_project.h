@@ -64,6 +64,8 @@ public:
 	typedef typename TPotAlgebra::vector_type pot_vector_type;
 /// Matrix type for the potential space
 	typedef typename TPotAlgebra::matrix_type pot_matrix_type;
+///	Grid function type for the potential space
+	typedef GridFunction<TDomain, TPotAlgebra> pot_gf_type;
 
 /// world dimention
 	static const int WDim = TDomain::dim;
@@ -119,24 +121,17 @@ public:
 	
 private:
 	
-	///	Initializes the auxiliary solver
-	inline void init_aux_solver
-	(
-		const DoFDistribution & vertDD, ///< [in] the vertex DD
-		const GridLevel & grid_lev ///< [in] grid level of the vector to correct
-	);
-	
 	/// Allocates memory for the DVFs associated with the ungrounded conductors
 	void alloc_DVFs
 	(
 		const SmartPtr<TDomain> & domain, ///< [in] the domain
-		const SmartPtr<DoFDistribution> & vertDD ///< [in] the vertex DD
+		pot_gf_type & aux_rhs ///< [in] grid function for the auxiliary rhs
 	);
 	
 	///	Computes the Dirichlet vector fields (DVFs)
 	void compute_DVFs
 	(
-		const SmartPtr<DoFDistribution> & vertDD ///< [in] the vertex DD
+		pot_gf_type & aux_rhs ///< grid function for the auxiliary rhs
 	);
 	
 	/// Computes the potential coefficients
@@ -153,7 +148,9 @@ private:
 		const SmartPtr<DoFDistribution> & edgeDD, ///< [in] the edge DD
 		vector_type & u, ///< [in] the vector where to project
 		size_t fct, ///< [in] function in u to compute div for
-		const SmartPtr<DoFDistribution> & vertDD ///< [in] the vertex DD
+		const SmartPtr<DoFDistribution> & vertDD, ///< [in] the vertex DD
+		pot_gf_type & aux_rhs, ///< [in] a grid function for the rhs of the aux. problem
+		pot_gf_type & aux_cor ///< [in] a grid function for the sol. of the aux. problem
 	);
 	
 //	The weak divergence and gradient operators:
@@ -637,11 +634,8 @@ private:
 	SmartPtr<AssembledLinearOperator<TPotAlgebra> > m_auxLaplaceOp;
 ///	Solver for the auxliliary equations
 	SmartPtr<ILinearOperatorInverse<pot_vector_type> > m_potSolver;
-///	Vectors for the rhs of the aux. systems and the correction
-	pot_vector_type m_aux_rhs;
-	pot_vector_type m_aux_cor;
 ///	Dirichlet vector fields (DVFs)
-	std::vector<pot_vector_type *> m_DVF_phi;
+	std::vector<pot_gf_type *> m_DVF_phi;
 ///	Potential coefficients:
 	DenseMatrix<VariableArray2<number> > m_potCoeff;
 };
