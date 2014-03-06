@@ -362,8 +362,6 @@ NedelecLoopCurrent<TDomain, TAlgebra>::AuxLaplaceLocAss::AuxLaplaceLocAss
 		UG_THROW ("NedelecLoopCurrent: No positive direction subsets specified");
 	if (m_cutSsGrp.empty ())
 		UG_THROW ("NedelecLoopCurrent: No cut specified");
-//	fast assembling
-	this->enable_fast_add_elem (true);
 //	register assemble functions
 	register_all_loc_discr_funcs ();
 }
@@ -406,7 +404,9 @@ template<typename TElem> // the element to register for
 void NedelecLoopCurrent<TDomain, TAlgebra>::AuxLaplaceLocAss::register_loc_discr_func ()
 {
 	ReferenceObjectID id = geometry_traits<TElem>::REFERENCE_OBJECT_ID;
-
+	
+	this->clear_add_fct(id);
+	
 	this->set_prep_elem_loop_fct(id, & AuxLaplaceLocAss::template prepare_element_loop<TElem>);
 	this->set_prep_elem_fct		(id, & AuxLaplaceLocAss::template prepare_element<TElem>);
 	this->set_fsh_elem_loop_fct	(id, & AuxLaplaceLocAss::template finish_element_loop<TElem>);
