@@ -57,7 +57,7 @@ void NedelecT1_LDisc<TDomain, TElem>::compute_W0_grads
  *
  * The edge dof indices correspond to the order of the edges in the reference
  * element. To every edge, two vertices (the corners of the element) are
- * assigned. We need them to be ordered independently on the element. This
+ * assigned. We need them to be ordered independently of the element. This
  * function assignes to every edge (i.e. every edge dof index) two indices
  * of the corners of the element in order that corresponds to the global
  * order of the vertices associated with these corners.
@@ -65,7 +65,7 @@ void NedelecT1_LDisc<TDomain, TElem>::compute_W0_grads
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc<TDomain, TElem>::get_edge_corners
 (
-	const TDomain& domain, /** [in] the domain */
+	const TDomain& domain, /**< [in] the domain */
 	TElem * elem, /**< [in] the element */
 	size_t edge_corner [numEdges] [2] /**< [out] edge dof -> corner of the element */
 )
@@ -104,7 +104,7 @@ void NedelecT1_LDisc<TDomain, TElem>::get_edge_corners
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc<TDomain, TElem>::local_stiffness_and_mass
 (
-	const TDomain & domain, /** [in] the domain */
+	const TDomain & domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
@@ -259,7 +259,7 @@ void NedelecT1_LDisc<TDomain, TElem>::get_shapes
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc<TDomain, TElem>::interpolate
 (
-	const TDomain & domain, /** [in] the domain */
+	const TDomain & domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	const number dof [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -310,7 +310,7 @@ void NedelecT1_LDisc<TDomain, TElem>::interpolate
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc<TDomain, TElem>::curl
 (
-	const TDomain & domain, /** [in] the domain */
+	const TDomain & domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	const number dof [], /**< [in] arrays of values of the Nedelec degrees of freedom */
