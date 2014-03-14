@@ -174,24 +174,6 @@ private:
 		std::vector<int> & minCondInd ///< [out] min. subset ind. of the conductor connected to a given one (or -1)
 	);
 	
-	/// a helper function for 'connectivity'
-	template <typename TElem>
-	void get_elem_connectivity
-	(
-		std::vector<int> & minCondInd ///< [out] min. subset ind. of the conductor connected to a given one (or -1)
-	);
-	
-	/// a helper class for 'connectivity'
-	struct GetElemConnectivity
-	{
-		this_type * m_pThis;
-		std::vector<int> & m_minCondSsI;
-		GetElemConnectivity (this_type* pThis, std::vector<int> & minCondInd)
-		 : m_pThis (pThis), m_minCondSsI (minCondInd) {}
-		template <typename TElem> void operator() (TElem &)
-			{m_pThis->get_elem_connectivity<TElem> (m_minCondSsI);}
-	};
-	
 	/// analyzes the conductor topology of the domain
 	void analyze_topology ();
 

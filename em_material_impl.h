@@ -154,6 +154,53 @@ void EMaterial<TDomain>::close ()
 }
 
 /**
+ * Computes the connectivity of the conductors and therefore finds out the
+ * topology of the domain.
+ *
+ * \param[out] minCondInd	an array indexed by the subset indices, so that
+ *							every entry of a conductor is initialized with the
+ *							smallest conductor subset id connected to it
+ *							(and with < 0 for the other subdomains including insulators)
+ */
+template <typename TDomain>
+void EMaterial<TDomain>::connectivity
+(
+	std::vector<int> & minCondInd
+)
+{
+//	The full-dim. grid element types for this dimension:
+	typedef typename domain_traits<dim>::grid_base_object t_base_object;
+	
+//	Initialize the marks of the conductor subsets:
+	std::vector<bool> isConductor (subset_handler()->num_subsets ());
+	
+	for (size_t si = 0; si < isConductor.size (); si++)
+	{
+		typename t_data_map::iterator iter = m_mUserDataBC.find (si);
+		if (iter == m_mUserDataBC.end () || iter->second == NULL) // if no data
+			isConductor [si] = false; // skip it
+		else if (iter->second->sigma == (number) 0) // if insulator
+			isConductor [si] = false; // skip it, too
+		else
+			isConductor [si] = true; // this one should be considered
+	}
+
+//	Find out the subset connectivity:
+	FindSubsetGroups<t_base_object> (minCondInd, isConductor, * subset_handler().get(),
+		NHT_VERTEX_NEIGHBORS);
+	
+//	Note that all the full-dimensional subsets must be marked, so that all
+//	the insulators must have -1 (not -2) in minCondInd. We check this once
+//	again to be on the safe side:
+	for (size_t si = 0; si < minCondInd.size (); si++)
+	if (minCondInd [si] < -1) // check that no conductors and insulators are marked with -2
+	{
+		if (m_mUserDataBC.find (si) != m_mUserDataBC.end ())
+			UG_THROW ("EMaterial::connectivity: Data specified for a low-dimensional subset.");
+	}
+};
+
+/**
  * Analyses the conductor topology of the domain.
  */
 template <typename TDomain>
@@ -191,227 +238,6 @@ void EMaterial<TDomain>::analyze_topology ()
 		for (size_t i = 0; i < m_minCondSsI.size (); i++)
 			if (m_minCondSsI [i] == base_cond_si)
 				m_baseCondInd [i] = base_cond;
-	}
-}
-
-/**
- * Computes the connectivity of the conductors and therefore finds out the
- * topology of the domain.
- *
- * \param[out] minCondInd	an array indexed by the subset indices, so that
- *							every entry of a conductor is initialized by the
- *							smallest conductor subset id connected to it
- *							(and by -1 for the other subdomains including insulators)
- */
-template <typename TDomain>
-void EMaterial<TDomain>::connectivity
-(
-	std::vector<int> & minCondInd
-)
-{
-//	The full-dim. grid element types for this dimension:
-	typedef typename domain_traits<dim>::DimElemList ElemList;
-	
-//	Initialize the array:
-	minCondInd.resize (subset_handler()->num_subsets ());
-	
-	for (size_t si = 0; si < minCondInd.size (); si++)
-	{
-		typename t_data_map::iterator iter = m_mUserDataBC.find (si);
-		if (iter == m_mUserDataBC.end () || iter->second == NULL) // if no data
-			minCondInd [si] = -2; // skip it
-		else if (iter->second->sigma == (number) 0) // if insulator
-			minCondInd [si] = -1; // skip it, too
-		else
-			minCondInd [si] = si; // this is the current minimum
-	}
-
-//	Call all the instances of 'get_elem_connectivity':
-	boost::mpl::for_each<ElemList> (GetElemConnectivity (this, minCondInd));
-};
-
-/// An auxiliary class for the grid that "describes" the geometry
-/**
- * This class gets the access to the elements that describe the basic
- * topology of the domain, for ex., to the coarsest grid in the grid
- * hierarcy. The general template definition provides only the error
- * messages. Cf. the specializations below.
- */
-///\{
-template <typename TElem, typename TSubsetHandler>
-class TopologyDesc
-{
-public:
-	/// Constructor
-	TopologyDesc
-	(
-		ConstSmartPtr<TSubsetHandler> pSH ///< the subset handler
-	)
-	{
-		UG_THROW ("Initialization of a TopologyDesc for an unknown SubsetHandler type.");
-	}
-	
-	/// returns a pointer to the subset handler
-	const GridSubsetHandler * subset_handler () const
-	{
-		UG_THROW ("Attempt to use a TopologyDesc for an unknown SubsetHandler type.");
-	}
-	
-	///	returns a pointer to the grid on which the subset-handler works
-	Grid * grid () const
-	{
-		UG_THROW ("Attempt to use a TopologyDesc for an unknown SubsetHandler type.");
-	}
-
-	///	returns the begin-iterator for the elements of type TElem in the given subset.
-	typename geometry_traits<TElem>::const_iterator begin (int subsetIndex) const
-	{
-		UG_THROW ("Attempt to use a TopologyDesc for an unknown SubsetHandler type.");
-	}
-	
-	///	returns the end-iterator for the elements of type TElem in the given subset.
-	typename geometry_traits<TElem>::const_iterator end (int subsetIndex) const
-	{
-		UG_THROW ("Attempt to use a TopologyDesc for an unknown SubsetHandler type.");
-	}
-};
-
-template <typename TElem>
-class TopologyDesc <TElem, GridSubsetHandler>
-{
-public:
-	/// Constructor
-	TopologyDesc
-	(
-		ConstSmartPtr<GridSubsetHandler> pSH ///< the subset handler
-	)
-	:	m_pSH (pSH)
-	{
-		if (m_pSH.invalid ())
-			UG_THROW ("TopologyDesc: specify a valid subset handler.");
-	}
-	
-	/// returns a pointer to the subset handler
-	const GridSubsetHandler * subset_handler () const {return m_pSH.get ();}
-	
-	///	returns a pointer to the grid on which the subset-handler works
-	Grid * grid () const
-	{
-		return m_pSH->grid ();
-	}
-
-	///	returns the begin-iterator for the elements of type TElem in the given subset.
-	typename geometry_traits<TElem>::const_iterator begin (int subsetIndex) const
-	{
-		return m_pSH->template begin<TElem> (subsetIndex);
-	}
-	
-	///	returns the end-iterator for the elements of type TElem in the given subset.
-	typename geometry_traits<TElem>::const_iterator end (int subsetIndex) const
-	{
-		return m_pSH->template end<TElem> (subsetIndex);
-	}
-	
-private:
-	ConstSmartPtr<GridSubsetHandler> m_pSH; ///< the subset handler
-};
-
-template <typename TElem>
-class TopologyDesc <TElem, MultiGridSubsetHandler>
-{
-public:
-	/// Constructor
-	TopologyDesc
-	(
-		ConstSmartPtr<MultiGridSubsetHandler> pSH ///< the subset handler
-	)
-	:	m_pSH (pSH)
-	{
-		if (m_pSH.invalid ())
-			UG_THROW ("TopologyDesc: specify a valid subset handler.");
-		if (! ((MultiGridSubsetHandler *) m_pSH.get ())->subset_inheritance_enabled ())
-			UG_THROW ("TopologyDesc: Subset inheritance should be enabled in the subset handler.");
-	}
-	
-	/// returns a pointer to the subset handler
-	const MultiGridSubsetHandler * subset_handler () const {return m_pSH.get ();}
-	
-	///	returns a pointer to the grid on which the subset-handler works
-	Grid * grid () const
-	{
-		return m_pSH->grid ();
-	}
-
-	///	returns the begin-iterator for the elements of type TElem in the given subset.
-	typename geometry_traits<TElem>::const_iterator begin (int subsetIndex) const
-	{
-		return m_pSH->template begin<TElem> (subsetIndex, 0);
-	}
-	
-	///	returns the end-iterator for the elements of type TElem in the given subset.
-	typename geometry_traits<TElem>::const_iterator end (int subsetIndex) const
-	{
-		return m_pSH->template end<TElem> (subsetIndex, 0);
-	}
-	
-private:
-	ConstSmartPtr<MultiGridSubsetHandler> m_pSH; ///< the subset handler
-};
-///\}
-
-/**
- * Helper for 'connectivity'. The sematics of the argument is the same as for
- * 'connectivity'. Note that the proper size of minCondInd should be set before
- * the call. Furthermore, this array is updated, not reset.
- */
-template <typename TDomain>
-template <typename TElem>
-void EMaterial<TDomain>::get_elem_connectivity
-(
-	std::vector<int> & minCondInd
-)
-{
-	typedef typename geometry_traits<TElem>::grid_base_object base_object;
-	typedef typename geometry_traits<TElem>::const_iterator elem_iterator;
-	
-	UG_ASSERT (((int) minCondInd.size ()) == subset_handler()->num_subsets (), "get_elem_connectivity: array size mismatch");
-	
-	std::vector<base_object*> neighbours;
-	
-//	Access to the elements:
-	TopologyDesc<TElem, subset_handler_type> base_grid (subset_handler ());
-	
-//	Loop over the subsets:
-	for (size_t si = 0; si < minCondInd.size (); si++)
-	{
-		int min_si;
-		
-	//	Conductor?
-		if ((min_si = minCondInd [si]) < 0)
-			continue; // no, we do not treat this subset
-		
-	//	Yes, loop over the elements in the subdomain:
-		elem_iterator e_end = base_grid.end (si);
-		for (elem_iterator e_iter = base_grid.begin (si); e_iter != e_end; ++e_iter)
-		{
-		//	Loop over the neighbours:
-			CollectNeighbors (neighbours, *e_iter, *base_grid.grid(), NHT_VERTEX_NEIGHBORS);
-			for (size_t k = 0; k < neighbours.size (); k++)
-			{
-				int min_nbr_si;
-				int nbr_si = base_grid.subset_handler()->get_subset_index (neighbours [k]);
-				
-				if (nbr_si < 0 || nbr_si >= (int) minCondInd.size ())
-					UG_THROW ("get_elem_connectivity: Illegal neighbour subset index.");
-				if ((min_nbr_si = minCondInd [nbr_si]) < 0)
-					continue; // we do not treat this subset
-				
-				if (min_nbr_si < min_si)
-					for (size_t l = 0; l < minCondInd.size (); l++)
-						if (minCondInd [l] == min_si)
-							minCondInd [l] = min_nbr_si;
-			}
-		}
 	}
 }
 
