@@ -189,15 +189,19 @@ void EMaterial<TDomain>::connectivity
 	FindSubsetGroups<t_base_object> (minCondInd, isConductor, * subset_handler().get(),
 		NHT_VERTEX_NEIGHBORS);
 	
-//	Note that all the full-dimensional subsets must be marked, so that all
-//	the insulators must have -1 (not -2) in minCondInd. We check this once
-//	again to be on the safe side:
+//	Note that the low-dimensional subsets have been "not-marked" and got '-1'
+//	in minCondInd. As '-1' should denote the insulators only, we revise the 
+//	array. Furthermore, there should be no marks '-2' at all because none of
+//	the low-dimensional subsets have been marked. We check it to be on the
+//	safe side:
 	for (size_t si = 0; si < minCondInd.size (); si++)
-	if (minCondInd [si] < -1) // check that no conductors and insulators are marked with -2
+	if (minCondInd [si] == -1) // check whether this is an insulator
 	{
-		if (m_mUserDataBC.find (si) != m_mUserDataBC.end ())
-			UG_THROW ("EMaterial::connectivity: Data specified for a low-dimensional subset.");
+		if (m_mUserDataBC.find (si) == m_mUserDataBC.end ())
+			minCondInd [si] = -2; // this is no insulator; otherwise, there would be data for it
 	}
+	else if (minCondInd [si] < -1) // check for marked low-dimensional subdomains
+		UG_THROW ("EMaterial::connectivity: Low-dimensional conductor found (subset index " << si << ").");
 };
 
 /**
