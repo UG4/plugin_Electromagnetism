@@ -8,6 +8,8 @@
  */
 #include "lib_disc/spatial_disc/disc_util/fe_geom.h"
 #include "lib_disc/spatial_disc/disc_util/geom_provider.h"
+#include "lib_disc/local_finite_element/lagrange/lagrange.h"
+#include "lib_disc/quadrature/gauss/gauss_quad.h"
 
 #include "nedelec_local_ass.h"
 
