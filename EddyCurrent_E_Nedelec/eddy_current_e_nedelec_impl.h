@@ -27,7 +27,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_setting
 {
 //	check the grid
 	if (bNonRegular)
-		UG_THROW ("ERROR in 'EddyCurrent_E_Nedelec::request_non_regular_grid':"
+		UG_THROW ("ERROR in EddyCurrent_E_Nedelec:"
 				" The discretization does not support hanging nodes.\n");
 
 //	check number of the components
@@ -224,7 +224,7 @@ template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem
 (
-	LocalVector& b,
+	LocalVector & b,
 	GridObject * elem,
 	const position_type vCornerCoords []
 )
