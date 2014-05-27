@@ -55,7 +55,7 @@ number calc_magnetic_flux
 			UG_THROW ("EddyCurrent: Illegal discretization space of the grid func. (must be NEDELEC)");
 	
 //	check whether the functions are defined in the specified subsets
-	for (size_t ssgi = 0; ssgi <= ss_grp.size (); ssgi++)
+	for (size_t ssgi = 0; ssgi < ss_grp.size (); ssgi++)
 		for (size_t i = 0; i < 2; i++)
 			if (! gfE->is_def_in_subset (i, ss_grp [ssgi]))
 				UG_THROW ("EddyCurrent: Grid function is undefined in some of the subsets.");
@@ -76,7 +76,7 @@ number calc_magnetic_flux
 //	compute the flux for every subset
 	number total_area = 0;
 	flux[0] = flux[1] = 0;
-	for (size_t ssgi = 0; ssgi <= ss_grp.size (); ssgi++)
+	for (size_t ssgi = 0; ssgi < ss_grp.size (); ssgi++)
 	{
 		int si = ss_grp [ssgi];
 		
