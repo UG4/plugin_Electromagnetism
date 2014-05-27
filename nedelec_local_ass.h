@@ -28,9 +28,135 @@ namespace Electromagnetism{
 /// Tool kit for the Whitney-1 (Nedelec) based FE discretization of the rot-rot operators
 /**
  * Class for the local discretization of the rot-rot operator using
- * the Nedelec-type-1 (Whitney-1) elements. This class does not contain
+ * the Nedelec-type-1 (Whitney-1) elements. This class may not contain
  * any member except for static functions, so no instances of this class
  * need to be created.
+ *
+ * This basic class template does not contain any numerical algorithms as they
+ * are specific for different types of the elements. Cf. the specializations
+ * for simplices (\see NedelecT1_LDisc_forSimplex).
+ *
+ * \remark
+ * Note that the definition of the Whitney-1 function depends on the ordering of
+ * the nodes in the element. More precisely, for a different ordering, the shape
+ * function \f$w^{(1)}_e\f$ may have a different sign. Thus, the ordering should
+ * be consistent in all the elements: If two elements \f$T_1\f$ and \f$T_2\f$
+ * share the edge \f$e\f$ with the ends at corners \f$i\f$ and \f$j\f$
+ * (that are shared, too) then this edge should be \f$e = (i, j)\f$ for both
+ * the elements (and not for example \f$e = (i, j)\f$ for \f$T_1\f$ but
+ * \f$e = (j, i)\f$ for \f$T_2\f$). In all the other respects, the ordering
+ * does not play any essential role. In particular, the singes of the degrees of
+ * freedom in the solution depend on the global ordering of the corners (but
+ * the absolute values of these dofs are invariant). For this, the solution
+ * of the discretized system may be only considered in connection with the
+ * given ordering of the corners (in the edges).
+ */
+template <typename TDomain, typename TElem>
+class NedelecT1_LDisc
+{
+public:
+
+/// world dimention
+	static const int WDim = TDomain::dim;
+	
+/// type of the grid
+	typedef typename TDomain::grid_type grid_type;
+
+/// type of the geometric positions (WDim-vectors)
+	typedef typename TDomain::position_type position_type;
+	
+///	type of reference element
+	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+
+/// shapes and derivatives of the Whitney-0 (Lagrange P1) shape functions
+	typedef LagrangeP1<ref_elem_type> W0_shapes_type;
+
+///	dimension of reference element
+	static const int dim = ref_elem_type::dim;
+
+/// total number of the corners
+	static const size_t numCorners = ref_elem_type::numCorners;
+	
+/// total number of the edges
+	static const size_t numEdges = ref_elem_type::numEdges;
+	
+/// max. number of the edges of the full-dimensional elements in the domain
+	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
+
+public:
+
+/// assembles the stiffness matrix of the rot-rot operator
+	static void local_stiffness_and_mass
+	(
+		const TDomain & domain, /**< [in] the domain */
+		TElem * elem, /**< [in] element */
+		const position_type * corners, /**< [in] array of the global corner coordinates */
+		number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
+		number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
+	)
+	{
+		UG_THROW ("Whitney-1 (Nedelec) shapes not implemented for roid " << ref_elem_type::REFERENCE_OBJECT_ID << ".");
+	};
+	
+///	assembles the discrete weak div operator
+	static void local_div_matrix
+	(
+		const TDomain & domain, /**< [in] the domain */
+		TElem * elem, /**< [in] element */
+		const position_type * corners, /**< [in] array of the global corner coordinates */
+		number B [][numEdges] /**< [out] local weak divergence operator matrix */
+	)
+	{
+		UG_THROW ("Whitney-1 (Nedelec) shapes not implemented for roid " << ref_elem_type::REFERENCE_OBJECT_ID << ".");
+	};
+	
+///	computes the Nedelec shapes at a given point
+	static void get_shapes
+	(
+		const TDomain & domain, /**< [in] the domain */
+		TElem * elem, /**< [in] element */
+		const position_type * corners, /**< [in] array of the global corner coordinates */
+		const MathVector<dim> local, /**< [in] local coordinates of the point where to compute */
+		MathVector<WDim> shapes [] /**< [out] array for the shapes */
+	)
+	{
+		UG_THROW ("Whitney-1 (Nedelec) shapes not implemented for roid " << ref_elem_type::REFERENCE_OBJECT_ID << ".");
+	};
+	
+///	computes of the values of the grid functions
+	static void interpolate
+	(
+		const TDomain & domain, /**< [in] the domain */
+		TElem * elem, /**< [in] element */
+		const position_type * corners, /**< [in] array of the global corner coordinates */
+		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
+		const MathVector<dim> local [], /**< [in] local coordinates of the points where to compute */
+		const size_t n_pnt, /**< [in] number of the points where to compute */
+		MathVector<WDim> values [] /**< [out] where to store the computed n_pnt values */
+	)
+	{
+		UG_THROW ("Whitney-1 (Nedelec) shapes not implemented for roid " << ref_elem_type::REFERENCE_OBJECT_ID << ".");
+	};
+	
+/// computes the curl of the grid functions (in 2d represented as \f$(z, 0)\f$ instead of \f$(0, 0, z)\f$)
+	static void curl
+	(
+		const TDomain & domain, /**< [in] the domain */
+		TElem * elem, /**< [in] element */
+		const position_type * corners, /**< [in] array of the global corner coordinates */
+		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
+		MathVector<WDim> & curl_vec /**< [out] where to store the computed curl */
+	)
+	{
+		UG_THROW ("Whitney-1 (Nedelec) shapes not implemented for roid " << ref_elem_type::REFERENCE_OBJECT_ID << ".");
+	};
+};
+
+/// Helper class for the specialization of NedelecT1_LDisc for simplices (triangles and tetrahedrons)
+/**
+ * This class template implements the Whitney-1 (Nedelec) elements for triangles
+ * and tetrahedrons (i.e. implements the classical variant of these elements),
+ * \see NedelecT1_LDisc.
  *
  * Consider a grid element \f$T\f$. Let \f$w^{(0)}_i\f$ denote the linear (Lagrangian)
  * shape functions equal to 1 at corner i and to 0 at the other corners of \f$T\f$.
@@ -85,8 +211,10 @@ namespace Electromagnetism{
  * \tparam	TElem		Element type
  */
 template <typename TDomain, typename TElem>
-class NedelecT1_LDisc
+class NedelecT1_LDisc_forSimplex
 {
+public:
+
 /// world dimention
 	static const int WDim = TDomain::dim;
 	
@@ -102,8 +230,6 @@ class NedelecT1_LDisc
 /// shapes and derivatives of the Whitney-0 (Lagrange P1) shape functions
 	typedef LagrangeP1<ref_elem_type> W0_shapes_type;
 
-	public:
-	
 ///	dimension of reference element
 	static const int dim = ref_elem_type::dim;
 
@@ -115,8 +241,9 @@ class NedelecT1_LDisc
 	
 /// max. number of the edges of the full-dimensional elements in the domain
 	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
+
+private:
 	
-	private:
 /// computes the gradients of the Whitney-0 (Lagrange P1) shape functions
 	static void compute_W0_grads
 	(
@@ -132,7 +259,8 @@ class NedelecT1_LDisc
 		size_t edge_corner [numEdges] [2] /**< [out] edge dof -> corner of the element */
 	);
 	
-	public:
+public:
+	
 /// assembles the stiffness matrix of the rot-rot operator
 	static void local_stiffness_and_mass
 	(
@@ -181,73 +309,28 @@ class NedelecT1_LDisc
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
-		MathVector<WDim> & curl /**< [out] where to store the computed curl */
+		MathVector<WDim> & curl_vec /**< [out] where to store the computed curl */
 	);
 };
-/// This class serves as a protection: no Nedelec elements in 1d (i.e. on edges)!
+
+/// Specialization of NedelecT1_LDisc for triangles
+/**
+ * Triangle is considered as a simplex.
+ * \see NedelecT1_LDisc and \see NedelecT1_LDisc_forSimplex
+ */
 template <typename TDomain>
-class NedelecT1_LDisc<TDomain, RegularEdge>
+class NedelecT1_LDisc<TDomain, Triangle> : public NedelecT1_LDisc_forSimplex<TDomain, Triangle>
 {
-	static const int WDim = TDomain::dim;
-	typedef typename TDomain::grid_type grid_type;
-	typedef typename TDomain::position_type position_type;
-	typedef typename reference_element_traits<RegularEdge>::reference_element_type ref_elem_type;
-	typedef LagrangeP1<ref_elem_type> W0_shapes_type;
-	public:
-	static const int dim = ref_elem_type::dim;
-	static const size_t numCorners = ref_elem_type::numCorners;
-	static const size_t numEdges = ref_elem_type::numEdges;
-	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
-	
-	public:
-	static void local_stiffness_and_mass
-	(
-		const TDomain & domain, /**< [in] the domain */
-		RegularEdge * elem, /**< [in] element */
-		const position_type * corners, /**< [in] array of the global corner coordinates */
-		number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
-		number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
-	)
-	{
-		UG_THROW ("Whitney-1 (Nedelec) shape functions are not defined for 1d grid elements.");
-	};
-	
-	static void local_div_matrix
-	(
-		const TDomain & domain, /**< [in] the domain */
-		RegularEdge * elem, /**< [in] element */
-		const position_type * corners, /**< [in] array of the global corner coordinates */
-		number B [][numEdges] /**< [out] local weak divergence operator matrix */
-	)
-	{
-		UG_THROW ("Whitney-1 (Nedelec) shape functions are not defined for 1d grid elements.");
-	};
-	
-	static void interpolate
-	(
-		const TDomain & domain, /**< [in] the domain */
-		RegularEdge * elem, /**< [in] element */
-		const position_type * corners, /**< [in] array of the global corner coordinates */
-		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
-		const MathVector<dim> local [], /**< [in] local coordinates of the points where to compute */
-		const size_t n_pnt, /**< [in] number of the points where to compute */
-		MathVector<WDim> values [] /**< [out] where to store the computed n_pnt values */
-	)
-	{
-		UG_THROW ("Whitney-1 (Nedelec) shape functions are not defined for 1d grid elements.");
-	};
-	
-	static void curl
-	(
-		const TDomain & domain, /**< [in] the domain */
-		RegularEdge * elem, /**< [in] element */
-		const position_type * corners, /**< [in] array of the global corner coordinates */
-		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
-		MathVector<WDim> & curl /**< [out] where to store the computed curl */
-	)
-	{
-		UG_THROW ("Whitney-1 (Nedelec) shape functions are not defined for 1d grid elements.");
-	};
+};
+
+/// Specialization of NedelecT1_LDisc for tetrahedra
+/**
+ * Tetrahedron is considered as a simplex.
+ * \see NedelecT1_LDisc and \see NedelecT1_LDisc_forSimplex
+ */
+template <typename TDomain>
+class NedelecT1_LDisc<TDomain, Tetrahedron> : public NedelecT1_LDisc_forSimplex<TDomain, Tetrahedron>
+{
 };
 
 ///@}
@@ -261,7 +344,6 @@ class NedelecT1_LDisc<TDomain, RegularEdge>
  * \tparam refDim	dimensionality of the reference element
  * \tparam WDim		dimensionality of the domain (Do not specify it yourself! It is only for the specializations.)
  */
-///\{
 template <typename TDomain, int refDim, int WDim = TDomain::dim>
 class NedelecInterpolation
 {
@@ -269,7 +351,7 @@ class NedelecInterpolation
 	typedef typename TDomain::position_type position_type;
 	
 public:
-	/// computes the values at given points
+/// computes the values at given points
 	static void value
 	(
 		const TDomain & domain, /**< [in] the domain */
@@ -286,7 +368,7 @@ public:
 					" of reference dim. " << refDim << " in a " << WDim << "d domain.");
 	}
 	
-	/// computes curl of the function
+/// computes curl of the function
 	/**
 	 * This function computes the value of the curl operator for the Nedelec
 	 * representation. Curl is constant over elements. Note that the result
@@ -299,14 +381,42 @@ public:
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
-		MathVector<WDim> & curl /**< [out] where to store the computed n_pnt values */
+		MathVector<WDim> & curl_vec /**< [out] where to store the computed n_pnt values */
 	)
 	{ // This is a generic version: It prints the error message. Cf. the specializations below.
 		UG_THROW ("NedelecInterpolation::curl: No implementation of the Nedelec elements for "
 					"Reference Object " << elem->reference_object_id () <<
 					" of reference dim. " << refDim << " in a " << WDim << "d domain.");
 	}
+	
+///	computes flux of the curl through a given plane in an element
+	/**
+	 * This function computes the flux of the curl through a given plane inside
+	 * of a given grid element. The plane is identified by a point on it and the
+	 * normal. The flux is multiplied by the norm of the given normal vector (i.e.
+	 * specify the unit normal to get the standard flux). The function returns 
+	 * the area of the intersection if the element is intersected by the
+	 * plane. Otherwise the function returns exactly 0.0.
+	 */
+	static number curl_flux
+	(
+		const TDomain & domain, /**< [in] the domain */
+		GridObject * elem, /**< [in] element */
+		const position_type corners [], /**< [in] array of the global corner coordinates */
+		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
+		const MathVector<WDim> & normal, /**< [in] normal to the plane */
+		const position_type pnt, /**< [in] point on the plane (identifying the plane) */
+		number & flux /**< [out] the flux */
+	)
+	{ // This is a generic version: It prints the error message. Cf. the specializations below.
+		UG_THROW ("NedelecInterpolation::curl_flux: No implementation of the Nedelec elements for "
+					"Reference Object " << elem->reference_object_id () <<
+					" of reference dim. " << refDim << " in a " << WDim << "d domain.");
+		return false;
+	}
 };
+
+/// A specialization of NedelecInterpolation for 2d, \see NedelecInterpolation
 template <typename TDomain>
 class NedelecInterpolation<TDomain, 2, 2>
 {
@@ -316,7 +426,7 @@ public:
 	typedef typename TDomain::position_type position_type;
 	
 public:
-	/// computes the values at given points
+/// computes the values at given points
 	static void value
 	(
 		const TDomain & domain, /**< [in] the domain */
@@ -336,7 +446,7 @@ public:
 			(domain, (Triangle *) elem, corners, dofs, local, n_pnt, values);
 	}
 	
-	/// computes curl of the function
+/// computes curl of the function
 	/**
 	 * This function computes the value of the curl operator for the Nedelec
 	 * representation. Curl is constant over elements. Note that the result
@@ -349,7 +459,7 @@ public:
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
-		MathVector<2> & curl /**< [out] where to store the computed n_pnt values */
+		MathVector<2> & curl_vec /**< [out] where to store the computed n_pnt values */
 	)
 	{
 		if (elem->reference_object_id () != ROID_TRIANGLE)
@@ -357,9 +467,37 @@ public:
 						"Reference Object " << elem->reference_object_id () <<
 						" of reference dim. 2 in a 2d domain. (This must be a triangle.)");
 		NedelecT1_LDisc<TDomain, Triangle>::curl
-			(domain, (Triangle *) elem, corners, dofs, curl);
+			(domain, (Triangle *) elem, corners, dofs, curl_vec);
+	}
+	
+///	computes flux of the curl through a given plane in an element
+	/**
+	 * This function computes the flux of the curl through a given plane inside
+	 * of a given grid element. The plane is identified by a point on it and the
+	 * normal. The flux is multiplied by the norm of the given normal vector (i.e.
+	 * specify the unit normal to get the standard flux). The function returns 
+	 * the area of the intersection if the element is intersected by the
+	 * plane. Otherwise the function returns exactly 0.0.
+	 */
+	static number curl_flux
+	(
+		const TDomain & domain, /**< [in] the domain */
+		GridObject * elem, /**< [in] element */
+		const position_type corners [], /**< [in] array of the global corner coordinates */
+		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
+		const MathVector<2> & normal, /**< [in] normal to the plane */
+		const position_type pnt, /**< [in] point on the plane (identifying the plane) */
+		number & flux /**< [out] the flux */
+	)
+	{ // This is a generic version: It prints the error message. Cf. the specializations below.
+		UG_THROW ("NedelecInterpolation::curl_flux: No implementation of the Nedelec elements for "
+					"Reference Object " << elem->reference_object_id () <<
+					" of reference dim. 3 in a 3d domain.");
+		return false;
 	}
 };
+
+/// A specialization of NedelecInterpolation for 3d, \see NedelecInterpolation
 template <typename TDomain>
 class NedelecInterpolation<TDomain, 3, 3>
 {
@@ -369,7 +507,7 @@ public:
 	typedef typename TDomain::position_type position_type;
 	
 public:
-	/// computes the values at given points
+/// computes the values at given points
 	static void value
 	(
 		const TDomain & domain, /**< [in] the domain */
@@ -389,7 +527,7 @@ public:
 			(domain, (Tetrahedron *) elem, corners, dofs, local, n_pnt, values);
 	}
 	
-	/// computes curl of the function
+/// computes curl of the function
 	/**
 	 * This function computes the value of the curl operator for the Nedelec
 	 * representation. Curl is constant over elements. Note that the result
@@ -401,7 +539,7 @@ public:
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
-		MathVector<3> & curl /**< [out] where to store the computed n_pnt values */
+		MathVector<3> & curl_vec /**< [out] where to store the computed n_pnt values */
 	)
 	{
 		if (elem->reference_object_id () != ROID_TETRAHEDRON)
@@ -409,10 +547,29 @@ public:
 						"Reference Object " << elem->reference_object_id () <<
 						" of reference dim. 3 in a 3d domain. (This must be a tetrahedron.)");
 		NedelecT1_LDisc<TDomain, Tetrahedron>::curl
-			(domain, (Tetrahedron *) elem, corners, dofs, curl);
+			(domain, (Tetrahedron *) elem, corners, dofs, curl_vec);
 	}
+	
+///	computes flux of the curl through a given plane in an element
+	/**
+	 * This function computes the flux of the curl through a given plane inside
+	 * of a given grid element. The plane is identified by a point on it and the
+	 * normal. The flux is multiplied by the norm of the given normal vector (i.e.
+	 * specify the unit normal to get the standard flux). The function returns 
+	 * the area of the intersection if the element is intersected by the
+	 * plane. Otherwise the function returns exactly 0.0.
+	 */
+	static number curl_flux
+	(
+		const TDomain & domain, /**< [in] the domain */
+		GridObject * elem, /**< [in] element */
+		const position_type corners [], /**< [in] array of the global corner coordinates */
+		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
+		const MathVector<3> & normal, /**< [in] normal to the plane */
+		const position_type pnt, /**< [in] point on the plane (identifying the plane) */
+		number & flux /**< [out] the flux */
+	);
 };
-///\}
 
 /**
  * Computes the arithm. average of given MathVectors.

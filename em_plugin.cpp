@@ -12,6 +12,7 @@
 #include "nedelec_encode.h"
 #include "nedelec_gf_user_data.h"
 #include "EddyCurrent_E_Nedelec/eddy_current_gf_user_data.h"
+#include "EddyCurrent_E_Nedelec/eddy_current_cmd.h"
 
 /* discretizations' headers: */
 #include "EddyCurrent_E_Nedelec/eddy_current_e_nedelec.h"
@@ -340,6 +341,33 @@ struct Functionality
 				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, number)>("GridFunction#Components#Frequency")
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "EddyCurrentImBofEUserData", tag);
+		}
+		
+	// Computation of various values
+		{
+			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			
+			reg.add_function
+			(
+				"CalcMagneticFlux",
+				static_cast
+				<
+					void (*)
+					(
+						SmartPtr<TFct>,
+						const char*,
+						const char*,
+						const std::vector<number>&,
+						const std::vector<number>&,
+						const size_t,
+						const std::vector<number>&
+					)
+				>
+				(&CalcMagneticFlux<TFct>),
+				grp,
+				"Magnetic flux through a cylindric coil",
+				"ElectricField#cmps#subsets#normal#basePnt#numWindings#windingSize"
+			);
 		}
 	};
 	

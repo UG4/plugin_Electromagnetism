@@ -19,19 +19,20 @@ namespace Electromagnetism{
 /**
  * Computes the gradients of the Whitney-0 (Lagrange P1) shape functions.
  *
- * \remark We assume that the reference mapping is linear: The Nedelec
+ * \remark We assume that the reference mapping is linear: Here, the Nedelec
  * elements are only implemented for simplices.
  */
 template <typename TDomain, typename TElem>
-void NedelecT1_LDisc<TDomain, TElem>::compute_W0_grads
+void NedelecT1_LDisc_forSimplex<TDomain, TElem>::compute_W0_grads
 (
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	MathVector<WDim> grad [numCorners] /**< [out] gradients of the Whitney-0 functions */
 )
 {
-// We work with simplices only:
-	if (! ReferenceMapping<ref_elem_type, WDim>::isLinear)
-		UG_THROW ("The Nedelec elements are implemented for triangles and tetrahedra only.");
+// We assume here that TElem is a simplex (triangle or tetrahedron):
+	UG_ASSERT ((ReferenceMapping<ref_elem_type, WDim>::isLinear),
+		"Not a simplex (" << ref_elem_type::REFERENCE_OBJECT_ID
+			<< ") as a template param. of NedelecT1_LDisc_forSimplex: Only triangles and tetrahedra accepted.");
 
 // Whitney-0 shapes:
 	const W0_shapes_type & W0_shapes = Provider<W0_shapes_type>::get ();
@@ -63,7 +64,7 @@ void NedelecT1_LDisc<TDomain, TElem>::compute_W0_grads
  * order of the vertices associated with these corners.
  */
 template <typename TDomain, typename TElem>
-void NedelecT1_LDisc<TDomain, TElem>::get_edge_corners
+void NedelecT1_LDisc_forSimplex<TDomain, TElem>::get_edge_corners
 (
 	const TDomain& domain, /**< [in] the domain */
 	TElem * elem, /**< [in] the element */
@@ -102,7 +103,7 @@ void NedelecT1_LDisc<TDomain, TElem>::get_edge_corners
  * elements are only implemented for simplices.
  */
 template <typename TDomain, typename TElem>
-void NedelecT1_LDisc<TDomain, TElem>::local_stiffness_and_mass
+void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_stiffness_and_mass
 (
 	const TDomain & domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
@@ -180,7 +181,7 @@ void NedelecT1_LDisc<TDomain, TElem>::local_stiffness_and_mass
  * (with \f$N\f$ being the number of corners of \f$T\f$).
  */
 template <typename TDomain, typename TElem>
-void NedelecT1_LDisc<TDomain, TElem>::local_div_matrix
+void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_div_matrix
 (
 	const TDomain & domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
@@ -221,7 +222,7 @@ void NedelecT1_LDisc<TDomain, TElem>::local_div_matrix
  * the world then the shapes are projected to the element.
  */
 template <typename TDomain, typename TElem>
-void NedelecT1_LDisc<TDomain, TElem>::get_shapes
+void NedelecT1_LDisc_forSimplex<TDomain, TElem>::get_shapes
 (
 	const TDomain & domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
@@ -257,7 +258,7 @@ void NedelecT1_LDisc<TDomain, TElem>::get_shapes
  * The values of the DoFs are scalar, but the resulting function is a vector field.
  */
 template <typename TDomain, typename TElem>
-void NedelecT1_LDisc<TDomain, TElem>::interpolate
+void NedelecT1_LDisc_forSimplex<TDomain, TElem>::interpolate
 (
 	const TDomain & domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
@@ -308,13 +309,13 @@ void NedelecT1_LDisc<TDomain, TElem>::interpolate
  * to keep the dimensionality of the output, it is represented as \f$(z, 0)\f$.
  */
 template <typename TDomain, typename TElem>
-void NedelecT1_LDisc<TDomain, TElem>::curl
+void NedelecT1_LDisc_forSimplex<TDomain, TElem>::curl
 (
 	const TDomain & domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	const number dof [], /**< [in] arrays of values of the Nedelec degrees of freedom */
-	MathVector<WDim> & curl /**< [out] where to store the computed curl */
+	MathVector<WDim> & curl_vec /**< [out] where to store the computed curl */
 )
 {
 // get the gradients of the Whitney-0 elements
@@ -332,11 +333,70 @@ void NedelecT1_LDisc<TDomain, TElem>::curl
 		GenVecCross (half_rot_w1[e], grad_w0[edge_corner[e][0]], grad_w0[edge_corner[e][1]]);
 	
 // compute the curl
-	curl = 0.0;
+	curl_vec = 0.0;
 	for (size_t e = 0; e < numEdges; e++)
-		VecScaleAppend (curl, dof[e], half_rot_w1[e]);
-	curl *= 2;
+		VecScaleAppend (curl_vec, dof[e], half_rot_w1[e]);
+	curl_vec *= 2;
 }
+
+/**
+ * This function computes the flux of the curl through a given plane inside
+ * of a given grid element. The plane is identified by a point on it and the
+ * normal. The flux is multiplied by the norm of the given normal vector (i.e.
+ * specify the unit normal to get the standard flux). The function returns 
+ * the area of the intersection if the element is intersected by the
+ * plane. Otherwise the function returns exactly 0.0.
+ */
+template <typename TDomain>
+number NedelecInterpolation<TDomain, 3, 3>::curl_flux
+(
+	const TDomain & domain, /**< [in] the domain */
+	GridObject * elem, /**< [in] element */
+	const position_type corners [], /**< [in] array of the global corner coordinates */
+	const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
+	const MathVector<3> & normal, /**< [in] normal to the plane */
+	const position_type pnt, /**< [in] point on the plane (identifying the plane) */
+	number & flux /**< [out] the flux */
+)
+{
+//	current implementation considers only tetrahedra
+	if (elem->reference_object_id () != ROID_TETRAHEDRON)
+		UG_THROW ("NedelecInterpolation::curl_flux:"
+					" No implementation of the Nedelec elements for"
+					" Reference Object " << elem->reference_object_id () <<
+					" of reference dim. 3 in a 3d domain. (This must be a tetrahedron.)");
+	
+//	compute the flux
+	number area;
+	MathVector<3> sect_corners [4];
+	size_t n_intersect = IntersectPlaneWithTetrahedron (sect_corners, pnt, normal, corners);
+	switch (n_intersect)
+	{
+	case 0:
+		flux = 0.0;
+		return 0.0;
+		
+	case 3:
+		area = TriangleArea (sect_corners[0], sect_corners[1], sect_corners[2]);
+		break;
+	case 4:
+		area = TriangleArea (sect_corners[0], sect_corners[1], sect_corners[2])
+				+ TriangleArea (sect_corners[0], sect_corners[2], sect_corners[3]);
+		break;
+	
+	default:
+		UG_THROW ("NedelecInterpolation::curl_flux:"
+			" Illegal number of intersections of a plane with a tetrahedron.");
+	}
+	
+//	compute the curl (as a vector); note that it is constant in the element
+	MathVector<3> curl_vec;
+	NedelecT1_LDisc<TDomain, Tetrahedron>::curl (domain, (Tetrahedron *) elem,
+		corners, dofs, curl_vec);
+	flux = VecDot (curl_vec, normal) * area;
+	
+	return area;
+};
 
 } // end namespace Electromagnetism
 } // end namespace ug

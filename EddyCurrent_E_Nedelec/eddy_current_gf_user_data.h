@@ -1,4 +1,4 @@
-/**
+/*
  * UserData class for computations with the time-harmonic Nedelec-based
  * representation of the electric field.
  *
