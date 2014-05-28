@@ -148,7 +148,7 @@ void CalcMagneticFlux
 	{
 		normal_vec[i] = Normal[i];
 		base_pnt_coord[i] = base_pnt[i];
-		d_pnt_coord[i] = base_pnt[i];
+		d_pnt_coord[i] = d_pnt[i];
 	}
 	
 //	create the subset group
