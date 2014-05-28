@@ -88,7 +88,7 @@ public:
 /// assembles the stiffness matrix of the rot-rot operator
 	static void local_stiffness_and_mass
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
@@ -101,7 +101,7 @@ public:
 ///	assembles the discrete weak div operator
 	static void local_div_matrix
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number B [][numEdges] /**< [out] local weak divergence operator matrix */
@@ -113,7 +113,7 @@ public:
 ///	computes the Nedelec shapes at a given point
 	static void get_shapes
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		const MathVector<dim> local, /**< [in] local coordinates of the point where to compute */
@@ -126,7 +126,7 @@ public:
 ///	computes of the values of the grid functions
 	static void interpolate
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -141,7 +141,7 @@ public:
 /// computes the curl of the grid functions (in 2d represented as \f$(z, 0)\f$ instead of \f$(0, 0, z)\f$)
 	static void curl
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -254,7 +254,7 @@ private:
 /// gets the correspondence between the edge dof indices and the corners of the element
 	static void get_edge_corners
 	(
-		const TDomain& domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] the element */
 		size_t edge_corner [numEdges] [2] /**< [out] edge dof -> corner of the element */
 	);
@@ -264,7 +264,7 @@ public:
 /// assembles the stiffness matrix of the rot-rot operator
 	static void local_stiffness_and_mass
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
@@ -274,7 +274,7 @@ public:
 ///	assembles the discrete weak div operator
 	static void local_div_matrix
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number B [][numEdges] /**< [out] local weak divergence operator matrix */
@@ -283,7 +283,7 @@ public:
 ///	computes the Nedelec shapes at a given point
 	static void get_shapes
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		const MathVector<dim> local, /**< [in] local coordinates of the point where to compute */
@@ -293,7 +293,7 @@ public:
 ///	computes of the values of the grid functions
 	static void interpolate
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -305,7 +305,7 @@ public:
 /// computes the curl of the grid functions (in 2d represented as \f$(z, 0)\f$ instead of \f$(0, 0, z)\f$)
 	static void curl
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -347,14 +347,19 @@ class NedelecT1_LDisc<TDomain, Tetrahedron> : public NedelecT1_LDisc_forSimplex<
 template <typename TDomain, int refDim, int WDim = TDomain::dim>
 class NedelecInterpolation
 {
+public:
+
 /// type of the geometric positions (WDim-vectors)
 	typedef typename TDomain::position_type position_type;
-	
+
+/// max. number of the edges of the full-dimensional elements in the domain
+	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
+
 public:
 /// computes the values at given points
 	static void value
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -377,7 +382,7 @@ public:
 	 */
 	static void curl
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -400,7 +405,7 @@ public:
 	 */
 	static number curl_flux
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -424,12 +429,15 @@ public:
 
 /// type of the geometric positions (WDim-vectors)
 	typedef typename TDomain::position_type position_type;
-	
+
+/// max. number of the edges of the full-dimensional elements in the domain
+	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<2>::DimElemList>::maxEdges;
+
 public:
 /// computes the values at given points
 	static void value
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -455,7 +463,7 @@ public:
 	 */
 	static void curl
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -481,7 +489,7 @@ public:
 	 */
 	static number curl_flux
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -505,12 +513,15 @@ public:
 
 /// type of the geometric positions (WDim-vectors)
 	typedef typename TDomain::position_type position_type;
-	
+
+/// max. number of the edges of the full-dimensional elements in the domain
+	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<3>::DimElemList>::maxEdges;
+
 public:
 /// computes the values at given points
 	static void value
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -535,7 +546,7 @@ public:
 	 */
 	static void curl
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -561,7 +572,7 @@ public:
 	 */
 	static number curl_flux
 	(
-		const TDomain & domain, /**< [in] the domain */
+		const TDomain * domain, /**< [in] the domain */
 		GridObject * elem, /**< [in] element */
 		const position_type corners [], /**< [in] array of the global corner coordinates */
 		const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */

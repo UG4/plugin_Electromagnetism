@@ -242,7 +242,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 				
 			// Get the shapes and assemble the contribution to the interpolation matrix:
 				MathVector<WDim> shape [ref_elem_type::numEdges];
-				NedelecT1_LDisc<TDomain, TElem>::get_shapes (domain, c_elem, aCorners, loc_center, shape);
+				NedelecT1_LDisc<TDomain, TElem>::get_shapes (&domain, c_elem, aCorners, loc_center, shape);
 				for (size_t fct = 0; fct < num_fct; fct++)
 				{
 				//	Get the DoFs:

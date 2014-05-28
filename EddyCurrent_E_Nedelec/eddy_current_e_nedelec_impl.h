@@ -90,7 +90,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element
 
 //	compute the local matrices of the rot-rot operator:
 	NedelecT1_LDisc<TDomain, TElem>::local_stiffness_and_mass
-		(* EddyCurrent_E_Nedelec<TDomain,TAlgebra>::domain().get(),
+		(EddyCurrent_E_Nedelec<TDomain,TAlgebra>::domain().get(),
 			static_cast<TElem*> (elem), vCornerCoords, m_rot_rot_S, m_rot_rot_M);
 			
 /* END code essential for the numerics */

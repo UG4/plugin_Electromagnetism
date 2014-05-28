@@ -392,7 +392,7 @@ void NedelecProject<TDomain, TAlgebra>::weak_div_elem_type
 			position_type aCorners [ref_elem_type::numCorners];
 			for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
 				aCorners [co] = aaPos [pElem->vertex (co)];
-			NedelecT1_LDisc<TDomain, TElem>::local_div_matrix (domain, pElem, aCorners,
+			NedelecT1_LDisc<TDomain, TElem>::local_div_matrix (&domain, pElem, aCorners,
 				(number (*) [ref_elem_type::numEdges]) & (B (0,0)));
 			
 		//	Compute the local contribution to the weak divergence:

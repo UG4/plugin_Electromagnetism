@@ -66,12 +66,12 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::compute_W0_grads
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc_forSimplex<TDomain, TElem>::get_edge_corners
 (
-	const TDomain& domain, /**< [in] the domain */
+	const TDomain * domain, /**< [in] the domain */
 	TElem * elem, /**< [in] the element */
 	size_t edge_corner [numEdges] [2] /**< [out] edge dof -> corner of the element */
 )
 {
-	const grid_type * grid = domain.grid().get ();
+	const grid_type * grid = domain->grid().get ();
 	Grid::edge_traits::secure_container edge_list;
 	
 	UG_ASSERT ((grid != 0), "No grid in the domain.");
@@ -105,7 +105,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::get_edge_corners
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_stiffness_and_mass
 (
-	const TDomain & domain, /**< [in] the domain */
+	const TDomain * domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
@@ -183,7 +183,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_stiffness_and_mass
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_div_matrix
 (
-	const TDomain & domain, /**< [in] the domain */
+	const TDomain * domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	number B [][numEdges] /**< [out] local weak divergence operator matrix */
@@ -224,7 +224,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_div_matrix
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc_forSimplex<TDomain, TElem>::get_shapes
 (
-	const TDomain & domain, /**< [in] the domain */
+	const TDomain * domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	const MathVector<dim> local, /**< [in] local coordinates of the point where to compute */
@@ -260,7 +260,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::get_shapes
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc_forSimplex<TDomain, TElem>::interpolate
 (
-	const TDomain & domain, /**< [in] the domain */
+	const TDomain * domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	const number dof [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -311,7 +311,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::interpolate
 template <typename TDomain, typename TElem>
 void NedelecT1_LDisc_forSimplex<TDomain, TElem>::curl
 (
-	const TDomain & domain, /**< [in] the domain */
+	const TDomain * domain, /**< [in] the domain */
 	TElem * elem, /**< [in] element */
 	const position_type * corners, /**< [in] array of the global corner coordinates */
 	const number dof [], /**< [in] arrays of values of the Nedelec degrees of freedom */
@@ -350,7 +350,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::curl
 template <typename TDomain>
 number NedelecInterpolation<TDomain, 3, 3>::curl_flux
 (
-	const TDomain & domain, /**< [in] the domain */
+	const TDomain * domain, /**< [in] the domain */
 	GridObject * elem, /**< [in] element */
 	const position_type corners [], /**< [in] array of the global corner coordinates */
 	const number dofs [], /**< [in] arrays of values of the Nedelec degrees of freedom */

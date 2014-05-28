@@ -157,7 +157,7 @@ public:
 			
 		//	Compute the values of the grid function
 			NedelecInterpolation<domain_type, refDim>::value
-				(*(m_spGF->domain().get()), elem, vCornerCoords, &(dofValues[0]),
+				(m_spGF->domain().get(), elem, vCornerCoords, &(dofValues[0]),
 					vLocIP, nip, & (E[part][0]));
 		}
 		
@@ -281,7 +281,7 @@ public:
 	//	Compute the curl
 		MathVector<dim> curl;
 		NedelecInterpolation<domain_type, refDim>::curl
-			(*(m_spGF->domain().get()), elem, vCornerCoords, &(dofValues[0]), curl);
+			(m_spGF->domain().get(), elem, vCornerCoords, &(dofValues[0]), curl);
 		for (size_t ip = 0; ip < nip; ip++)
 			this_impl()->get_value (curl, vValue [ip]);
 	};

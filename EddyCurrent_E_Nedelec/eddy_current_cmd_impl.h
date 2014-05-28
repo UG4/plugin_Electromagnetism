@@ -105,10 +105,10 @@ number calc_magnetic_flux
 			{
 				number elem_flux [2];
 				number elem_area;
-				if ((elem_area = NedelecInterpolation<domain_type, dim, dim>::curl_flux
+				if ((elem_area = NedelecInterpolation<domain_type, dim>::curl_flux
 					(domain, (GridObject *) elem, corners, dofValues[0], normal, pnt, elem_flux[0])) != 0.0)
 				{
-					NedelecInterpolation<domain_type, dim, dim>::curl_flux
+					NedelecInterpolation<domain_type, dim>::curl_flux
 						(domain, (GridObject *) elem, corners, dofValues[1], normal, pnt, elem_flux[1]);
 					flux[0] += elem_flux[0];
 					flux[1] += elem_flux[1];

@@ -99,6 +99,8 @@ public:
 		const MathMatrix<refDim, dim> * vJT = NULL
 	) const
 	{
+		static const size_t maxEdges = NedelecInterpolation<domain_type, refDim>::maxNumEdges;
+		
 	//	Derivatives are not implemented
 		if (bDeriv)
 			UG_THROW ("NedelecGridFunctionData: Derivatives are not implemented.");
@@ -106,15 +108,17 @@ public:
 	//	Get multiindices of element
 		std::vector<DoFIndex> ind;
 		m_spGF->dof_indices (elem, m_fct, ind);
+		if (ind.size() > maxEdges)
+			UG_THROW ("NedelecGridFunctionData: Illegal number of DoFs!");
 	
 	//	The DoF values of the grid function
-		std::vector<number> dofValues (ind.size());
-		for (size_t sh = 0; sh < dofValues.size (); ++sh)
+		number dofValues [maxEdges];
+		for (size_t sh = 0; sh < ind.size(); ++sh)
 			dofValues[sh] = DoFRef (*m_spGF, ind[sh]);
 		
 	//	Compute the values
 		NedelecInterpolation<domain_type, refDim>::value
-			(*(m_spGF->domain().get()), elem, vCornerCoords, &(dofValues[0]), vLocIP, nip, vValue);
+			(m_spGF->domain().get(), elem, vCornerCoords, dofValues, vLocIP, nip, vValue);
 	};
 };
 
@@ -192,6 +196,8 @@ public:
 		const MathMatrix<refDim, dim> * vJT = NULL
 	) const
 	{
+		static const size_t maxEdges = NedelecInterpolation<domain_type, refDim>::maxNumEdges;
+		
 	//	Derivatives are not implemented
 		if (bDeriv)
 			UG_THROW ("NedelecCurlData: Derivatives are not implemented.");
@@ -199,16 +205,18 @@ public:
 	//	Get multiindices of element
 		std::vector<DoFIndex> ind;
 		m_spGF->dof_indices (elem, m_fct, ind);
+		if (ind.size() > maxEdges)
+			UG_THROW ("NedelecGridFunctionData: Illegal number of DoFs!");
 	
 	//	The DoF values of the grid function
-		std::vector<number> dofValues (ind.size());
-		for (size_t sh = 0; sh < dofValues.size (); ++sh)
+		number dofValues [maxEdges];
+		for (size_t sh = 0; sh < ind.size(); ++sh)
 			dofValues[sh] = DoFRef (*m_spGF, ind[sh]);
 		
 	//	Compute the curl
 		MathVector<dim> curl;
 		NedelecInterpolation<domain_type, refDim>::curl
-			(*(m_spGF->domain().get()), elem, vCornerCoords, &(dofValues[0]), curl);
+			(m_spGF->domain().get(), elem, vCornerCoords, dofValues, curl);
 		for (size_t ip = 0; ip < nip; ip++)
 			vValue[ip] = curl;
 	};
@@ -295,6 +303,8 @@ public:
 		const MathMatrix<refDim, dim> * vJT = NULL
 	) const
 	{
+		static const size_t maxEdges = NedelecInterpolation<domain_type, refDim>::maxNumEdges;
+		
 	//	Derivatives are not implemented
 		if (bDeriv)
 			UG_THROW ("NedelecSigmaEData: Derivatives are not implemented.");
@@ -313,15 +323,17 @@ public:
 	//	Get multiindices of element
 		std::vector<DoFIndex> ind;
 		m_spGF->dof_indices (elem, m_fct, ind);
+		if (ind.size() > maxEdges)
+			UG_THROW ("NedelecGridFunctionData: Illegal number of DoFs!");
 	
 	//	The DoF values of the grid function
-		std::vector<number> dofValues (ind.size());
-		for (size_t sh = 0; sh < dofValues.size (); ++sh)
+		number dofValues [maxEdges];
+		for (size_t sh = 0; sh < ind.size(); ++sh)
 			dofValues[sh] = DoFRef (*m_spGF, ind[sh]);
 		
 	//	Compute the values of the grid function
 		NedelecInterpolation<domain_type, refDim>::value
-			(*(m_spGF->domain().get()), elem, vCornerCoords, &(dofValues[0]), vLocIP, nip, vValue);
+			(m_spGF->domain().get(), elem, vCornerCoords, dofValues, vLocIP, nip, vValue);
 		
 	//	Multiply the values by \f$ \sigma \f$
 		for (size_t i = 0; i < nip; i++)
