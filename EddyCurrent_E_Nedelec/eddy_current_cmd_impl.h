@@ -19,13 +19,14 @@ namespace Electromagnetism{
 
 /// Computation of the magnetic flux through windings of a coil
 /**
- * This function computes the magnetic flux through windings of a cylindric coil.
+ * This function computes the magnetic flux through windings of a cylindric coil
+ * and returns the electomotive force due to the varying magnetic flux.
  * The flux is a complex number (as well as the electric field that is used as
  * the base of the computation). The function returns the total area of all the
  * windings.
  */
 template <typename TGridFunc>
-number calc_magnetic_flux
+number calc_EMF
 (
 	const TGridFunc * gfE, ///< [in] grid function with the electric field
 	const size_t fct [2], ///< [in] function components (Re and Im)
@@ -34,7 +35,7 @@ number calc_magnetic_flux
 	const typename TGridFunc::domain_type::position_type & base_pnt, ///< [in] point on the plane of the 1st winding
 	const size_t n_pnt, ///< [in] number of the windings
 	const typename TGridFunc::domain_type::position_type & d_pnt, ///< [in] thickness of the windings
-	number flux [2] ///< [out] the computed flux (Re and Im)
+	number emf [2] ///< [out] the computed electromotive force (Re and Im)
 )
 {
 	typedef typename TGridFunc::domain_type domain_type;
@@ -75,7 +76,7 @@ number calc_magnetic_flux
 
 //	compute the flux for every subset
 	number total_area = 0;
-	flux[0] = flux[1] = 0;
+	emf[0] = emf[1] = 0;
 	for (size_t ssgi = 0; ssgi < ss_grp.size (); ssgi++)
 	{
 		int si = ss_grp [ssgi];
@@ -110,8 +111,8 @@ number calc_magnetic_flux
 				{
 					NedelecInterpolation<domain_type, dim>::curl_flux
 						(domain, (GridObject *) elem, corners, dofValues[1], normal, pnt, elem_flux[1]);
-					flux[0] += elem_flux[0];
-					flux[1] += elem_flux[1];
+					emf[0] += elem_flux[0];
+					emf[1] += elem_flux[1];
 					total_area += elem_area;
 				}
 			}
@@ -122,9 +123,9 @@ number calc_magnetic_flux
 	return total_area;
 };
 
-/// Prints of the magnetic flux through windings of a coil
+/// Prints of the electromotive force due to the time variation of the magnetic flux through windings of a coil
 template <typename TGridFunc>
-void CalcMagneticFlux
+void CalcEMF
 (
 	SmartPtr<TGridFunc> spGF, ///< [in] grid function with the electric field
     const char* cmps, ///< [in] names of the components of the grid function (for Re and Im)
@@ -187,13 +188,13 @@ void CalcMagneticFlux
 	}
 	
 //	compute the flux and the area
-	number flux [2], area;
-	area = calc_magnetic_flux (spGF.get(), fcts, ssGrp, normal_vec,
-		base_pnt_coord, n_pnt, d_pnt_coord, flux);
+	number emf [2], area;
+	area = calc_EMF (spGF.get(), fcts, ssGrp, normal_vec,
+		base_pnt_coord, n_pnt, d_pnt_coord, emf);
 	
 //	print the result
-	UG_LOG ("--> Magnetic flux through " << n_pnt << " windings (total area " << area
-		<< "): " << flux[0] << " + " << flux[1] << " I.\n");
+	UG_LOG ("--> Electromotive force in the coil with " << n_pnt << " windings (total area "
+		<< area << "): " << emf[0] << " + " << emf[1] << " I.\n");
 };
 
 } // end namespace Electromagnetism

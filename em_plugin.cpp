@@ -349,7 +349,7 @@ struct Functionality
 			
 			reg.add_function
 			(
-				"CalcMagneticFlux",
+				"CalcEMF",
 				static_cast
 				<
 					void (*)
@@ -363,7 +363,7 @@ struct Functionality
 						const std::vector<number>&
 					)
 				>
-				(&CalcMagneticFlux<TFct>),
+				(&CalcEMF<TFct>),
 				grp,
 				"Magnetic flux through a cylindric coil",
 				"ElectricField#cmps#subsets#normal#basePnt#numWindings#windingSize"

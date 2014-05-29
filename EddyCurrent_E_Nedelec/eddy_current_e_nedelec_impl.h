@@ -255,7 +255,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem
 			Re_rhs -= m_rot_rot_M[e_1][e_2] * vJG[e_2][_Im_];
 			Im_rhs -= m_rot_rot_M[e_1][e_2] * vJG[e_2][_Re_];
 		}
-		b (_Re_, e_1) += Re_rhs; b (_Im_, e_1) += Im_rhs;
+		b (_Re_, e_1) += m_omega * Re_rhs; b (_Im_, e_1) += m_omega * Im_rhs;
 	}
 
 /* END code essential for the numerics */
