@@ -510,8 +510,6 @@ private:
 ///	Array of the electric current data
 	std::vector<TSrcData> m_vSrcData;
 
-///	Generator current in the source
-	number m_generatorCurrent;
 ///	Names of all the subsets of the source
 	std::string m_allSsNames;
 ///	Names of the subsets of the positive direction
