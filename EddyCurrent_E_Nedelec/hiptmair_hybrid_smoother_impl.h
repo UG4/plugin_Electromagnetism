@@ -23,18 +23,18 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 	const DoFDistribution * pVertDD ///< vertex-centered DoF distribution of the grid functions
 )
 {
-	typedef DoFDistribution::traits<RegularEdge>::const_iterator t_edge_iter;
+	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iter;
 	
 	m_vEdgeInfo.resize (pEdgeDD->num_indices (), false);
 	std::vector<size_t> vEdgeInd (1), vVertInd (1);
 	
 //	Get the edge-to-vertex correspondence
-	t_edge_iter edgeIterEnd = pEdgeDD->end<RegularEdge> ();
-	for (t_edge_iter edgeIter = pEdgeDD->begin<RegularEdge> (); edgeIter != edgeIterEnd; ++edgeIter)
+	t_edge_iter edgeIterEnd = pEdgeDD->end<Edge> ();
+	for (t_edge_iter edgeIter = pEdgeDD->begin<Edge> (); edgeIter != edgeIterEnd; ++edgeIter)
 	{
 		Edge * pEdge = *edgeIter;
 		if (pEdgeDD->inner_algebra_indices (pEdge, vEdgeInd) != 1)
-			UG_THROW (name () << ": RegularEdge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
+			UG_THROW (name () << ": Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 		tEdgeInfo & EdgeInfo = m_vEdgeInfo [vEdgeInd [0]];
 		
 		EdgeInfo.Dirichlet = false;
@@ -57,12 +57,12 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 	{
 		int si = dirichlet_ssgrp [j];
 	//	Loop the edges in the subset
-		t_edge_iter iterEnd = pEdgeDD->end<RegularEdge> (si);
-		for (t_edge_iter iter = pEdgeDD->begin<RegularEdge> (si); iter != iterEnd; iter++)
+		t_edge_iter iterEnd = pEdgeDD->end<Edge> (si);
+		for (t_edge_iter iter = pEdgeDD->begin<Edge> (si); iter != iterEnd; iter++)
 		{
 			Edge * pEdge = *iter;
 			if (pEdgeDD->inner_algebra_indices (pEdge, vEdgeInd) != 1)
-				UG_THROW (name () << ": RegularEdge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
+				UG_THROW (name () << ": Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 			m_vEdgeInfo[vEdgeInd[0]].Dirichlet = true;
 		}
 	}

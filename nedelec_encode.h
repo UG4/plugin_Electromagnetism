@@ -74,7 +74,7 @@ void ComputeNedelecDoFs
 //	Domain type, position_type and iterators
 	typedef typename TGridFunction::domain_type domain_type;
 	typedef typename domain_type::position_type position_type;
-	typedef typename TGridFunction::template traits<RegularEdge>::const_iterator t_edge_iterator;
+	typedef typename TGridFunction::template traits<Edge>::const_iterator t_edge_iterator;
 
 //	Get position accessor
 	const typename domain_type::position_accessor_type& aaPos = spGridFct->domain()->position_accessor();
@@ -98,8 +98,8 @@ void ComputeNedelecDoFs
 		}
 	
 	//	Loop the edges
-		t_edge_iterator iter = spGridFct->template begin<RegularEdge> (si);
-		t_edge_iterator iterEnd = spGridFct->template end<RegularEdge> (si);
+		t_edge_iterator iter = spGridFct->template begin<Edge> (si);
+		t_edge_iterator iterEnd = spGridFct->template end<Edge> (si);
 		for (; iter != iterEnd; iter++)
 		{
 			Edge * pEdge = *iter;
@@ -198,7 +198,6 @@ void ComputeNedelecDoFs
  * functions for a given vector function. This function can be called from
  * lua scripts.
  */
-///\{
 template <typename TGridFunction>
 void ComputeNedelecDoFs
 (
@@ -246,7 +245,6 @@ void ComputeNedelecDoFs
 {
 	ComputeNedelecDoFs (LuaFunction, spGridFct, cmp, NULL, 0);
 }
-///\}
 
 #endif // UG_FOR_LUA
 

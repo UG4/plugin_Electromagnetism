@@ -71,23 +71,32 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::get_edge_corners
 	size_t edge_corner [numEdges] [2] /**< [out] edge dof -> corner of the element */
 )
 {
-	const grid_type * grid = domain->grid().get ();
-	Grid::edge_traits::secure_container edge_list;
+	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	const ref_elem_type & rRefElem = Provider<ref_elem_type>::get ();
 	
+	const grid_type * grid = domain->grid().get ();
 	UG_ASSERT ((grid != 0), "No grid in the domain.");
-	((grid_type *) grid)->associated_elements_sorted (edge_list, elem);
-	UG_ASSERT ((edge_list.size () == numEdges), "Mismatch of numbers of corners and vertices of an element");
 	
 	for (size_t e = 0; e < numEdges; e++)
 	{
-		const Edge * edge = edge_list[e];
-		for (size_t i = 0; i < 2; i++)
+		int co_0 = rRefElem.id (1, e, 0, 0);
+		int co_1 = rRefElem.id (1, e, 0, 1);
+		UG_ASSERT ((co_0 >= 0 && co_1 >= 0), "NedelecT1_LDisc_forSimplex::get_edge_corners: Internal error.");
+		
+		const Edge * edge = ((grid_type *) grid)->get_edge (elem, e);
+		
+		if (elem->vertex (co_0) == edge->vertex (0))
 		{
-			const Vertex * vert = edge->vertex (i); size_t co = 0;
-			while (elem->vertex (co) != vert)
-				if ((++co) == numCorners)
-					UG_THROW ("Internal error in Nedelec disc.: vertex-edge mismatch");
-			edge_corner[e][i] = co;
+			UG_ASSERT ((elem->vertex (co_0) == edge->vertex (0)), "NedelecT1_LDisc_forSimplex::get_edge_corners: Internal error.")
+			edge_corner[e][0] = co_0;
+			edge_corner[e][1] = co_1;
+		}
+		else
+		{
+			UG_ASSERT ((elem->vertex (co_0) == edge->vertex (1) && elem->vertex (co_1) == edge->vertex (0)),
+				"NedelecT1_LDisc_forSimplex::get_edge_corners: Internal error.")
+			edge_corner[e][0] = co_1;
+			edge_corner[e][1] = co_0;
 		}
 	}
 }

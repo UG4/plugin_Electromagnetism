@@ -199,7 +199,7 @@ void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 //	Exclude grounded conductors
 	if (m_spDirichlet.valid ())
 	{
-		typedef DoFDistribution::traits<RegularEdge>::const_iterator t_edge_iterator;
+		typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
 		
 		const grid_type * grid = domain->grid().get ();
 		const subset_handler_type * ss_handler = domain->subset_handler().get ();
@@ -214,11 +214,11 @@ void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 			int si = dirichlet_ssgrp [j];
 			
 		//	Loop the Dirichlet edges in the subset
-			t_edge_iterator iterEnd = vertDD->end<RegularEdge> (si);
-			for (t_edge_iterator iter = vertDD->begin<RegularEdge> (si); iter != iterEnd; iter++)
+			t_edge_iterator iterEnd = vertDD->end<Edge> (si);
+			for (t_edge_iterator iter = vertDD->begin<Edge> (si); iter != iterEnd; iter++)
 			{
 			//	Loop the adjacent volumes
-				((grid_type*) grid)->associated_elements_sorted (volume_list, *iter);
+				((grid_type*) grid)->associated_elements (volume_list, *iter);
 				for (size_t v = 0; v < volume_list.size (); v++)
 				{
 					int v_b_cnd;
@@ -397,7 +397,7 @@ void NedelecProject<TDomain, TAlgebra>::weak_div_elem_type
 			
 		//	Compute the local contribution to the weak divergence:
 			if (edgeDD.dof_indices (pElem, fct, vEdgeInd) != (size_t) ref_elem_type::numEdges)
-				UG_THROW ("NedelecProject: RegularEdge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
+				UG_THROW ("NedelecProject: Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 			for (size_t i = 0; i < (size_t) ref_elem_type::numEdges; i++)
 				loc_u [i] = DoFRef (u, vEdgeInd [i]);
 			MatVecMult (loc_div, B, loc_u);
@@ -537,15 +537,15 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 )
 {
 //	Iterator over edges
-	typedef DoFDistribution::traits<RegularEdge>::const_iterator t_edge_iterator;
+	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
 
 //	Arrays for the indices in the vectors:
 	std::vector<size_t> vVertInd (1);
 	std::vector<DoFIndex> vEdgeInd (1);
 	
 //	Loop over edges:
-	t_edge_iterator iterEnd = edgeDD.end<RegularEdge> ();
-	for (t_edge_iterator iter = edgeDD.begin<RegularEdge> (); iter != iterEnd; iter++)
+	t_edge_iterator iterEnd = edgeDD.end<Edge> ();
+	for (t_edge_iterator iter = edgeDD.begin<Edge> (); iter != iterEnd; iter++)
 	{
 		number corner_val [2];
 		Edge * pEdge = *iter;
@@ -751,8 +751,8 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::set_zero_Dirichlet
 		int si = dirichlet_ssgrp [j];
 		
 	//	Loop the edges
-		t_edge_iterator iterEnd = dd->end<RegularEdge> (si);
-		for (t_edge_iterator iter = dd->begin<RegularEdge> (si); iter != iterEnd; iter++)
+		t_edge_iterator iterEnd = dd->end<Edge> (si);
+		for (t_edge_iterator iter = dd->begin<Edge> (si); iter != iterEnd; iter++)
 		{
 			Edge * pEdge = *iter;
 			
@@ -795,8 +795,8 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::set_identity_Dirichlet
 		int si = dirichlet_ssgrp [j];
 		
 	//	Loop the edges
-		t_edge_iterator iterEnd = dd->end<RegularEdge> (si);
-		for (t_edge_iterator iter = dd->begin<RegularEdge> (si); iter != iterEnd; iter++)
+		t_edge_iterator iterEnd = dd->end<Edge> (si);
+		for (t_edge_iterator iter = dd->begin<Edge> (si); iter != iterEnd; iter++)
 		{
 			Edge * pEdge = *iter;
 			

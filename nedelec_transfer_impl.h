@@ -32,6 +32,8 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::GetRegularLocalC
 	MathVector<TElem::dim> & local ///< [out] to save the local coordinates
 )
 {
+	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	
 //	Get the parent of the vertex (note that this is typically not the 'base')
 	GridObject * parent = mg->get_parent (v);
 	
@@ -42,8 +44,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::GetRegularLocalC
 	UG_ASSERT (n_co != 0, "GetRegularLocalCoordinate: No associated vertices.")
 	
 //	Get the reference element for the base
-	const DimReferenceElement<TElem::dim> & rRefElem = ReferenceElementProvider::get<TElem::dim>
-		(geometry_traits<TElem>::REFERENCE_OBJECT_ID);
+	const ref_elem_type& rRefElem = Provider<ref_elem_type>::get ();
 	
 //	Average the local coordinates of the vertices
 	local = 0.0;
@@ -77,7 +78,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, RegularEdge>::assemble_p
 	std::vector<bool> & vIsRestricted ///< [out] whether a coarse grid DoF has children
 )
 {
-	typedef DoFDistribution::traits<Edge>::const_iterator iterator;
+	typedef DoFDistribution::traits<RegularEdge>::const_iterator iterator;
 	
 // Multiindices to access the components
 	std::vector<DoFIndex> c_ind (1), f_ind (1);
@@ -93,8 +94,8 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, RegularEdge>::assemble_p
 	for (int si = 0; si < coarseDD.num_subsets (); si++)
 	{
 	// Loop over all edges in the subset
-		iterator e_end = coarseDD.template end<Edge> (si);
-		for (iterator edge_iter = coarseDD.template begin<Edge> (si);
+		iterator e_end = coarseDD.template end<RegularEdge> (si);
+		for (iterator edge_iter = coarseDD.template begin<RegularEdge> (si);
 			edge_iter != e_end; ++edge_iter)
 		{
 			number coef;

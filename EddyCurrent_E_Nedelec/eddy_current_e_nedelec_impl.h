@@ -305,7 +305,7 @@ template<typename TDomain, typename TAlgebra>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_all_loc_discr_funcs ()
 {
 //	get all grid element types in this dimension and below
-	typedef typename domain_traits<dim>::AllElemList ElemList;
+	typedef typename domain_traits<dim>::DimElemList ElemList;
 
 //	switch assemble functions
 	boost::mpl::for_each<ElemList> (RegisterLocalDiscr (this));

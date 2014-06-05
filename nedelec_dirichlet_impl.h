@@ -303,8 +303,8 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_jacobian
 		int si = ssGrp [i];
 		
 	//	Loop the edges
-		t_edge_iterator iterEnd = dd->end<RegularEdge> (si);
-		for (t_edge_iterator iter = dd->begin<RegularEdge> (si); iter != iterEnd; iter++)
+		t_edge_iterator iterEnd = dd->end<Edge> (si);
+		for (t_edge_iterator iter = dd->begin<Edge> (si); iter != iterEnd; iter++)
 		//	Loop functions
 			for(size_t fct_i = 0; fct_i < fctGrp.size (); fct_i++)
 			{
@@ -347,8 +347,8 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_defect
 		int si = ssGrp [i];
 		
 	//	Loop the edges
-		t_edge_iterator iterEnd = dd->end<RegularEdge> (si);
-		for (t_edge_iterator iter = dd->begin<RegularEdge> (si); iter != iterEnd; iter++)
+		t_edge_iterator iterEnd = dd->end<Edge> (si);
+		for (t_edge_iterator iter = dd->begin<Edge> (si); iter != iterEnd; iter++)
 		//	Loop functions
 			for(size_t fct_i = 0; fct_i < fctGrp.size (); fct_i++)
 			{
@@ -380,8 +380,8 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution
 	std::vector<DoFIndex>  multInd;
 
 //	Loop the edges
-	t_edge_iterator iterEnd = dd->end<RegularEdge> (si);
-	for (t_edge_iterator iter = dd->begin<RegularEdge> (si); iter != iterEnd; iter++)
+	t_edge_iterator iterEnd = dd->end<Edge> (si);
+	for (t_edge_iterator iter = dd->begin<Edge> (si); iter != iterEnd; iter++)
 	//	Loop dirichlet functions on this segment
 		for(size_t i = 0; i < vUserData.size (); ++i)
 		{
@@ -420,8 +420,8 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution_implicit
 		int si = ssIter->first;
 		
 	//	Loop the edges
-		t_edge_iterator iterEnd = dd->end<RegularEdge> (si);
-		for (t_edge_iterator iter = dd->begin<RegularEdge> (si); iter != iterEnd; iter++)
+		t_edge_iterator iterEnd = dd->end<Edge> (si);
+		for (t_edge_iterator iter = dd->begin<Edge> (si); iter != iterEnd; iter++)
 		{
 			Edge * pEdge = *iter;
 			
