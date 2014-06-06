@@ -598,47 +598,6 @@ inline void get_ave_vector
 	ave /= n_vec;
 }
 
-/** computes the "generalized vector product" of two vectors
- *
- * In 3d, this is a usual cross-product. In 2d, the first component
- * of the result is the determinant of the 2x2-matrix build of the operands,
- * and the second component is always 0.
- *
- * \tparam dim	dimensionality of the vectors
- */
-
-template <size_t dim>
-inline void GenVecCross
-(
-	MathVector<dim> & result,
-	const MathVector<dim> & v_1, const MathVector<dim> & v_2
-)
-{
-	/* Cf. the specializations below! */
-	UG_THROW ("The generalized vector product is defined only in 2 and 3 dimensions");
-};
-
-template <>
-inline void GenVecCross<2>
-(
-	MathVector<2> & result,
-	const MathVector<2> & v_1, const MathVector<2> & v_2
-)
-{
-	result[0] = v_1[0] * v_2[1] - v_1[1] * v_2[0];
-	result[1] = 0;
-};
-
-template <>
-inline void GenVecCross<3>
-(
-	MathVector<3> & result,
-	const MathVector<3> & v_1, const MathVector<3> & v_2
-)
-{
-	VecCross (result, v_1, v_2);
-};
-
 } // end namespace Electromagnetism
 } // end namespace ug
 
