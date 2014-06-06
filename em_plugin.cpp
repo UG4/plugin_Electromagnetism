@@ -32,6 +32,9 @@
 /* divergence-free sources */
 #include "nedelec_source.h"
 
+/* further tools */
+#include "nedelec_aux_cmd.h"
+
 using namespace std;
 using namespace ug::bridge;
 
@@ -367,6 +370,25 @@ struct Functionality
 				grp,
 				"Magnetic flux through a cylindric coil",
 				"ElectricField#cmps#subsets#normal#basePnt#numWindings#windingSize"
+			);
+			
+			reg.add_function
+			(
+				"ComputeFlux",
+				static_cast
+				<
+					void (*)
+					(
+						SmartPtr<TFct>,
+						const char*,
+						const char*,
+						const char*
+					)
+				>
+				(&ComputeFlux<TFct>),
+				grp,
+				"Flux of a Nedelec vector field through a surface",
+				"Field#cmp#vol.subsets#surface subsets"
 			);
 		}
 	};
