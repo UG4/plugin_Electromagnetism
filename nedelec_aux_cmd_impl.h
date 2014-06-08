@@ -17,111 +17,134 @@
 namespace ug{
 namespace Electromagnetism{
 
-/// Computation of the flux through sides of an element. (Helper for ComputeFlux.)
+/// Helper class for computation of the flux in elements. (Helper for ComputeFlux.)
 template <typename TGridFunc, typename TElem>
-number compute_elem_flux
-(
-	TGridFunc * pGF, ///< grid function of the Nedelec-DoFs of the vector field
-	size_t fct, ///< index of the function in the grid function
-	TElem * pElem, ///< the element
-	SubsetGroup & faceSSG ///< the surface (the low-dim. subsets)
-)
+class ComputeElemFluxHelper
 {
-	typedef typename TGridFunc::domain_type domain_type;
-	static const int dim = domain_type::dim;
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename domain_traits<dim>::side_type side_type;
-	
-	number flux = 0;
-	
-//	loop the sides
-	const ISubsetHandler * pIsh = pGF->subset_handler().get ();
-	for (size_t i = 0; i < (size_t) ref_elem_type::numSides; i++)
+private:
+	/// Computation of the flux through sides of an element.
+	static number compute_elem_flux
+	(
+		TGridFunc * pGF, ///< grid function of the Nedelec-DoFs of the vector field
+		size_t fct, ///< index of the function in the grid function
+		TElem * pElem, ///< the element
+		SubsetGroup & faceSSG ///< the surface (the low-dim. subsets)
+	)
 	{
-	//	check whether that is a side on the face
-		side_type * pSide = pIsh->grid()->get_side (pElem, i);
-		if (! faceSSG.contains (pIsh->get_subset_index (pSide)))
-			continue;
+		typedef typename TGridFunc::domain_type domain_type;
+		static const int dim = domain_type::dim;
+		typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+		typedef typename domain_traits<dim>::side_type side_type;
 		
-	//---- There is typically only one side on the surface, and not for every
-	//---- element. So we put the following section into the loop although it
-	//---- does not depend on the side. This allows to skip getting coordinates
-	//---- and dofs for elements that have no sides on the surface.
-	
-		const ref_elem_type & rRefElem = Provider<ref_elem_type>::get ();
+		number flux = 0;
 		
-	//	get position accessor and corner coordinates of the element
-		const typename domain_type::position_accessor_type & aaPos
-			= pGF->domain()->position_accessor();
-		typename domain_type::position_type corners [ref_elem_type::numCorners];
-		for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
-			corners[co] = aaPos [pElem->vertex (co)];
-	
-	//	get the dof values of the function in the element
-		std::vector<DoFIndex> ind;
-		if (pGF->dof_indices (pElem, fct, ind) != (size_t) ref_elem_type::numEdges)
-			UG_THROW ("Grid function type mismatch.");
-		number dofValues [ref_elem_type::numEdges];
-		for (size_t dof = 0; dof < (size_t) ref_elem_type::numEdges; dof++)
-			dofValues[dof] = DoFRef (*pGF, ind[dof]);
-	
-	//----
-		
-	//	get the integration point
-		MathVector<dim> loc_center;
-		loc_center = 0.0;
-		size_t co;
-		for (co = 0; co < pSide->num_vertices (); co++)
+	//	loop the sides
+		const ISubsetHandler * pIsh = pGF->subset_handler().get ();
+		for (size_t i = 0; i < (size_t) ref_elem_type::numSides; i++)
 		{
-			int elem_co = rRefElem.id (dim-1, i, 1, co);
-			UG_ASSERT (elem_co >= 0, "Index mismatch.");
-			loc_center += rRefElem.corner (elem_co);
+		//	check whether that is a side on the face
+			side_type * pSide = pIsh->grid()->get_side (pElem, i);
+			if (! faceSSG.contains (pIsh->get_subset_index (pSide)))
+				continue;
+			
+		//---- There is typically only one side on the surface, and not for every
+		//---- element. So we put the following section into the loop although it
+		//---- does not depend on the side. This allows to skip getting coordinates
+		//---- and dofs for elements that have no sides on the surface.
+		
+			const ref_elem_type & rRefElem = Provider<ref_elem_type>::get ();
+			
+		//	get position accessor and corner coordinates of the element
+			const typename domain_type::position_accessor_type & aaPos
+				= pGF->domain()->position_accessor();
+			typename domain_type::position_type corners [ref_elem_type::numCorners];
+			for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
+				corners[co] = aaPos [pElem->vertex (co)];
+		
+		//	get the dof values of the function in the element
+			std::vector<DoFIndex> ind;
+			if (pGF->dof_indices (pElem, fct, ind) != (size_t) ref_elem_type::numEdges)
+				UG_THROW ("Grid function type mismatch.");
+			number dofValues [ref_elem_type::numEdges];
+			for (size_t dof = 0; dof < (size_t) ref_elem_type::numEdges; dof++)
+				dofValues[dof] = DoFRef (*pGF, ind[dof]);
+		
+		//----
+			
+		//	get the integration point
+			MathVector<dim> loc_center;
+			loc_center = 0.0;
+			size_t co;
+			for (co = 0; co < pSide->num_vertices (); co++)
+			{
+				int elem_co = rRefElem.id (dim-1, i, 1, co);
+				UG_ASSERT (elem_co >= 0, "Index mismatch.");
+				loc_center += rRefElem.corner (elem_co);
+			}
+			loc_center /= co;
+			
+		//	compute the value of the function at the ip
+			MathVector<dim> val;
+			NedelecInterpolation<domain_type, dim>::value
+				(pGF->domain().get (), pElem, corners, dofValues, &loc_center, 1, &val);
+			
+		//	get the normal to the side (its length is the area of the side)
+			MathVector<dim> normal;
+			SideNormal<ref_elem_type, dim> (normal, i, corners);
+		
+		//	update the flux
+			flux += VecDot (val, normal);
 		}
-		loc_center /= co;
 		
-	//	compute the value of the function at the ip
-		MathVector<dim> val;
-		NedelecInterpolation<domain_type, dim>::value
-			(pGF->domain().get (), pElem, corners, dofValues, &loc_center, 1, &val);
-		
-	//	get the normal to the side (its length is the area of the side)
-		MathVector<dim> normal;
-		SideNormal<ref_elem_type, dim> (normal, i, corners);
-	
-	//	update the flux
-		flux += VecDot (val, normal);
+		return flux;
 	}
 	
-	return flux;
-}
-
-/// Computation of the flux through the sides of all elements of one type. (Helper for ComputeFlux.)
-template <typename TGridFunc, typename TElem>
-number compute_flux
-(
-	TGridFunc * pGF, ///< grid function of the Nedelec-DoFs of the vector field
-	size_t fct, ///< index of the function in the grid function
-	SubsetGroup & volSSG, ///< full-dim. subsets (adjacent to the surface) to indicate the negative direction
-	SubsetGroup & faceSSG ///< the surface (the low-dim. subsets)
-)
-{
-	typedef typename TGridFunc::template traits<TElem>::const_iterator t_elem_iterator;
-
-	number flux = 0;
-	
-//	loop all volume subsets
-	for (size_t i = 0; i < volSSG.size (); i++)
+public:
+	/// Computation of the flux through the sides of all elements of one type.
+	static number compute_flux
+	(
+		TGridFunc * pGF, ///< grid function of the Nedelec-DoFs of the vector field
+		size_t fct, ///< index of the function in the grid function
+		SubsetGroup & volSSG, ///< full-dim. subsets (adjacent to the surface) to indicate the negative direction
+		SubsetGroup & faceSSG ///< the surface (the low-dim. subsets)
+	)
 	{
-		int si = volSSG[i];
-	//	loop all the elements
-		t_elem_iterator elem_iter = pGF->template begin<TElem> (si);
-		t_elem_iterator end_iter = pGF->template end<TElem> (si);
-		for (; elem_iter != end_iter; ++elem_iter)
-			flux += compute_elem_flux (pGF, fct, *elem_iter, faceSSG);
-	}
+		typedef typename TGridFunc::template traits<TElem>::const_iterator t_elem_iterator;
 	
-	return flux;
-}
+		number flux = 0;
+		
+	//	loop all volume subsets
+		for (size_t i = 0; i < volSSG.size (); i++)
+		{
+			int si = volSSG[i];
+		//	loop all the elements
+			t_elem_iterator elem_iter = pGF->template begin<TElem> (si);
+			t_elem_iterator end_iter = pGF->template end<TElem> (si);
+			for (; elem_iter != end_iter; ++elem_iter)
+				flux += compute_elem_flux (pGF, fct, *elem_iter, faceSSG);
+		}
+		
+		return flux;
+	}
+};
+
+/// Helper class for computation of the flux in elements. (Helper for ComputeFlux.)
+template <typename TGridFunc>
+class ComputeElemFluxHelper<TGridFunc, RegularEdge>
+{
+public:
+	/// Computation of the flux through the sides of all elements of one type.
+	static number compute_flux
+	(
+		TGridFunc * pGF, ///< grid function of the Nedelec-DoFs of the vector field
+		size_t fct, ///< index of the function in the grid function
+		SubsetGroup & volSSG, ///< full-dim. subsets (adjacent to the surface) to indicate the negative direction
+		SubsetGroup & faceSSG ///< the surface (the low-dim. subsets)
+	)
+	{
+		UG_THROW ("ComputeFlux: No flux computations in 1d.");
+	}
+};
 
 /// Helper class for the loop over all the elements in the computation of the flux. (Helper for ComputeFlux.)
 template <typename TGridFunc>
@@ -151,7 +174,7 @@ public:
 	
 	template <typename TElem> void operator() (TElem &)
 	{
-		m_flux += compute_flux<TGridFunc, TElem> (m_pGF, m_fct, m_volSSG, m_faceSSG);
+		m_flux += ComputeElemFluxHelper<TGridFunc, TElem>::compute_flux (m_pGF, m_fct, m_volSSG, m_faceSSG);
 	}
 };
 
