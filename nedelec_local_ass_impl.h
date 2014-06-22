@@ -102,7 +102,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::get_edge_corners
 }
 
 /**
- * Assembles the stiffness and mass matrices of the rot-rot operator
+ * Assembles the local stiffness and mass matrices of the rot-rot operator
  *
  * The matrices are not premultiplied by any physical factors:
  * these factors are assumed to be constant over the element and must
@@ -153,10 +153,14 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_stiffness_and_mass
 	
 /* 2. Computation of the mass matrix: */
 	
-// REMARK: Below we compute the integrals of (w^{(1)}_e1,  w^{(1)}_e2) over the element
-// by the MIDPOINT rule. The approximation error should be consistent with the one
-// of the whole discretization. (Is it true?)
+// REMARK: Below we compute the integrals of (w^{(1)}_e1,  w^{(1)}_e2) over the
+// element by a generalization of the Simpson's quadrature rule for simplexes, cf.
+// A. Horwitz, A version of Simpson’s rule for multiple integrals,
+// Journal of Computational and Applied Mathematics 134 (2001), pp. 1-11,
+// DOI: 10.1016/S0377-0427(00)00444-1
 
+	static const number lambda = ((number) (WDim + 1)) / (WDim + 2);
+	
 // compute the values of the w^{(1)}_e-functions at the center of the element
 	MathVector<WDim> w1_at_center[numEdges];
 	for (size_t e = 0; e < numEdges; e++)
@@ -167,10 +171,104 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_stiffness_and_mass
 		VecSubtract (w1_at_center[e], grad_w0[edge_corner[e][0]], grad_w0[edge_corner[e][1]]);
 		w1_at_center[e] /= numCorners;
 	}
+// compute the values of w^{(1)}_e-functions at the corners
+	MathVector<WDim> w1_at_co[numEdges][numCorners];
+	for (size_t e = 0; e < numEdges; e++)
+	{
+	// Every w^{(1)} is non-zero at only two corners of the element: the ends
+	// of the edge: At all the other corners the corresponding w^{(0)} are zero.
+		for (size_t co = 0; co < numCorners; co++) w1_at_co[e][co] = 0;
+		w1_at_co[e][edge_corner[e][0]] = grad_w0[edge_corner[e][1]];
+		w1_at_co[e][edge_corner[e][1]] -= grad_w0[edge_corner[e][0]];
+	}
 // assemble the mass matrix
 	for (size_t e_1 = 0; e_1 < numEdges; e_1++)
 		for (size_t e_2 = 0; e_2 <= e_1; e_2++)
-			M[e_1][e_2] = VecDot (w1_at_center[e_1], w1_at_center[e_2]) * V;
+		{
+			number t = 0;
+			for (size_t co = 0; co < numCorners; co++)
+				t += VecDot (w1_at_co[e_1][co], w1_at_co[e_2][co]);
+			t /= numCorners;
+			
+			M[e_1][e_2] = (lambda * VecDot (w1_at_center[e_1], w1_at_center[e_2])
+				+ (1 - lambda) * t) * V;
+		}
+	for (size_t e_1 = 0; e_1 < numEdges-1; e_1++)
+		for (size_t e_2 = e_1 + 1; e_2 < numEdges; e_2++) M[e_1][e_2] = M[e_2][e_1];
+}
+
+/**
+ * Assembles the local mass matrix of the Nedelec element (i.e. performs a part
+ * of the task of local_stiffness_and_mass).
+ *
+ * \remark We assume that the reference mapping is linear: The Nedelec
+ * elements are only implemented for simplices.
+ */
+template <typename TDomain, typename TElem>
+void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_mass
+(
+	const TDomain * domain, /**< [in] the domain */
+	TElem * elem, /**< [in] element */
+	const position_type * corners, /**< [in] array of the global corner coordinates */
+	number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
+)
+{
+// clear the local matrix:
+	memset (M, 0, maxNumEdges * maxNumEdges * sizeof (number));
+	
+// get volume of the grid element
+	number V = ElementSize<ref_elem_type, WDim> (corners);
+	
+/* Computation of the mass matrix: */
+	
+// get the gradients of the Whitney-0 elements
+	MathVector<WDim> grad_w0 [numCorners];
+	compute_W0_grads (corners, grad_w0);
+
+// get the correspondence of the edges and the corners:
+	size_t edge_corner [numEdges] [2];
+	get_edge_corners (domain, elem, edge_corner);
+
+// REMARK: Below we compute the integrals of (w^{(1)}_e1,  w^{(1)}_e2) over the
+// element by a generalization of the Simpson's quadrature rule for simplexes, cf.
+// A. Horwitz, A version of Simpson’s rule for multiple integrals,
+// Journal of Computational and Applied Mathematics 134 (2001), pp. 1-11,
+// DOI: 10.1016/S0377-0427(00)00444-1
+
+	static const number lambda = ((number) (WDim + 1)) / (WDim + 2);
+	
+// compute the values of the w^{(1)}_e-functions at the center of the element
+	MathVector<WDim> w1_at_center[numEdges];
+	for (size_t e = 0; e < numEdges; e++)
+	{
+	// All the w^{(0)} (i.e. Lagrange) functions have the same value at the center
+	// of the element. (This can be considered as a definition of the 'center'.)
+	// This value is 1.0 / numCorners:
+		VecSubtract (w1_at_center[e], grad_w0[edge_corner[e][0]], grad_w0[edge_corner[e][1]]);
+		w1_at_center[e] /= numCorners;
+	}
+// compute the values of w^{(1)}_e-functions at the corners
+	MathVector<WDim> w1_at_co[numEdges][numCorners];
+	for (size_t e = 0; e < numEdges; e++)
+	{
+	// Every w^{(1)} is non-zero at only two corners of the element: the ends
+	// of the edge: At all the other corners the corresponding w^{(0)} are zero.
+		for (size_t co = 0; co < numCorners; co++) w1_at_co[e][co] = 0;
+		w1_at_co[e][edge_corner[e][0]] = grad_w0[edge_corner[e][1]];
+		w1_at_co[e][edge_corner[e][1]] -= grad_w0[edge_corner[e][0]];
+	}
+// assemble the mass matrix
+	for (size_t e_1 = 0; e_1 < numEdges; e_1++)
+		for (size_t e_2 = 0; e_2 <= e_1; e_2++)
+		{
+			number t = 0;
+			for (size_t co = 0; co < numCorners; co++)
+				t += VecDot (w1_at_co[e_1][co], w1_at_co[e_2][co]);
+			t /= numCorners;
+			
+			M[e_1][e_2] = (lambda * VecDot (w1_at_center[e_1], w1_at_center[e_2])
+				+ (1 - lambda) * t) * V;
+		}
 	for (size_t e_1 = 0; e_1 < numEdges-1; e_1++)
 		for (size_t e_2 = e_1 + 1; e_2 < numEdges; e_2++) M[e_1][e_2] = M[e_2][e_1];
 }

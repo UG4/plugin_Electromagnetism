@@ -12,6 +12,27 @@
 namespace ug{
 namespace Electromagnetism{
 
+/// Computes the power of the electromagnetic field (up to the contribution of the boundary)
+template <typename TGridFunc>
+void calc_power
+(
+	TGridFunc * pJGGF, ///< grid function of the Nedelec-DoFs of the generator current \f$\mathbf{J}_G\f$
+	size_t JG_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{J}_G\f$
+	TGridFunc * pEGF, ///< grid function of the Nedelec-DoFs of the electric field \f$\mathbf{E}\f$
+	size_t E_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{E}\f$
+	number pow[] ///< to add the integral
+);
+
+/// Prints the (complex-valued) power of the electromagnetic field
+template <typename TGridFunc>
+void CalcPower
+(
+	SmartPtr<TGridFunc> spJGGF, ///< [in] grid function with the generator current
+    const char* JG_cmps, ///< [in] names of the components of the grid function (for Re and Im)
+	SmartPtr<TGridFunc> spEGF, ///< [in] grid function with the electric field
+    const char* E_cmps ///< [in] names of the components of the grid function (for Re and Im)
+);
+
 /// Computation of the magnetic flux through windings of a coil
 template <typename TGridFunc>
 number calc_magnetic_flux

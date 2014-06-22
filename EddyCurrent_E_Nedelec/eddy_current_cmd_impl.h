@@ -17,6 +17,253 @@
 namespace ug{
 namespace Electromagnetism{
 
+//---- Computation of the power of the electromagnetic field ----//
+
+/// Helper class for the integration of the power
+/**
+ * This class implements the function computes the integral
+ * \f[
+ *  \int_\Omega \overline{\mathbf{J}_G} \mathbf{E} \, dx
+ * \f]
+ * over the subdomain covered by grid elements of one type.
+ *
+ * \tparam	TGridFunc	grid function type
+ * \tparam	TElem		grid element type
+ */
+template <typename TGridFunc, typename TElem>
+class CalcVolPowerElemHelperClass
+{
+private:
+	typedef typename TGridFunc::domain_type domain_type;
+	typedef typename domain_type::position_accessor_type position_accessor_type;
+	typedef typename domain_type::position_type position_type;
+	
+	static const size_t numCorners = NedelecT1_LDisc<domain_type, TElem>::numCorners;
+	static const size_t numEdges = NedelecT1_LDisc<domain_type, TElem>::numEdges;
+	static const size_t maxEdges = NedelecT1_LDisc<domain_type, TElem>::maxNumEdges;
+		
+///	computes the integral over one element
+	inline static void calc_elem_power
+	(
+		TGridFunc * pJGGF, ///< grid function of the Nedelec-DoFs of the generator current \f$\mathbf{J}_G\f$
+		size_t JG_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{J}_G\f$
+		TGridFunc * pEGF, ///< grid function of the Nedelec-DoFs of the electric field \f$\mathbf{E}\f$
+		size_t E_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{E}\f$
+		position_accessor_type & aaPos, ///< position accessor
+		TElem * pElem, ///< the element
+		number pow[] ///< to add the integral (Re and Im parts)
+	)
+	{
+	//	Get coordinates of the corners
+		position_type corners [numCorners];
+		for (size_t co = 0; co < numCorners; co++)
+			corners [co] = aaPos [pElem->vertex (co)];
+		
+	//	Assemble the local mass matrix
+		number M [maxEdges] [maxEdges];
+		NedelecT1_LDisc<domain_type, TElem>::local_mass
+			(pEGF->domain().get (), pElem, corners, M);
+		
+	//	Get the components of the grid functions
+		number Re_JG_val [numEdges], Im_JG_val [numEdges];
+		number Re_E_val [numEdges], Im_E_val [numEdges];
+		std::vector<DoFIndex> ind;
+		
+		if (pJGGF->dof_indices (pElem, JG_fct[0], ind) != numEdges)
+			UG_THROW ("J_G grid function type mismatch.");
+		for (size_t dof = 0; dof < numEdges; dof++)
+			Re_JG_val[dof] = DoFRef (*pJGGF, ind[dof]);
+		
+		if (pJGGF->dof_indices (pElem, JG_fct[1], ind) != numEdges)
+			UG_THROW ("J_G grid function type mismatch.");
+		for (size_t dof = 0; dof < numEdges; dof++)
+			Im_JG_val[dof] = DoFRef (*pJGGF, ind[dof]);
+		
+		if (pEGF->dof_indices (pElem, E_fct[0], ind) != numEdges)
+			UG_THROW ("E grid function type mismatch.");
+		for (size_t dof = 0; dof < numEdges; dof++)
+			Re_E_val[dof] = DoFRef (*pEGF, ind[dof]);
+		
+		if (pEGF->dof_indices (pElem, E_fct[1], ind) != numEdges)
+			UG_THROW ("E grid function type mismatch.");
+		for (size_t dof = 0; dof < numEdges; dof++)
+			Im_E_val[dof] = DoFRef (*pEGF, ind[dof]);
+		
+	//	Compute the integral
+		number Re_ME [numEdges], Im_ME [numEdges];
+		
+		memset (Re_ME, 0, numEdges * sizeof (number));
+		memset (Im_ME, 0, numEdges * sizeof (number));
+		for (size_t i = 0; i < numEdges; i++)
+			for (size_t j = 0; j < numEdges; j++)
+			{
+				Re_ME [i] +=  M [i] [j] * Re_E_val [j];
+				Im_ME [i] +=  M [i] [j] * Im_E_val [j];
+			}
+	
+	//	a) the real part
+		number Re_pow = 0;
+		for (size_t i = 0; i < numEdges; i++)
+			Re_pow += Re_JG_val[i] * Re_ME[i] + Im_JG_val[i] * Im_ME[i];
+	//	b) the imaginary part
+		number Im_pow = 0;
+		for (size_t i = 0; i < numEdges; i++)
+			Im_pow += Re_JG_val[i] * Im_ME[i] - Re_ME[i] * Im_JG_val[i];
+	
+	//	Done
+		pow[0] += Re_pow; pow[1] += Im_pow;
+	
+	//-- For debugging only
+	//	UG_LOG ("==> subset " << pEGF->domain()->subset_handler()->get_subset_index (pElem)
+	//		<< ": Re = " << Re_pow << ", Im = " << Im_pow << "\n");
+	//--
+	}
+
+public:
+
+///	Computes the integral for all elements of one type
+	static void calc_power
+	(
+		TGridFunc * pJGGF, ///< grid function of the Nedelec-DoFs of the generator current \f$\mathbf{J}_G\f$
+		size_t JG_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{J}_G\f$
+		TGridFunc * pEGF, ///< grid function of the Nedelec-DoFs of the electric field \f$\mathbf{E}\f$
+		size_t E_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{E}\f$
+		number pow[] ///< to add the integral (Re and Im parts)
+	)
+	{
+		typedef typename TGridFunc::template traits<TElem>::const_iterator t_elem_iterator;
+		
+		position_accessor_type & aaPos = pEGF->domain()->position_accessor();
+	//	loop all the elements
+		t_elem_iterator elem_iter = pEGF->template begin<TElem> ();
+		t_elem_iterator end_iter = pEGF->template end<TElem> ();
+		for (; elem_iter != end_iter; ++elem_iter)
+			CalcVolPowerElemHelperClass<TGridFunc, TElem>::calc_elem_power
+				(pJGGF, JG_fct, pEGF, E_fct, aaPos, *elem_iter, pow);
+	}
+};
+
+/// Helper class for the computation of the power of the electromagnetic field
+template <typename TGridFunc>
+class CalcVolPowerHelperClass
+{
+	TGridFunc * m_pJGGF;
+	size_t m_JG_fct[2];
+	TGridFunc * m_pEGF;
+	size_t m_E_fct[2];
+	number * m_pow;
+	
+public:
+	
+///	class constructor
+	CalcVolPowerHelperClass
+	(
+		TGridFunc * pJGGF, ///< grid function of the Nedelec-DoFs of the generator current \f$\mathbf{J}_G\f$
+		size_t JG_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{J}_G\f$
+		TGridFunc * pEGF, ///< grid function of the Nedelec-DoFs of the electric field \f$\mathbf{E}\f$
+		size_t E_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{E}\f$
+		number pow[] ///< to add the integral
+	)
+	: m_pJGGF (pJGGF), m_pEGF (pEGF), m_pow (pow)
+	{
+		m_JG_fct[0] = JG_fct[0]; m_JG_fct[1] = JG_fct[1];
+		m_E_fct[0] = E_fct[0]; m_E_fct[1] = E_fct[1];
+		m_pow[0] = m_pow[1] = 0;
+	}
+	
+	template <typename TElem> void operator() (TElem &)
+	{
+		CalcVolPowerElemHelperClass<TGridFunc, TElem>::calc_power
+			(m_pJGGF, m_JG_fct, m_pEGF, m_E_fct, m_pow);
+	}
+};
+
+/// Computes the power of the electromagnetic field (up to the contribution of the boundary)
+template <typename TGridFunc>
+void calc_power
+(
+	TGridFunc * pJGGF, ///< grid function of the Nedelec-DoFs of the generator current \f$\mathbf{J}_G\f$
+	size_t JG_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{J}_G\f$
+	TGridFunc * pEGF, ///< grid function of the Nedelec-DoFs of the electric field \f$\mathbf{E}\f$
+	size_t E_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{E}\f$
+	number pow[] ///< to add the integral
+)
+{
+	typedef typename TGridFunc::domain_type domain_type;
+	static const int dim = domain_type::dim;
+	typedef typename domain_traits<dim>::DimElemList ElemList;
+	
+	boost::mpl::for_each<ElemList>
+		(CalcVolPowerHelperClass<TGridFunc> (pJGGF, JG_fct, pEGF, E_fct, pow));
+	
+	pow [0] /= -2;
+	pow [1] /= -2;
+}
+
+/// Prints the (complex-valued) power of the electromagnetic field
+template <typename TGridFunc>
+void CalcPower
+(
+	SmartPtr<TGridFunc> spJGGF, ///< [in] grid function with the generator current
+    const char* JG_cmps, ///< [in] names of the components of the grid function (for Re and Im)
+	SmartPtr<TGridFunc> spEGF, ///< [in] grid function with the electric field
+    const char* E_cmps ///< [in] names of the components of the grid function (for Re and Im)
+)
+{
+//	Get functions by names
+	size_t JG_fcts [2];
+	{
+		std::string fctString = std::string (JG_cmps);
+		std::vector<std::string> tokens;
+		TokenizeString (fctString, tokens, ',');
+		if (tokens.size () != 2)
+			UG_THROW("EddyCurrent: Needed 2 components "
+						"in symbolic function names (for Re and Im) for JG, "
+							"but given: " << JG_cmps);
+		for (size_t i = 0; i < tokens.size (); i++)
+			RemoveWhitespaceFromString (tokens [i]);
+	
+		for (int i = 0; i < 2; i++)
+		try
+		{
+			JG_fcts [i] = spJGGF->fct_id_by_name (tokens[i].c_str ());
+		}
+		UG_CATCH_THROW ("EddyCurrent: Cannot find symbolic function "
+						"component for the name '" << tokens[i] << "' (in JG).");
+	}
+	size_t E_fcts [2];
+	{
+		std::string fctString = std::string (E_cmps);
+		std::vector<std::string> tokens;
+		TokenizeString (fctString, tokens, ',');
+		if (tokens.size () != 2)
+			UG_THROW("EddyCurrent: Needed 2 components "
+						"in symbolic function names (for Re and Im) for E, "
+							"but given: " << E_cmps);
+		for (size_t i = 0; i < tokens.size (); i++)
+			RemoveWhitespaceFromString (tokens [i]);
+	
+		for (int i = 0; i < 2; i++)
+		try
+		{
+			E_fcts [i] = spEGF->fct_id_by_name (tokens[i].c_str ());
+		}
+		UG_CATCH_THROW ("EddyCurrent: Cannot find symbolic function "
+						"component for the name '" << tokens[i] << "' (in E).");
+	}
+	
+//	Compute the power
+	number power [2];
+	calc_power (spJGGF.get (), JG_fcts, spEGF.get (), E_fcts, power);
+	
+//	Print the result
+	UG_LOG ("--> Power of the electromagnetic field: "
+		<< power [0] << " + " << power [1] << " I.\n");
+	UG_LOG ("Note: Contribution of the boundary is not taken into account.\n");
+}
+
+//---- Computation of magnetic flux through a cross-section ----//
+
 /// Computation of the magnetic flux through windings of a coil
 /**
  * This function computes the magnetic flux through windings of a cylindric coil

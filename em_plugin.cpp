@@ -352,6 +352,25 @@ struct Functionality
 			
 			reg.add_function
 			(
+				"CalcPower",
+				static_cast
+				<
+					void (*)
+					(
+						SmartPtr<TFct> spJGGF,
+						const char* JG_cmps,
+						SmartPtr<TFct> spEGF,
+						const char* E_cmps
+					)
+				>
+				(&CalcPower<TFct>),
+				grp,
+				"Power of the electromagnetic field (up to the contribution of the boundary)",
+				"GeneratorCurrent#cmps#ElectricField#cmps"
+			);
+			
+			reg.add_function
+			(
 				"CalcEMF",
 				static_cast
 				<

@@ -77,7 +77,7 @@ private:
 			size_t co;
 			for (co = 0; co < pSide->num_vertices (); co++)
 			{
-				int elem_co = rRefElem.id (dim-1, i, 1, co);
+				int elem_co = rRefElem.id (dim-1, i, 0, co);
 				UG_ASSERT (elem_co >= 0, "Index mismatch.");
 				loc_center += rRefElem.corner (elem_co);
 			}

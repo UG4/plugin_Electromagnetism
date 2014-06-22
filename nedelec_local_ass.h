@@ -85,13 +85,25 @@ public:
 
 public:
 
-/// assembles the stiffness matrix of the rot-rot operator
+/// assembles the local stiffness and the mass matrices of the rot-rot operator
 	static void local_stiffness_and_mass
 	(
 		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
+		number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
+	)
+	{
+		UG_THROW ("Whitney-1 (Nedelec) shapes not implemented for roid " << ref_elem_type::REFERENCE_OBJECT_ID << ".");
+	};
+	
+/// assembles the local mass matrix of the Nedelec elements
+	static void local_mass
+	(
+		const TDomain * domain, /**< [in] the domain */
+		TElem * elem, /**< [in] element */
+		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
 	)
 	{
@@ -261,13 +273,22 @@ private:
 	
 public:
 	
-/// assembles the stiffness matrix of the rot-rot operator
+/// assembles the local stiffness and mass matrices of the rot-rot operator
 	static void local_stiffness_and_mass
 	(
 		const TDomain * domain, /**< [in] the domain */
 		TElem * elem, /**< [in] element */
 		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number S [maxNumEdges][maxNumEdges], /**< [out] local stiffness matrix */
+		number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
+	);
+	
+/// assembles the local mass matrix of the Nedelec elements
+	static void local_mass
+	(
+		const TDomain * domain, /**< [in] the domain */
+		TElem * elem, /**< [in] element */
+		const position_type * corners, /**< [in] array of the global corner coordinates */
 		number M [maxNumEdges][maxNumEdges] /**< [out] local mass matrix */
 	);
 	
