@@ -88,6 +88,12 @@ struct Functionality
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "SubsetIndicatorUserData", tag);
 		}
+		{
+			typedef ug::CPUAlgebra TPotAlgebra;
+			typedef ug::GridFunction<TDomain, TPotAlgebra> TPotFct;
+			
+			reg.add_function("SetSubsetVertVal", static_cast<void (*)(SmartPtr<TPotFct>, const char*, number)>(&SetSubsetVertVal<TPotFct>), grp, "Set a field to a constant on subsets", "GradientGridFunction#Subsets#Value");
+		}
 	}
 	
 	/**
@@ -234,6 +240,8 @@ struct Functionality
 		{
 			static const int dim = TDomain::dim;
 			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			typedef ug::CPUAlgebra TPotAlgebra;
+			typedef ug::GridFunction<TDomain, TPotAlgebra> TPotFct;
 			
 			reg.add_function("ComputeNedelecDoFs", static_cast<void (*)(SmartPtr<UserData<MathVector<dim>, dim> >, SmartPtr<TFct>, const char*, const char*, number)>(&ComputeNedelecDoFs<TFct>), grp, "Nedelec DoFs for given vector field", "Data#GridFunction#Component#Subsets#Time");
 			reg.add_function("ComputeNedelecDoFs", static_cast<void (*)(SmartPtr<UserData<MathVector<dim>, dim> >, SmartPtr<TFct>, const char*, number)>(&ComputeNedelecDoFs<TFct>), grp, "Nedelec DoFs for given vector field", "Data#GridFunction#Component#Time");
@@ -246,6 +254,8 @@ struct Functionality
 			reg.add_function("ComputeNedelecDoFs", static_cast<void (*)(const char*, SmartPtr<TFct>, const char*, const char*)>(&ComputeNedelecDoFs<TFct>), grp, "Nedelec DoFs for given vector field", "LuaFunction#GridFunction#Component#Subsets");
 			reg.add_function("ComputeNedelecDoFs", static_cast<void (*)(const char*, SmartPtr<TFct>, const char*)>(&ComputeNedelecDoFs<TFct>), grp, "Nedelec DoFs for given vector field", "LuaFunction#GridFunction#Component");
 			#endif
+			
+			reg.add_function("NedelecGradPotential", static_cast<void (*)(SmartPtr<TPotFct>, SmartPtr<TFct>, const char*)>(&NedelecGradPotential<TPotFct, TFct>), grp, "Nedelec DoFs for the gradient of a given field", "GradientGridFunction#ResultGridFunction#Component");
 		}
 	
 	//	Computation of divergence-free sources
@@ -359,6 +369,7 @@ struct Functionality
 					(
 						SmartPtr<TFct> spJGGF,
 						const char* JG_cmps,
+						const char* JG_ss,
 						SmartPtr<TFct> spEGF,
 						const char* E_cmps
 					)
@@ -366,7 +377,7 @@ struct Functionality
 				(&CalcPower<TFct>),
 				grp,
 				"Power of the electromagnetic field (up to the contribution of the boundary)",
-				"GeneratorCurrent#cmps#ElectricField#cmps"
+				"GeneratorCurrent#cmps#SubSets#ElectricField#cmps"
 			);
 			
 			reg.add_function

@@ -551,7 +551,7 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 		Edge * pEdge = *iter;
 		
 	//	Get the potential the ends of the edge:
-		for(size_t i = 0; i < 2; i++)
+		for (size_t i = 0; i < 2; i++)
 		{
 		//	Get the multiindices
 			if (vertDD.inner_algebra_indices (pEdge->vertex(i), vVertInd) != 1)

@@ -126,6 +126,7 @@ public:
 	(
 		TGridFunc * pJGGF, ///< grid function of the Nedelec-DoFs of the generator current \f$\mathbf{J}_G\f$
 		size_t JG_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{J}_G\f$
+		SubsetGroup & JG_ssg, ///< (full-dim.) subsets where \f$\mathbf{J}_G\f$ is defined (non-zero and in the kernel)
 		TGridFunc * pEGF, ///< grid function of the Nedelec-DoFs of the electric field \f$\mathbf{E}\f$
 		size_t E_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{E}\f$
 		number pow[] ///< to add the integral (Re and Im parts)
@@ -134,12 +135,19 @@ public:
 		typedef typename TGridFunc::template traits<TElem>::const_iterator t_elem_iterator;
 		
 		position_accessor_type & aaPos = pEGF->domain()->position_accessor();
-	//	loop all the elements
-		t_elem_iterator elem_iter = pEGF->template begin<TElem> ();
-		t_elem_iterator end_iter = pEGF->template end<TElem> ();
-		for (; elem_iter != end_iter; ++elem_iter)
-			CalcVolPowerElemHelperClass<TGridFunc, TElem>::calc_elem_power
-				(pJGGF, JG_fct, pEGF, E_fct, aaPos, *elem_iter, pow);
+		
+	//	loop the subdomains
+		for (size_t i = 0; i < JG_ssg.size (); i++)
+		{
+			int si = JG_ssg [i];
+			
+		//	loop all the elements of the given type in the subset
+			t_elem_iterator elem_iter = pEGF->template begin<TElem> (si);
+			t_elem_iterator end_iter = pEGF->template end<TElem> (si);
+			for (; elem_iter != end_iter; ++elem_iter)
+				CalcVolPowerElemHelperClass<TGridFunc, TElem>::calc_elem_power
+					(pJGGF, JG_fct, pEGF, E_fct, aaPos, *elem_iter, pow);
+		}
 	}
 };
 
@@ -149,6 +157,7 @@ class CalcVolPowerHelperClass
 {
 	TGridFunc * m_pJGGF;
 	size_t m_JG_fct[2];
+	SubsetGroup & m_JG_ssg;
 	TGridFunc * m_pEGF;
 	size_t m_E_fct[2];
 	number * m_pow;
@@ -160,11 +169,12 @@ public:
 	(
 		TGridFunc * pJGGF, ///< grid function of the Nedelec-DoFs of the generator current \f$\mathbf{J}_G\f$
 		size_t JG_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{J}_G\f$
+		SubsetGroup & JG_ssg, ///< (full-dim.) subsets where \f$\mathbf{J}_G\f$ is defined (non-zero and in the kernel)
 		TGridFunc * pEGF, ///< grid function of the Nedelec-DoFs of the electric field \f$\mathbf{E}\f$
 		size_t E_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{E}\f$
 		number pow[] ///< to add the integral
 	)
-	: m_pJGGF (pJGGF), m_pEGF (pEGF), m_pow (pow)
+	: m_pJGGF (pJGGF), m_JG_ssg (JG_ssg), m_pEGF (pEGF), m_pow (pow)
 	{
 		m_JG_fct[0] = JG_fct[0]; m_JG_fct[1] = JG_fct[1];
 		m_E_fct[0] = E_fct[0]; m_E_fct[1] = E_fct[1];
@@ -174,7 +184,7 @@ public:
 	template <typename TElem> void operator() (TElem &)
 	{
 		CalcVolPowerElemHelperClass<TGridFunc, TElem>::calc_power
-			(m_pJGGF, m_JG_fct, m_pEGF, m_E_fct, m_pow);
+			(m_pJGGF, m_JG_fct, m_JG_ssg, m_pEGF, m_E_fct, m_pow);
 	}
 };
 
@@ -184,6 +194,7 @@ void calc_power
 (
 	TGridFunc * pJGGF, ///< grid function of the Nedelec-DoFs of the generator current \f$\mathbf{J}_G\f$
 	size_t JG_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{J}_G\f$
+	SubsetGroup & JG_ssg, ///< (full-dim.) subsets where \f$\mathbf{J}_G\f$ is defined (non-zero and in the kernel)
 	TGridFunc * pEGF, ///< grid function of the Nedelec-DoFs of the electric field \f$\mathbf{E}\f$
 	size_t E_fct[], ///< indices of the Re and Im parts in the grid function for \f$\mathbf{E}\f$
 	number pow[] ///< to add the integral
@@ -194,7 +205,7 @@ void calc_power
 	typedef typename domain_traits<dim>::DimElemList ElemList;
 	
 	boost::mpl::for_each<ElemList>
-		(CalcVolPowerHelperClass<TGridFunc> (pJGGF, JG_fct, pEGF, E_fct, pow));
+		(CalcVolPowerHelperClass<TGridFunc> (pJGGF, JG_fct, JG_ssg, pEGF, E_fct, pow));
 	
 	pow [0] /= -2;
 	pow [1] /= -2;
@@ -206,6 +217,7 @@ void CalcPower
 (
 	SmartPtr<TGridFunc> spJGGF, ///< [in] grid function with the generator current
     const char* JG_cmps, ///< [in] names of the components of the grid function (for Re and Im)
+	const char* JG_ss, ///< (full-dim.) subsets where \f$\mathbf{J}_G\f$ is defined (non-zero and in the kernel)
 	SmartPtr<TGridFunc> spEGF, ///< [in] grid function with the electric field
     const char* E_cmps ///< [in] names of the components of the grid function (for Re and Im)
 )
@@ -252,9 +264,20 @@ void CalcPower
 						"component for the name '" << tokens[i] << "' (in E).");
 	}
 	
+	SubsetGroup JG_ssg;
+	{
+		std::string ssString = std::string (JG_ss);
+		std::vector<std::string> tokens;
+		TokenizeString (ssString, tokens, ',');
+		for (size_t i = 0; i < tokens.size (); i++)
+			RemoveWhitespaceFromString (tokens [i]);
+		JG_ssg.set_subset_handler (spJGGF->subset_handler ());
+		JG_ssg.add (tokens);
+	}
+	
 //	Compute the power
 	number power [2];
-	calc_power (spJGGF.get (), JG_fcts, spEGF.get (), E_fcts, power);
+	calc_power (spJGGF.get (), JG_fcts, JG_ssg, spEGF.get (), E_fcts, power);
 	
 //	Print the result
 	UG_LOG ("--> Power of the electromagnetic field: "

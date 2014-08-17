@@ -30,38 +30,53 @@ namespace Electromagnetism{
 
 /// Class for computation of loop currents
 /**
- * Class for computation of weakly divergence-free loop currents.
+ * Class for computation of weakly divergence-free loop currents that are
+ * non-zero only in a given subdomain \f$T\f$ (i.e. in a coil).
  *
  * The range (image) of the stiffness matrix of the discrete
  * \f$\mathbf{rot} \, \mathbf{rot}\f$ operator is the subspace of all
  * functions othrogonal to all the gradients \f$ \mathbf{G} \psi \f$, where
- * \f$ \mathbf{G} \f$ is the indicence matrix between the vertices and the edges,
+ * \f$ \mathbf{G} \f$ is the incidence matrix between the vertices and the edges,
  * and \f$ \psi \f$ is any vertex-centered grid function. Thus, for the
  * solvability of the discretized system (for ex. of the E-based formulation of
- * the eddy-current model), its right-hand side \f$ J \f$ must satisfy
+ * the eddy-current model), its right-hand side \f$M^{(1)} J \f$ (\f$M^{(1)}\f$
+ * being the mass matrix of the Whitney-1 shapes) must satisfy
  * \f{eqnarray*}{
- *  ( \mathbf{G}_{i}^T J, \psi ) = ( J, \mathbf{G}_{i} \psi ) = 0
+ *  ( \mathbf{G}^T M^{(1)} J, \psi ) = ( M^{(1)} J, \mathbf{G} \psi ) = 0
  * \f}
- * where \f$ \mathbf{G}_{i} \f$ is the matrix obtained from \f$ \mathbf{G}_{i} \f$
- * by setting the lines corresponding to conductor nodes to zero. (In conductors,
- * a mass matrix is added to the \f$\mathbf{rot} \, \mathbf{rot}\f$ operator
- * operator, so that the kernel is trivial.) This equation implies
+ * This is really true only in insulators. In conductors, a mass matrix is added
+ * to the \f$\mathbf{rot} \, \mathbf{rot}\f$ operator, so that the kernel is
+ * trivial. We assume that a coil is modelled as a zero-conductivity medium with
+ * the source, so that \f$T\f$ is completely contained in insulators.
+ * Thus the former condition implies
  * \f{eqnarray*}{
- *  \mathbf{G}_{i}^T J = 0,
+ *  \mathbf{G}_{i}^T M^{(1)} J = 0,
  * \f}
- * i.e. the weak divergence of the rhs must be zero.
+ * (with \f$ J = 0 \f$ out of \f$ T \f$) i.e. the weak divergence of the rhs
+ * must be zero.
  *
  * This class implements a computation of such a weakly divergence-free
- * current \f$J\f$ in a given set of insulators constituting (topologically) a
- * ring (torus) by specifying a cut with the jump of the potential and a
+ * current \f$J\f$ in a given set of insulators \f$T\f$ constituting (topologically)
+ * a ring (torus) by specifying a cut with the jump of the potential and a
  * part adjacent to this cut that specifies the positive direction of the
- * current. The current is represented as \f$J = \mathbf{G} \phi\f$ and the
+ * current. The current is represented as \f$J = \hat{\mathbf{G}} \phi\f$ and the
  * potential \f$\phi\f$ is computed as the solution of a discretized Laplace
- * with the special boundary conditions.
+ * equation with the special boundary conditions. Here, \f$\hat{\mathbf{G}}\f$
+ * is the matrix obtained from \f$\mathbf{G}\f$ by replacing the rows
  *
  * The computed \f$J\f$ is rescaled so that the current over the cut is
  * equal to the given value. Different values of the currents can be used for
  * different function names: cf. the 'set' functions of this class.
+ *
+ * Note that the mass matrix \f$M^{(1)}\f$ is not the same as the mass matrix
+ * at the off-diagonal positions of the stiffness matrix of the time-harmonic
+ * problem. The matrix \f$M^{(1)}\f$ mentioned here for the computation of the
+ * right-hand side is assembled only of the local mass matrices for the grid
+ * elements from \f$T\f$. The resulting discretized system for \f$\phi\f$ consists
+ * the discrete Laplace operator on \f$T\f$, the discrete Neumann-0 (natural)
+ * boundary condition on \f$\partial{T}\f$ and the identity matrix for all other
+ * DoFs. Note furthermore that the same \f$M^{(1)}\f$ should be used in the
+ * assembling of the right-hand side of the discretized Maxwell equations.
  *
  * References:
  * <ul>

@@ -133,7 +133,8 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element
  *
  * \remark
  * For the solvability of the problem, the generator current must be numerically
- * weakly divergence free.
+ * weakly divergence free (cf. the documentation for the class NedelecLoopCurrent
+ * for details).
  */
 template<typename TDomain, typename TAlgebra>
 template<size_t numEdges>
@@ -334,7 +335,12 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_loc_discr_func ()
 //	obtaining the parameters
 ////////////////////////////////////////////////////////////////////////////////
 
-/// adds a generator current item \f$ \mathbf{J}_{G,h} \f$ to the discretization
+/**
+ * Adds a generator current item \f$ \mathbf{J}_{G,h} \f$ to the discretization.
+ * \remark
+ * Note that for the solvability of the problem, the correct specification of the
+ * subsets is important. \see NedelecLoopCurrent
+ */
 template<typename TDomain, typename TAlgebra>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::set_generator_current
 (
