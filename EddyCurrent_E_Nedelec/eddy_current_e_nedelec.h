@@ -132,7 +132,7 @@ private:
 	void prepare_element_loop(ReferenceObjectID roid, int si);
 
 	template <typename TElem>
-	void prepare_element(const LocalVector& u, GridObject* elem, const position_type vCornerCoords[]);
+	void prepare_element(const LocalVector& u, GridObject* elem, ReferenceObjectID roid, const position_type vCornerCoords[]);
 
 	template <typename TElem>
 	void finish_element_loop();

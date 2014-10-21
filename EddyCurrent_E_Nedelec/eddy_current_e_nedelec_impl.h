@@ -83,6 +83,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element
 (
 	const LocalVector & u, ///< local solution at the dofs associated with elem
 	GridObject * elem, ///< element to prepare
+	ReferenceObjectID roid,  // id of reference element used for assembling
 	const position_type vCornerCoords [] ///< coordinates of the corners of the element
 )
 {
