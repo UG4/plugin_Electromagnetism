@@ -13,8 +13,8 @@
 #include "common/common.h"
 #include "common/util/smart_pointer.h"
 
-#include "lib_disc/common/subset_group.h"
-#include "lib_disc/common/subset_util.h"
+#include "lib_grid/tools/subset_group.h"
+#include "lib_grid/algorithms/subset_dim_util.h"
 
 #include "lib_disc/spatial_disc/constraints/constraint_interface.h"
 
