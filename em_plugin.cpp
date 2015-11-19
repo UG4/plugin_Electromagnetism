@@ -186,13 +186,13 @@ struct Functionality
 				.template add_constructor<void (*) (const char*)>("Functions")
 				.add_method("add_0", static_cast<void (T::*)(const char*)>(&T::add_0),
 							"Sets a zero BC on subsets", "Value#Function#Subsets")
-#ifdef UG_FOR_LUA
 				.add_method("add", static_cast<void (T::*)(MathVector<dim>&, const char*, const char*)>(&T::add),
 							"Sets a constant BC for one component", "Value#Function#Subsets")
 				.add_method("add", static_cast<void (T::*)(std::vector<number>&, const char*, const char*)>(&T::add),
 							"Sets a constant BC for one component", "Value#Function#Subsets")
 				.add_method("add", static_cast<void (T::*)(SmartPtr<UserData<MathVector<dim>, dim> >&, const char*, const char*)>(&T::add),
 							"Sets a position and time dependent BC for one component", "UserData#Function#Subsets")
+#ifdef UG_FOR_LUA
 				.add_method("add", static_cast<void (T::*)(const char*, const char*, const char*)>(&T::add),
 							"Sets a position and time dependent BC for one component", "LuaFunc#Function#Subsets")
 #endif
