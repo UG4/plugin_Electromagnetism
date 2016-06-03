@@ -109,17 +109,6 @@ struct Functionality
 		}
 	// Further tools
 		{
-			static const int dim = TDomain::dim;
-			string name = string("SubsetIndicatorUserData").append(suffix);
-			typedef SubsetIndicatorUserData<TDomain> T;
-			typedef UserData<number, dim> TBase;
-			
-			reg.add_class_<T, TBase> (name, grp)
-				.template add_constructor<void (*)(ConstSmartPtr<TDomain>, const char*)>("Domain#Subsets")
-				.set_construct_as_smart_pointer(true);
-			reg.add_class_to_group(name, "SubsetIndicatorUserData", tag);
-		}
-		{
 			typedef ug::CPUAlgebra TPotAlgebra;
 			typedef ug::GridFunction<TDomain, TPotAlgebra> TPotFct;
 			
