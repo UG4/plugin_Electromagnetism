@@ -425,6 +425,7 @@ private:
 			pot_matrix_type & J,
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0,
 			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = SPNULL,
 			const number s_a0 = 1.0
@@ -441,6 +442,7 @@ private:
 			pot_vector_type & d,
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0,
 			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = SPNULL,
 			const std::vector<number> * vScaleMass = NULL,
@@ -457,6 +459,7 @@ private:
 		(
 			pot_vector_type	& u,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0
 		)
 		{
@@ -471,6 +474,7 @@ private:
 			pot_matrix_type & A,
 			pot_vector_type & b,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0
 		)
 		{
@@ -486,10 +490,11 @@ private:
 			pot_vector_type & b,
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0
 		)
 		{
-			OutOfSource::adjust_solution (b, dd, time);
+			OutOfSource::adjust_solution (b, dd, type, time);
 		}
 
 	///	returns the type of the constraints

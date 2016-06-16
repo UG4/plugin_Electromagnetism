@@ -314,6 +314,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_jacobian
 	matrix_type & J,
 	const vector_type & u,
 	ConstSmartPtr<DoFDistribution> dd,
+	int type,
 	number time,
 	ConstSmartPtr<VectorTimeSeries<vector_type> > vSol,
 	const number s_a0
@@ -357,6 +358,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_defect
 	vector_type& d,
 	const vector_type& u,
 	ConstSmartPtr<DoFDistribution> dd,
+	int type,
 	number time,
 	ConstSmartPtr<VectorTimeSeries<vector_type> > vSol,
 	const std::vector<number> * vScaleMass,
@@ -477,6 +479,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution
 (
 	vector_type & u,
 	ConstSmartPtr<DoFDistribution> dd, 
+	int type,
 	number time
 )
 {

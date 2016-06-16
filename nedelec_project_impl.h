@@ -928,6 +928,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_jacobian
 	pot_matrix_type & J,
 	const pot_vector_type & u,
 	ConstSmartPtr<DoFDistribution> dd,
+	int type,
 	number time,
 	ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol,
 	const number s_a0
@@ -954,6 +955,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_defect
 	pot_vector_type & d,
 	const pot_vector_type & u,
 	ConstSmartPtr<DoFDistribution> dd,
+	int type,
 	number time,
 	ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol,
 	const std::vector<number> * vScaleMass,
@@ -980,6 +982,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_solution
 (
 	pot_vector_type	& u,
 	ConstSmartPtr<DoFDistribution> dd,
+	int type,
 	number time
 )
 {

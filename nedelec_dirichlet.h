@@ -329,6 +329,7 @@ public:
 		matrix_type & J,
 		const vector_type & u,
 		ConstSmartPtr<DoFDistribution> dd,
+		int type,
 		number time = 0.0,
 		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = SPNULL,
 		const number s_a0 = 1.0
@@ -340,6 +341,7 @@ public:
 		vector_type & d,
 		const vector_type & u,
 		ConstSmartPtr<DoFDistribution> dd,
+		int type,
 		number time = 0.0,
 		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = SPNULL,
 		const std::vector<number> * vScaleMass = NULL,
@@ -351,6 +353,7 @@ public:
 	(
 		vector_type & u,
 		ConstSmartPtr<DoFDistribution> dd,
+		int type,
 		number time = 0.0
 	);
 
@@ -360,11 +363,12 @@ public:
 		matrix_type & A,
 		vector_type & b,
 		ConstSmartPtr<DoFDistribution> dd,
+		int type,
 		number time = 0.0
 	)
 	{
-		this_type::adjust_jacobian (A, b, dd, time); // the 2nd arg. is dummy: A does not depend on u
-		this_type::adjust_solution (b, dd, time);
+		this_type::adjust_jacobian (A, b, dd, type, time); // the 2nd arg. is dummy: A does not depend on u
+		this_type::adjust_solution (b, dd, type, time);
 	};
 
 	///	sets the dirichlet value in the right-hand side
@@ -373,10 +377,11 @@ public:
 		vector_type & b,
 		const vector_type & u,
 		ConstSmartPtr<DoFDistribution> dd,
+		int type,
 		number time = 0.0
 	)
 	{
-		this_type::adjust_solution (b, dd, time);
+		this_type::adjust_solution (b, dd, type, time);
 	};
 
 	///	returns the type of the constraints

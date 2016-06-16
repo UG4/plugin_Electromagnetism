@@ -369,15 +369,17 @@ void NedelecTransfer<TDomain, TAlgebra>::prolongate
 		for (size_t i = 0; i < m_vConstraint.size (); ++i)
 			if (m_vConstraint[i]->type () & CT_DIRICHLET)
 				m_vConstraint[i]->adjust_defect (uFine, uFine,
-					m_spApproxSpace->dof_distribution (m_fineLevel));
+					m_spApproxSpace->dof_distribution (m_fineLevel), CT_DIRICHLET);
 	}
 	UG_CATCH_THROW("NedelecTransfer::prolongate: Error while setting dirichlet defect to zero.");
 
 // Call further constraints constraints (= adjust_restrict, member of class constraint)
 	try
 	{
-		for(size_t i = 0; i < m_vConstraint.size (); ++i)
-			m_vConstraint[i]->adjust_prolongation (uFine, m_fineLevel, uCoarse, m_coarseLevel);
+		for (int type = 1; type < CT_ALL; type = type << 1)
+			for (size_t i = 0; i < m_vConstraint.size (); ++i)
+				if (m_vConstraint[i]->type() & type)
+					m_vConstraint[i]->adjust_prolongation (uFine, m_fineLevel, uCoarse, m_coarseLevel, type);
 	}
 	UG_CATCH_THROW("NedelecTransfer::prolongate: Error while setting dirichlet defect to zero.");
 }
@@ -422,15 +424,17 @@ void NedelecTransfer<TDomain, TAlgebra>::do_restrict
 		for(size_t i = 0; i < m_vConstraint.size (); ++i)
 			if (m_vConstraint[i]->type () & CT_DIRICHLET)
 				m_vConstraint[i]->adjust_defect (uCoarse, uCoarse,
-					m_spApproxSpace->dof_distribution (m_coarseLevel));
+					m_spApproxSpace->dof_distribution (m_coarseLevel), CT_DIRICHLET);
 	}
 	UG_CATCH_THROW("NedelecTransfer::restrict: Error while setting dirichlet defect to zero.");
 
 // call restrictions due to added constraints (= adjust_restrict, member of class constraint)
 	try
 	{
-		for (size_t i = 0; i < m_vConstraint.size (); ++i)
-			m_vConstraint[i]->adjust_restriction (uCoarse, m_coarseLevel, uFine, m_fineLevel);
+		for (int type = 1; type < CT_ALL; type = type << 1)
+			for (size_t i = 0; i < m_vConstraint.size (); ++i)
+				if (m_vConstraint[i]->type() & type)
+					m_vConstraint[i]->adjust_restriction (uCoarse, m_coarseLevel, uFine, m_fineLevel, type);
 	}
 	UG_CATCH_THROW("NedelecTransfer::restrict: Error while setting dirichlet defect to zero.");
 }

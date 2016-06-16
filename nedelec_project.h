@@ -426,6 +426,7 @@ private:
 			pot_matrix_type & J,
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0,
 			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = SPNULL,
 			const number s_a0 = 1.0
@@ -437,6 +438,7 @@ private:
 			pot_vector_type & d,
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0,
 			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = SPNULL,
 			const std::vector<number> * vScaleMass = NULL,
@@ -448,6 +450,7 @@ private:
 		(
 			pot_vector_type	& u,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0
 		);
 	
@@ -457,11 +460,12 @@ private:
 			pot_matrix_type & A,
 			pot_vector_type & b,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0
 		)
 		{ // Note that this function is not really used, so it needs not to be optimal.
-			AuxLaplaceRHS::adjust_jacobian (A, b, dd, time); // the 2nd arg. is dummy: A does not depend on u
-			AuxLaplaceRHS::adjust_solution (b, dd, time);
+			AuxLaplaceRHS::adjust_jacobian (A, b, dd, type, time); // the 2nd arg. is dummy: A does not depend on u
+			AuxLaplaceRHS::adjust_solution (b, dd, type, time);
 		}
 	
 	///	sets the dirichlet value in the right-hand side
@@ -470,10 +474,11 @@ private:
 			pot_vector_type & b,
 			const pot_vector_type & u,
 			ConstSmartPtr<DoFDistribution> dd,
+			int type,
 			number time = 0.0
 		)
 		{
-			AuxLaplaceRHS::adjust_solution (b, dd, time);
+			AuxLaplaceRHS::adjust_solution (b, dd, type, time);
 		}
 
 	///	returns the type of the constraints
