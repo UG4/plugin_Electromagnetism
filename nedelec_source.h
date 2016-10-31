@@ -152,7 +152,15 @@ public:
 	
 ///	position type
 	typedef typename TDomain::position_type position_type;
+	
+private:
 
+///	Type of the attachment and its accessor for flags
+	typedef AChar a_edge_flag_type;
+	typedef Grid::EdgeAttachmentAccessor<a_edge_flag_type> aa_edge_flag_type;
+	typedef ABool a_vert_flag_type;
+	typedef Grid::VertexAttachmentAccessor<a_vert_flag_type> aa_vert_flag_type;
+	
 public:
 
 ///	Constructor
@@ -188,20 +196,20 @@ private:
 	void mark_source_edges
 	(
 		const DoFDistribution & edgeDD, ///< [in] the edge DD
-		VariableArray1<char> & in_source ///< [out] the arrays of flags to update
+		aa_edge_flag_type & in_source ///< [out] the flags to update
 	);
 	/// Helper class for marking the edges in the source
 	struct MarkSourceEdges
 	{
 		this_type * m_pThis;
 		const DoFDistribution & m_edgeDD;
-		VariableArray1<char> & m_in_source;
+		aa_edge_flag_type & m_in_source;
 		
 		MarkSourceEdges
 		(
 			this_type * pThis, ///< [in] pointer to the master class
 			const DoFDistribution & edgeDD, ///< [in] the edge DD
-			VariableArray1<char> & in_source ///< [out] the arrays of flags to update
+			aa_edge_flag_type & in_source ///< [out] the flags to update
 		)
 		: m_pThis (pThis), m_edgeDD (edgeDD), m_in_source (in_source) {}
 		
@@ -222,7 +230,7 @@ private:
 	(
 		const DoFDistribution & vertDD, ///< [in] the vertex DD
 		pot_vector_type & src_pot, ///< [in] potential to distribute
-		const DoFDistribution & edgeDD, ///< [in] the edge DD
+		DoFDistribution & edgeDD, ///< [in] the edge DD
 		size_t func, ///< [in] index of the function
 		number value, ///< [in] value of the source
 		vector_type & src_field ///< [out] the computed source field
@@ -369,20 +377,20 @@ private:
 		void mark_source_vertices_elem_type
 		(
 			const DoFDistribution & vertDD, ///< [in] the vertex DD
-			VariableArray1<bool> & in_source ///< [out] the arrays of flags to update
+			aa_vert_flag_type & in_source ///< [out] the flags to update
 		);
 	/// Helper class for marking the vertices in the closure of the source subdomain
 		struct MarkSourceVertices
 		{
 			OutOfSource * m_pThis;
 			const DoFDistribution & m_vertDD;
-			VariableArray1<bool> & m_in_source;
+			aa_vert_flag_type & m_in_source;
 			
 			MarkSourceVertices
 			(
 				OutOfSource * pThis, ///< [in] pointer to the master class
 				const DoFDistribution & vertDD, ///< [in] the vertex DD
-				VariableArray1<bool> & in_source ///< [out] the arrays of flags to update
+				aa_vert_flag_type & in_source ///< [out] theflags to update
 			)
 			: m_pThis (pThis), m_vertDD (vertDD), m_in_source (in_source) {}
 			
@@ -395,20 +403,22 @@ private:
 		void mark_source_vertices
 		(
 			const DoFDistribution & vertDD, ///< [in] the vertex DD
-			VariableArray1<bool> & in_source ///< [out] the arrays of flags
+			aa_vert_flag_type & in_source ///< [out] the flags
 		);
 	
 	///	sets to identity all the matrix rows that do not belong to the closure of the source subdomain
 		void adjust_matrix
 		(
-			VariableArray1<bool> & in_source, ///< the arrays of flags
+			const DoFDistribution & vertDD, ///< the vertex DD
+			aa_vert_flag_type & in_source, ///< the flags
 			pot_matrix_type & A ///< the matrix to adjust
 		);
 		
 	///	sets to 0 all the entries of a vector that do not belong to the closure of the source subdomain
 		void adjust_vector
 		(
-			VariableArray1<bool> & in_source, ///< the arrays of flags
+			const DoFDistribution & vertDD, ///< the vertex DD
+			aa_vert_flag_type & in_source, ///< the flags
 			pot_vector_type & u ///< the vector to adjust
 		);
 		
@@ -431,9 +441,13 @@ private:
 			const number s_a0 = 1.0
 		)
 		{
-			VariableArray1<bool> in_source (dd->num_indices ());
-			mark_source_vertices (* dd.get (), in_source);
-			adjust_matrix (in_source, J);
+			MultiGrid * mg = (MultiGrid *) dd->multi_grid().get ();
+			a_vert_flag_type a_in_source;
+			mg->attach_to_vertices (a_in_source);
+			aa_vert_flag_type aa_in_source (*mg, a_in_source);
+			mark_source_vertices (* dd.get (), aa_in_source);
+			adjust_matrix (* dd.get (), aa_in_source, J);
+			mg->detach_from_edges (a_in_source);
 		}
 	
 	/// sets a zero value in the defect for all conductor indices
@@ -449,9 +463,13 @@ private:
 			const std::vector<number> * vScaleStiff = NULL
 		)
 		{
-			VariableArray1<bool> in_source (dd->num_indices ());
-			mark_source_vertices (* dd.get (), in_source);
-			adjust_vector (in_source, d);
+			MultiGrid * mg = (MultiGrid *) dd->multi_grid().get ();
+			a_vert_flag_type a_in_source;
+			mg->attach_to_vertices (a_in_source);
+			aa_vert_flag_type aa_in_source (*mg, a_in_source);
+			mark_source_vertices (* dd.get (), aa_in_source);
+			adjust_vector (* dd.get (), aa_in_source, d);
+			mg->detach_from_edges (a_in_source);
 		}
 	
 	/// sets the value in the solution for all conductor indices
@@ -463,9 +481,13 @@ private:
 			number time = 0.0
 		)
 		{
-			VariableArray1<bool> in_source (dd->num_indices ());
-			mark_source_vertices (* dd.get (), in_source);
-			adjust_vector (in_source, u);
+			MultiGrid * mg = (MultiGrid *) dd->multi_grid().get ();
+			a_vert_flag_type a_in_source;
+			mg->attach_to_vertices (a_in_source);
+			aa_vert_flag_type aa_in_source (*mg, a_in_source);
+			mark_source_vertices (* dd.get (), aa_in_source);
+			adjust_vector (* dd.get (), aa_in_source, u);
+			mg->detach_from_edges (a_in_source);
 		}
 	
 	///	sets unity rows in A and dirichlet values in right-hand side b
@@ -478,10 +500,14 @@ private:
 			number time = 0.0
 		)
 		{
-			VariableArray1<bool> in_source (dd->num_indices ());
-			mark_source_vertices (* dd.get (), in_source);
-			adjust_matrix (in_source, A);
-			adjust_vector (in_source, b);
+			MultiGrid * mg = (MultiGrid *) dd->multi_grid().get ();
+			a_vert_flag_type a_in_source;
+			mg->attach_to_vertices (a_in_source);
+			aa_vert_flag_type aa_in_source (*mg, a_in_source);
+			mark_source_vertices (* dd.get (), aa_in_source);
+			adjust_matrix (* dd.get (), aa_in_source, A);
+			adjust_vector (* dd.get (), aa_in_source, b);
+			mg->detach_from_edges (a_in_source);
 		}
 	
 	///	sets the dirichlet value in the right-hand side

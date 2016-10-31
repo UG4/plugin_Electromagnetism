@@ -187,14 +187,13 @@ template <typename TElem>
 void NedelecLoopCurrent<TDomain, TAlgebra>::mark_source_edges
 (
 	const DoFDistribution & edgeDD, ///< [in] the edge DD
-	VariableArray1<char> & in_source ///< [out] the arrays of flags to update
+	aa_edge_flag_type & in_source ///< [out] the array of flags to update
 )
 {
 	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
 	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
 	
 	const ISubsetHandler * pIsh = edgeDD.subset_handler().get ();
-	std::vector<size_t> vEdgeInd (1);
 	Grid::edge_traits::secure_container edge_list;
 	
 //	Loop over the source subsets:
@@ -205,7 +204,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::mark_source_edges
 	//	Loop over all the elements of the given type in the subset
 		iterator e_end = edgeDD.template end<TElem> (si);
 		for (iterator elem_iter = edgeDD.template begin<TElem> (si);
-			elem_iter != e_end; ++elem_iter)
+				elem_iter != e_end; ++elem_iter)
 		{
 			TElem * pElem = *elem_iter;
 			pIsh->grid()->associated_elements (edge_list, pElem);
@@ -215,8 +214,6 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::mark_source_edges
 			{
 				Edge * pEdge = edge_list[e];
 				char flag = 1;
-				if (edgeDD.inner_algebra_indices (pEdge, vEdgeInd) != 1)
-					UG_THROW ("NedelecLoopCurrent: Edge DoF distribution mismatch. Not the Nedelec-type-1 element?");
 				if (in_pos)
 				{
 					if (m_cutSsGrp.contains (pIsh->get_subset_index (pEdge->vertex (0))))
@@ -224,7 +221,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::mark_source_edges
 					if (m_cutSsGrp.contains (pIsh->get_subset_index (pEdge->vertex (1))))
 						flag |= 4;
 				}
-				in_source [vEdgeInd [0]] = flag;
+				in_source [pEdge] = flag;
 			}
 		}
 	}
@@ -261,7 +258,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 (
 	const DoFDistribution & vertDD, ///< [in] the vertex DD
 	pot_vector_type & src_pot, ///< [in] potential to distribute
-	const DoFDistribution & edgeDD, ///< [in] the edge DD
+	DoFDistribution & edgeDD, ///< [in] the edge DD
 	size_t func, ///< [in] index of the function
 	number value, ///< [in] value of the source
 	vector_type & src_field ///< [out] the computed source field
@@ -272,10 +269,17 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 //	The full-dim. grid element types for this dimension:
 	typedef typename domain_traits<WDim>::DimElemList ElemList;
 	
+//	Multigrid and iterators:
+	SmartPtr<MultiGrid> sp_mg = edgeDD.multi_grid ();
+	t_edge_iter edgeIterBeg = edgeDD.begin<Edge> ();
+	t_edge_iter edgeIterEnd = edgeDD.end<Edge> ();
+	
 //	Mark the edges in the source:
-	VariableArray1<char> in_source (edgeDD.num_indices ());
-	memset (& (in_source.at (0)), 0, in_source.size () * sizeof (char));
-	boost::mpl::for_each<ElemList> (MarkSourceEdges (this, edgeDD, in_source));
+	a_edge_flag_type a_in_source;
+	sp_mg->attach_to_edges (a_in_source);
+	aa_edge_flag_type aa_in_source (*sp_mg, a_in_source);
+	SetAttachmentValues (aa_in_source, edgeIterBeg, edgeIterEnd, 0);
+	boost::mpl::for_each<ElemList> (MarkSourceEdges (this, edgeDD, aa_in_source));
 	
 //	Scaling of the potential:
 	value /= m_pot_scaling;
@@ -283,23 +287,22 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 //	Compute the gradient:
 	std::vector<size_t> vVertInd (1);
 	std::vector<DoFIndex> vEdgeInd (1);
-	t_edge_iter edgeIterEnd = edgeDD.end<Edge> ();
-	for (t_edge_iter edgeIter = edgeDD.begin<Edge> (); edgeIter != edgeIterEnd; ++edgeIter)
+	for (t_edge_iter edgeIter = edgeIterBeg; edgeIter != edgeIterEnd; ++edgeIter)
 	{
 		Edge * pEdge = *edgeIter;
 		char edge_flag;
 		number nd_pot [2];
 		
-		// Get the edge DoF and check whether the edge is in the source:
+	// Get the edge DoF and check whether the edge is in the source:
 		if (edgeDD.inner_dof_indices (pEdge, func, vEdgeInd) != 1)
 			UG_THROW ("NedelecLoopCurrent: Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
-		if ((edge_flag = in_source [vEdgeInd [0] [0]]) == 0)
+		if ((edge_flag = aa_in_source [pEdge]) == 0)
 		{ // we are not in the source
 			DoFRef (src_field, vEdgeInd [0]) = 0;
 			continue;
 		}
 		
-		// Get the values at the ends:
+	// Get the values at the ends:
 		for (size_t i = 0; i < 2; i++)
 		{
 			Vertex * pVertex = pEdge->vertex (i);
@@ -310,9 +313,12 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 				nd_pot [i] += 1.0; // the jump of the potential at the cut
 		}
 		
-		// Compute the gradient:
+	// Compute the gradient:
 		DoFRef (src_field, vEdgeInd [0]) = value * (nd_pot [1] - nd_pot [0]);
 	}
+	
+//	Release the attachment:
+	sp_mg->detach_from_edges (a_in_source);
 }
 
 /*----- Assembling the auxiliary Poisson problems 1: class AuxLaplaceLocAss -----*/
@@ -534,13 +540,11 @@ template <typename TElem>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices_elem_type
 (
 	const DoFDistribution & vertDD, ///< [in] the vertex DD
-	VariableArray1<bool> & in_source ///< [out] the arrays of flags to update
+	aa_vert_flag_type & in_source ///< [out] the flags to update
 )
 {
 	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
 	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
-	
-	std::vector<size_t> vVertInd (ref_elem_type::numCorners);
 	
 //	Loop over the source subsets:
 	for (size_t i = 0; i < m_master.m_allSsGrp.size (); i++)
@@ -549,13 +553,11 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices_el
 	//	Loop over all the elements of the given type in the subset
 		iterator e_end = vertDD.template end<TElem> (si);
 		for (iterator elem_iter = vertDD.template begin<TElem> (si);
-			elem_iter != e_end; ++elem_iter)
+				elem_iter != e_end; ++elem_iter)
 		{
 			TElem * pElem = *elem_iter;
-			if (vertDD.algebra_indices (pElem, vVertInd) != (size_t) ref_elem_type::numCorners)
-				UG_THROW ("NedelecLoopCurrent: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
 			for (size_t i = 0; i < (size_t) ref_elem_type::numCorners; i++)
-				in_source [vVertInd [i]] = true;
+				in_source [pElem->vertex (i)] = true;
 		}
 	}
 }
@@ -567,15 +569,15 @@ template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices
 (
 	const DoFDistribution & vertDD, ///< [in] the vertex DD
-	VariableArray1<bool> & in_source ///< [out] the arrays of flags to update
+	aa_vert_flag_type & in_source ///< [out] the flags to fill
 )
 {
 //	The full-dim. grid element types for this dimension:
 	typedef typename domain_traits<WDim>::DimElemList ElemList;
 	
-	UG_ASSERT (vertDD.num_indices () == in_source.size (),
-		"NedelecLoopCurrent: Size mismatch of the vertex DoF distribution.");
-	memset (& (in_source.at (0)), 0, in_source.size () * sizeof (bool));
+//	Mark the vertices:
+	SetAttachmentValues (in_source,
+		vertDD.begin<Vertex> (), vertDD.end<Vertex> (), false);
 	boost::mpl::for_each<ElemList> (MarkSourceVertices (this, vertDD, in_source));
 }
 
@@ -586,14 +588,27 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices
 template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_matrix
 (
-	VariableArray1<bool> & in_source, ///< the arrays of flags
+	const DoFDistribution & vertDD, ///< the vertex DD
+	aa_vert_flag_type & in_source, ///< the flags
 	pot_matrix_type & A ///< the matrix to adjust
 )
 {
-	UG_ASSERT (A.num_rows () == in_source.size (), "Matrix size mismatch.")
-	for (size_t i = 0; i < in_source.size (); i++)
-	if (! in_source[i])
-		SetDirichletRow (A, i);
+	typedef DoFDistribution::traits<Vertex>::const_iterator iterator;
+	std::vector<size_t> vVertInd (1);
+	
+//	Loop over all the vertices out of the source
+	iterator vert_end = vertDD.end<Vertex> ();
+	for (iterator vert_iter = vertDD.begin<Vertex> (); vert_iter != vert_end; ++vert_iter)
+	{
+		Vertex * pVertex = *vert_iter;
+		if (in_source [pVertex])
+			continue; // the vertex is in the source
+		
+		if (vertDD.inner_algebra_indices (pVertex, vVertInd) != 1)
+			UG_THROW ("NedelecLoopCurrent: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
+		
+		SetDirichletRow (A, vVertInd[0]);
+	}
 }
 
 /**
@@ -603,14 +618,27 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_matrix
 template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_vector
 (
-	VariableArray1<bool> & in_source, ///< the arrays of flags
+	const DoFDistribution & vertDD, ///< the vertex DD
+	aa_vert_flag_type & in_source, ///< the flags
 	pot_vector_type & u ///< the vector to adjust
 )
 {
-	UG_ASSERT (u.size () == in_source.size (), "Vector size mismatch.")
-	for (size_t i = 0; i < in_source.size (); i++)
-	if (! in_source[i])
-		u [i] = 0;
+	typedef DoFDistribution::traits<Vertex>::const_iterator iterator;
+	std::vector<size_t> vVertInd (1);
+	
+//	Loop over all the vertices out of the source
+	iterator vert_end = vertDD.end<Vertex> ();
+	for (iterator vert_iter = vertDD.begin<Vertex> (); vert_iter != vert_end; ++vert_iter)
+	{
+		Vertex * pVertex = *vert_iter;
+		if (in_source [pVertex])
+			continue; // the vertex is in the source
+		
+		if (vertDD.inner_algebra_indices (pVertex, vVertInd) != 1)
+			UG_THROW ("NedelecLoopCurrent: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
+		
+		u [vVertInd[0]] = 0;
+	}
 }
 
 /*----- Computation of the flux of the potential over the cut -----*/
