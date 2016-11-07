@@ -38,6 +38,7 @@
 #define __H__UG__PLUGINS__ELECTROMAGNETISM__NEDELEC_SOURCE__
 
 #include "common/common.h"
+#include "lib_grid/algorithms/attachment_util.h"
 #include "lib_disc/common/function_group.h"
 #include "lib_disc/common/groups_util.h"
 #include "lib_disc/function_spaces/grid_function.h"
@@ -51,6 +52,7 @@
 #include "lib_algebra/operator/debug_writer.h"
 
 #ifdef UG_PARALLEL
+#include "lib_grid/parallelization/util/attachment_operations.hpp"
 #include "lib_disc/parallelization/parallelization_util.h"
 #endif
 
@@ -405,6 +407,17 @@ private:
 			const DoFDistribution & vertDD, ///< [in] the vertex DD
 			aa_vert_flag_type & in_source ///< [out] the flags
 		);
+	///	syncronize the marks between processors (in a parallel computation)
+		void reduce_src_vert_marks
+		(
+			MultiGrid & mg, ///< [in] the multigrid
+			a_vert_flag_type & a_in_source ///< [out] the flags
+		)
+		{
+#		ifdef UG_PARALLEL
+			AttachmentAllReduce<Vertex> (mg, a_in_source, PCL_RO_LOR);
+#		endif
+		}
 	
 	///	sets to identity all the matrix rows that do not belong to the closure of the source subdomain
 		void adjust_matrix
@@ -446,6 +459,7 @@ private:
 			mg->attach_to_vertices (a_in_source);
 			aa_vert_flag_type aa_in_source (*mg, a_in_source);
 			mark_source_vertices (* dd.get (), aa_in_source);
+			reduce_src_vert_marks (*mg, a_in_source);
 			adjust_matrix (* dd.get (), aa_in_source, J);
 			mg->detach_from_edges (a_in_source);
 		}
@@ -468,6 +482,7 @@ private:
 			mg->attach_to_vertices (a_in_source);
 			aa_vert_flag_type aa_in_source (*mg, a_in_source);
 			mark_source_vertices (* dd.get (), aa_in_source);
+			reduce_src_vert_marks (*mg, a_in_source);
 			adjust_vector (* dd.get (), aa_in_source, d);
 			mg->detach_from_edges (a_in_source);
 		}
@@ -486,6 +501,7 @@ private:
 			mg->attach_to_vertices (a_in_source);
 			aa_vert_flag_type aa_in_source (*mg, a_in_source);
 			mark_source_vertices (* dd.get (), aa_in_source);
+			reduce_src_vert_marks (*mg, a_in_source);
 			adjust_vector (* dd.get (), aa_in_source, u);
 			mg->detach_from_edges (a_in_source);
 		}
@@ -505,6 +521,7 @@ private:
 			mg->attach_to_vertices (a_in_source);
 			aa_vert_flag_type aa_in_source (*mg, a_in_source);
 			mark_source_vertices (* dd.get (), aa_in_source);
+			reduce_src_vert_marks (*mg, a_in_source);
 			adjust_matrix (* dd.get (), aa_in_source, A);
 			adjust_vector (* dd.get (), aa_in_source, b);
 			mg->detach_from_edges (a_in_source);

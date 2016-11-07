@@ -280,6 +280,9 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 	aa_edge_flag_type aa_in_source (*sp_mg, a_in_source);
 	SetAttachmentValues (aa_in_source, edgeIterBeg, edgeIterEnd, 0);
 	boost::mpl::for_each<ElemList> (MarkSourceEdges (this, edgeDD, aa_in_source));
+#	ifdef UG_PARALLEL
+	AttachmentAllReduce<Edge> (*sp_mg, a_in_source, PCL_RO_BOR);
+#	endif
 	
 //	Scaling of the potential:
 	value /= m_pot_scaling;

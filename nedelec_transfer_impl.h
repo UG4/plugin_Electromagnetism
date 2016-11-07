@@ -328,6 +328,10 @@ void NedelecTransfer<TDomain, TAlgebra>::init ()
 	UG_CATCH_THROW ("NedelecTransfer: Failed to allocate the prolongation matrix.");
 	boost::mpl::for_each<ElemList> (AssembleProlongationMatrix (this, coarseDD, fineDD));
 
+#	ifdef UG_PARALLEL
+	m_prolongation_matrix.set_storage_type (PST_CONSISTENT);
+#	endif
+
 //	Done:
 	m_bInit = true;
 }
