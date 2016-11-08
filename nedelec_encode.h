@@ -103,7 +103,6 @@ void ComputeNedelecDoFs
 {
 //	Domain type, position_type and iterators
 	typedef typename TGridFunction::domain_type domain_type;
-	typedef typename domain_type::position_type position_type;
 	typedef typename TGridFunction::template traits<Edge>::const_iterator t_edge_iterator;
 
 //	Get position accessor
