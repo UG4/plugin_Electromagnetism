@@ -378,52 +378,36 @@ private:
 		template <typename TElem>
 		void mark_source_vertices_elem_type
 		(
-			const DoFDistribution & vertDD, ///< [in] the vertex DD
-			aa_vert_flag_type & in_source ///< [out] the flags to update
+			const TDomain * dom ///< [in] the domain
 		);
 	/// Helper class for marking the vertices in the closure of the source subdomain
 		struct MarkSourceVertices
 		{
 			OutOfSource * m_pThis;
-			const DoFDistribution & m_vertDD;
-			aa_vert_flag_type & m_in_source;
+			const TDomain * m_pDom;
 			
 			MarkSourceVertices
 			(
 				OutOfSource * pThis, ///< [in] pointer to the master class
-				const DoFDistribution & vertDD, ///< [in] the vertex DD
-				aa_vert_flag_type & in_source ///< [out] theflags to update
+				const TDomain * pDom ///< [in] the domain
 			)
-			: m_pThis (pThis), m_vertDD (vertDD), m_in_source (in_source) {}
+			: m_pThis (pThis), m_pDom (pDom) {}
 			
 			template <typename TElem> void operator() (TElem &)
 			{
-				m_pThis->template mark_source_vertices_elem_type<TElem> (m_vertDD, m_in_source);
+				m_pThis->template mark_source_vertices_elem_type<TElem> (m_pDom);
 			}
 		};
 	/// marks the vertices belonging to elements in the source (for all element types)
 		void mark_source_vertices
 		(
-			const DoFDistribution & vertDD, ///< [in] the vertex DD
-			aa_vert_flag_type & in_source ///< [out] the flags
+			const TDomain * dom ///< [in] the domain
 		);
-	///	syncronize the marks between processors (in a parallel computation)
-		void reduce_src_vert_marks
-		(
-			MultiGrid & mg, ///< [in] the multigrid
-			a_vert_flag_type & a_in_source ///< [out] the flags
-		)
-		{
-#		ifdef UG_PARALLEL
-			AttachmentAllReduce<Vertex> (mg, a_in_source, PCL_RO_LOR);
-#		endif
-		}
 	
 	///	sets to identity all the matrix rows that do not belong to the closure of the source subdomain
 		void adjust_matrix
 		(
 			const DoFDistribution & vertDD, ///< the vertex DD
-			aa_vert_flag_type & in_source, ///< the flags
 			pot_matrix_type & A ///< the matrix to adjust
 		);
 		
@@ -431,7 +415,6 @@ private:
 		void adjust_vector
 		(
 			const DoFDistribution & vertDD, ///< the vertex DD
-			aa_vert_flag_type & in_source, ///< the flags
 			pot_vector_type & u ///< the vector to adjust
 		);
 		
@@ -441,6 +424,21 @@ private:
 		(
 			NedelecLoopCurrent & master ///< [in] the master object
 		);
+		
+	///	initializer
+		void init
+		(
+			domain_type * dom, ///< [in] the domain
+			a_vert_flag_type & a_in_source ///< the attachment for the flags
+		)
+		{
+			MultiGrid * mg = dom->grid().get ();
+			m_in_source.access (*mg, a_in_source);
+			mark_source_vertices (dom);
+#			ifdef UG_PARALLEL
+			AttachmentAllReduce<Vertex> (*mg, a_in_source, PCL_RO_LOR);
+#			endif
+		}
 		
 	/// sets a unity row for all conductor indices
 		void adjust_jacobian
@@ -454,14 +452,7 @@ private:
 			const number s_a0 = 1.0
 		)
 		{
-			MultiGrid * mg = (MultiGrid *) dd->multi_grid().get ();
-			a_vert_flag_type a_in_source;
-			mg->attach_to_vertices (a_in_source);
-			aa_vert_flag_type aa_in_source (*mg, a_in_source);
-			mark_source_vertices (* dd.get (), aa_in_source);
-			reduce_src_vert_marks (*mg, a_in_source);
-			adjust_matrix (* dd.get (), aa_in_source, J);
-			mg->detach_from_edges (a_in_source);
+			adjust_matrix (* dd.get (), J);
 		}
 	
 	/// sets a zero value in the defect for all conductor indices
@@ -477,14 +468,7 @@ private:
 			const std::vector<number> * vScaleStiff = NULL
 		)
 		{
-			MultiGrid * mg = (MultiGrid *) dd->multi_grid().get ();
-			a_vert_flag_type a_in_source;
-			mg->attach_to_vertices (a_in_source);
-			aa_vert_flag_type aa_in_source (*mg, a_in_source);
-			mark_source_vertices (* dd.get (), aa_in_source);
-			reduce_src_vert_marks (*mg, a_in_source);
-			adjust_vector (* dd.get (), aa_in_source, d);
-			mg->detach_from_edges (a_in_source);
+			adjust_vector (* dd.get (), d);
 		}
 	
 	/// sets the value in the solution for all conductor indices
@@ -496,14 +480,7 @@ private:
 			number time = 0.0
 		)
 		{
-			MultiGrid * mg = (MultiGrid *) dd->multi_grid().get ();
-			a_vert_flag_type a_in_source;
-			mg->attach_to_vertices (a_in_source);
-			aa_vert_flag_type aa_in_source (*mg, a_in_source);
-			mark_source_vertices (* dd.get (), aa_in_source);
-			reduce_src_vert_marks (*mg, a_in_source);
-			adjust_vector (* dd.get (), aa_in_source, u);
-			mg->detach_from_edges (a_in_source);
+			adjust_vector (* dd.get (), u);
 		}
 	
 	///	sets unity rows in A and dirichlet values in right-hand side b
@@ -516,15 +493,8 @@ private:
 			number time = 0.0
 		)
 		{
-			MultiGrid * mg = (MultiGrid *) dd->multi_grid().get ();
-			a_vert_flag_type a_in_source;
-			mg->attach_to_vertices (a_in_source);
-			aa_vert_flag_type aa_in_source (*mg, a_in_source);
-			mark_source_vertices (* dd.get (), aa_in_source);
-			reduce_src_vert_marks (*mg, a_in_source);
-			adjust_matrix (* dd.get (), aa_in_source, A);
-			adjust_vector (* dd.get (), aa_in_source, b);
-			mg->detach_from_edges (a_in_source);
+			adjust_matrix (* dd.get (), A);
+			adjust_vector (* dd.get (), b);
 		}
 	
 	///	sets the dirichlet value in the right-hand side
@@ -537,7 +507,7 @@ private:
 			number time = 0.0
 		)
 		{
-			OutOfSource::adjust_solution (b, dd, type, time);
+			adjust_vector (* dd.get (), b);
 		}
 
 	///	returns the type of the constraints
@@ -547,6 +517,9 @@ private:
 		
 	///	the master object of the projection
 		NedelecLoopCurrent & m_master;
+		
+	///	attachment accessor for the current vertex flags
+		aa_vert_flag_type m_in_source;
 	};
 	
 ///	Computes the flux of of the gradient of the potential over the cut (for one type of elements)

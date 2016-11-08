@@ -238,6 +238,12 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute_potential
 {
 	pot_gf_type pot_rhs (pot_u.approx_space (), pot_u.dof_distribution ());
 	
+//	Prepare the attachment for the flags:
+	MultiGrid * mg = pot_u.dd()->multi_grid().get ();
+	a_vert_flag_type a_in_source;
+	mg->attach_to_vertices (a_in_source);
+	m_outOfSource->init (pot_u.domain().get (), a_in_source);
+	
 //	Assemble the matrix of the auxiliary problem:
 	pot_u.set (0.0);
 	m_auxLaplaceOp->set_level (pot_u.grid_level ());
@@ -248,6 +254,9 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute_potential
 	
 //	Assemble and solve the Laplace equation:
 	m_potSolver->apply (pot_u, pot_rhs);
+	
+//	Release the attachment:
+	mg->detach_from_vertices (a_in_source);
 }
 
 /**
@@ -542,25 +551,32 @@ template <typename TDomain, typename TAlgebra>
 template <typename TElem>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices_elem_type
 (
-	const DoFDistribution & vertDD, ///< [in] the vertex DD
-	aa_vert_flag_type & in_source ///< [out] the flags to update
+	const TDomain * dom ///< [in] the domain
 )
 {
 	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	typedef typename geometry_traits<TElem>::const_iterator iterator;
+	
+//	Get the multigrid and the subset handler:
+	const MultiGrid * mg = dom->grid().get ();
+	const MGSubsetHandler * ssh = dom->subset_handler().get ();
+	size_t n_levels = mg->num_levels ();
 	
 //	Loop over the source subsets:
 	for (size_t i = 0; i < m_master.m_allSsGrp.size (); i++)
 	{
 		int si = m_master.m_allSsGrp [i];
-	//	Loop over all the elements of the given type in the subset
-		iterator e_end = vertDD.template end<TElem> (si);
-		for (iterator elem_iter = vertDD.template begin<TElem> (si);
-				elem_iter != e_end; ++elem_iter)
+		for (size_t lev = 0; lev < n_levels; lev++)
 		{
-			TElem * pElem = *elem_iter;
-			for (size_t i = 0; i < (size_t) ref_elem_type::numCorners; i++)
-				in_source [pElem->vertex (i)] = true;
+		//	Loop over all the elements of the given type in the subset
+			iterator e_end = ssh->template end<TElem> (si, lev);
+			for (iterator elem_iter = ssh->template begin<TElem> (si, lev);
+					elem_iter != e_end; ++elem_iter)
+			{
+				TElem * pElem = *elem_iter;
+				for (size_t i = 0; i < (size_t) ref_elem_type::numCorners; i++)
+					m_in_source [pElem->vertex (i)] = true;
+			}
 		}
 	}
 }
@@ -571,17 +587,18 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices_el
 template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices
 (
-	const DoFDistribution & vertDD, ///< [in] the vertex DD
-	aa_vert_flag_type & in_source ///< [out] the flags to fill
+	const TDomain * dom ///< [in] the domain
 )
 {
 //	The full-dim. grid element types for this dimension:
 	typedef typename domain_traits<WDim>::DimElemList ElemList;
 	
+//	Reset the flags:
+	const MultiGrid * mg = dom->grid().get ();
+	SetAttachmentValues (m_in_source, mg->begin<Vertex> (), mg->end<Vertex> (), false);
+		
 //	Mark the vertices:
-	SetAttachmentValues (in_source,
-		vertDD.begin<Vertex> (), vertDD.end<Vertex> (), false);
-	boost::mpl::for_each<ElemList> (MarkSourceVertices (this, vertDD, in_source));
+	boost::mpl::for_each<ElemList> (MarkSourceVertices (this, dom));
 }
 
 /**
@@ -592,7 +609,6 @@ template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_matrix
 (
 	const DoFDistribution & vertDD, ///< the vertex DD
-	aa_vert_flag_type & in_source, ///< the flags
 	pot_matrix_type & A ///< the matrix to adjust
 )
 {
@@ -604,7 +620,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_matrix
 	for (iterator vert_iter = vertDD.begin<Vertex> (); vert_iter != vert_end; ++vert_iter)
 	{
 		Vertex * pVertex = *vert_iter;
-		if (in_source [pVertex])
+		if (m_in_source [pVertex])
 			continue; // the vertex is in the source
 		
 		if (vertDD.inner_algebra_indices (pVertex, vVertInd) != 1)
@@ -622,7 +638,6 @@ template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_vector
 (
 	const DoFDistribution & vertDD, ///< the vertex DD
-	aa_vert_flag_type & in_source, ///< the flags
 	pot_vector_type & u ///< the vector to adjust
 )
 {
@@ -634,7 +649,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_vector
 	for (iterator vert_iter = vertDD.begin<Vertex> (); vert_iter != vert_end; ++vert_iter)
 	{
 		Vertex * pVertex = *vert_iter;
-		if (in_source [pVertex])
+		if (m_in_source [pVertex])
 			continue; // the vertex is in the source
 		
 		if (vertDD.inner_algebra_indices (pVertex, vVertInd) != 1)
