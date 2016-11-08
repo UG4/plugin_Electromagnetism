@@ -371,7 +371,7 @@ public:
 template <typename TGridFunc>
 class EddyCurrentImBofEUserData
 	: public EddyCurrentCurlEDependentCmpUserData
-		<EddyCurrentReBofEUserData<TGridFunc>, EddyCurrentTraits::_Re_, TGridFunc>
+		<EddyCurrentImBofEUserData<TGridFunc>, EddyCurrentTraits::_Re_, TGridFunc>
 {
 ///	Type of domain
 	typedef typename TGridFunc::domain_type domain_type;
@@ -392,7 +392,7 @@ public:
 		number omega ///< the frequency of the field
 	)
 	:	EddyCurrentCurlEDependentCmpUserData
-		 <EddyCurrentReBofEUserData<TGridFunc>, EddyCurrentTraits::_Re_, TGridFunc> (spGridFct, cmp),
+		 <EddyCurrentImBofEUserData<TGridFunc>, EddyCurrentTraits::_Re_, TGridFunc> (spGridFct, cmp),
 		m_omega (omega)
 	{};
 
