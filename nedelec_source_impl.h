@@ -142,10 +142,17 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute
 	compute_potential (pot_u);
 	
 //	Compute the normalization factor of the potential (to scale the current to 1)
+	number pot_scaling;
 	boost::mpl::for_each<ElemList>
 		(GetFluxOfPotential (this, * m_spVertApproxSpace->domain().get (), pot_u,
-			* vertDD.get (), m_pot_scaling));
-	m_pot_scaling = - m_pot_scaling;
+			* vertDD.get (), pot_scaling));
+#	ifdef UG_PARALLEL
+	{
+		pcl::ProcessCommunicator proc_comm;
+		pot_scaling = proc_comm.allreduce (pot_scaling, PCL_RO_SUM);
+	}
+#	endif
+	pot_scaling = - pot_scaling;
 	
 //	Loop over the source data
 	for (size_t i_data = 0; i_data < m_vSrcData.size (); i_data++)
@@ -165,7 +172,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute
 				UG_THROW ("NedelecLoopCurrent: Not a Nedelec-element-based grid function specified for the source.");
 		
 	//	Compute the gradients of the potential
-		number value = m_vSrcData[i_data].I;
+		number value = m_vSrcData[i_data].I / pot_scaling;
 		for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
 			distribute_source_potential (* vertDD.get (), pot_u, * edgeDD.get (),
 				fctGrp[i_fct], value, u);
@@ -260,7 +267,10 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute_potential
 }
 
 /**
- * Computes the gradient of the potential for one function
+ * Computes the gradient of the potential for one function.
+ *
+ * Remark: The potential is considered to be properly scaled. Otherwise,
+ * the scaling should be included into the value of the source
  */
 template <typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
@@ -269,7 +279,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 	pot_vector_type & src_pot, ///< [in] potential to distribute
 	DoFDistribution & edgeDD, ///< [in] the edge DD
 	size_t func, ///< [in] index of the function
-	number value, ///< [in] value of the source
+	number value, ///< [in] value of the source (probably divided by the scaling of the potential)
 	vector_type & src_field ///< [out] the computed source field
 )
 {
@@ -292,9 +302,6 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 #	ifdef UG_PARALLEL
 	AttachmentAllReduce<Edge> (*sp_mg, a_in_source, PCL_RO_BOR);
 #	endif
-	
-//	Scaling of the potential:
-	value /= m_pot_scaling;
 	
 //	Compute the gradient:
 	std::vector<size_t> vVertInd (1);

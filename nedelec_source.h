@@ -608,9 +608,6 @@ private:
 	SmartPtr<AssembledLinearOperator<TPotAlgebra> > m_auxLaplaceOp;
 ///	Solver for the auxliliary equations
 	SmartPtr<ILinearOperatorInverse<pot_vector_type> > m_potSolver;
-	
-///	Computed scaling of the potential
-	number m_pot_scaling;
 };
 
 } // end namespace Electromagnetism
