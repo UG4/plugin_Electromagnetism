@@ -136,9 +136,9 @@ void NedelecProject<TDomain, TAlgebra>::apply
 //	Compute the Dirichlet vector fields:
 	if (m_bDampDVFs)
 	{
-		alloc_DVFs (domain, aux_rhs);
+		alloc_DVFs (* domain.get (), aux_rhs);
 		compute_DVFs (aux_rhs);
-		compute_DVF_potential_coeffs (domain, vertDD);
+		compute_DVF_potential_coeffs (* domain.get (), * vertDD.get ());
 	}
 	
 //	Project every function:
@@ -201,140 +201,10 @@ void NedelecProject<TDomain, TAlgebra>::compute_div
 	
 //	Compute the weak divergence:
 	DenseVector<VariableArray1<number> > charge;
-	div.set (0.0);
 	assemble_div (* domain.get(), * edgeDD.get(), u, u_fct, * vertDD.get(), div, charge);
-}
-
-/**
- * Allocates memory for the DVFs associated with the conductors that
- * do not touch the Dirichlet boundary
- */
-template <typename TDomain, typename TAlgebra>
-void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
-(
-	const SmartPtr<TDomain> & domain, ///< [in] the domain
-	pot_gf_type & aux_rhs ///< [in] the grid function of the auxiliary rhs
-)
-{
-	const DoFDistribution * vertDD = aux_rhs.dof_distribution().get ();
-	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
-	const std::vector<int> & base_cond = m_spEmMaterial->base_conductors ();
-	size_t n_cond = base_cond.size ();
-	std::vector<bool> grounded (n_cond);
-	
-	for (size_t i = 0; i < n_cond; i++)
-		grounded [i] = false;
-	
-//	Exclude grounded conductors
-	if (m_spDirichlet.valid ())
-	{
-		typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
-		
-		const grid_type * grid = domain->grid().get ();
-		const subset_handler_type * ss_handler = domain->subset_handler().get ();
-		Grid::volume_traits::secure_container volume_list;
-		
-		SubsetGroup dirichlet_ssgrp (domain->subset_handler());
-		m_spDirichlet->get_dirichlet_subsets (dirichlet_ssgrp);
-		
-	//	Loop the Dirichlet subsets
-		for (size_t j = 0; j < dirichlet_ssgrp.size (); j++)
-		{
-			int si = dirichlet_ssgrp [j];
-			
-		//	Loop the Dirichlet edges in the subset
-			t_edge_iterator iterEnd = vertDD->end<Edge> (si);
-			for (t_edge_iterator iter = vertDD->begin<Edge> (si); iter != iterEnd; iter++)
-			{
-			//	Loop the adjacent volumes
-				((grid_type*) grid)->associated_elements (volume_list, *iter);
-				for (size_t v = 0; v < volume_list.size (); v++)
-				{
-					int v_b_cnd;
-					if ((v_b_cnd = cond_index [ss_handler->get_subset_index (volume_list [v])]) < 0)
-						continue;
-					grounded [v_b_cnd] = true;
-				}
-			}
-		}
-	}
-	
-//	Allocate memory for the conductors
-	m_DVF_phi.resize (n_cond);
-	for (size_t i = 0; i < n_cond; i++)
-	if (grounded [i])
-		m_DVF_phi [i] = NULL; // the conductor is grounded, skip it
-	else
-		m_DVF_phi [i] = new pot_gf_type (aux_rhs.approx_space (), aux_rhs.dof_distribution ());
-}
-
-/**
- * Computes the Dirichlet vector fields
- */
-template <typename TDomain, typename TAlgebra>
-void NedelecProject<TDomain, TAlgebra>::compute_DVFs
-(
-	pot_gf_type & aux_rhs //< grid function for the auxiliary rhs
-)
-{
-	for (size_t i = 0; i < m_DVF_phi.size (); i++)
-	{
-		pot_gf_type * phi = m_DVF_phi [i];
-		if (phi == NULL) continue; // a grounded conductor
-		
-	// 1. Compose the right-hand side:
-		m_auxLaplaceRHS->set_base_conductor (i);
-		aux_rhs.set (0.0);
-		m_auxLaplaceAss->adjust_solution (aux_rhs, aux_rhs.dof_distribution ());
-	// 2. Solve the auxiliary system:
-		phi->set (0.0);
-		m_auxLaplaceAss->adjust_solution (*phi, phi->dof_distribution ());
-		m_potSolver->apply (*phi, aux_rhs);
-	}
-}
-
-/**
- * Computes the potential coefficients
- */
-template <typename TDomain, typename TAlgebra>
-void NedelecProject<TDomain, TAlgebra>::compute_DVF_potential_coeffs
-(
-	const SmartPtr<TDomain> & domain, ///< [in] the domain
-	const SmartPtr<DoFDistribution> & vertDD ///< [in] the vertex DD
-)
-{
-//	The full-dim. grid element types for this dimension:
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
-	
-//	Prepare the matrix for the potential coefficients:
-	size_t num_b_cond = m_DVF_phi.size ();
-	m_potCoeff.resize (num_b_cond, num_b_cond, false);
-	if (num_b_cond <= 0) return; // nothing to do: no conductors
-	
-//	Get the base conductor indices at vertices
-	size_t num_vert = vertDD->num_indices ();
-	std::vector<int> vert_base_cond (num_vert, -1);
-	boost::mpl::for_each<ElemList> (MarkCondVert (this, * vertDD.get (), & (vert_base_cond[0])));
-	for (size_t i = 0; i < num_vert; i++)
-	{
-		int & b_cond = vert_base_cond [i];
-		if (b_cond >= 0 && m_DVF_phi [b_cond] == NULL)
-			b_cond = -2; // exclude grounded conductors
-	}
-	
-//	Compute the capacity matrix
-	m_potCoeff = 0.0;
-	boost::mpl::for_each<ElemList> (IntegrateDivDVF
-		(this, * domain.get (), * vertDD.get (), & (vert_base_cond[0]), m_potCoeff));
-	for (size_t i = 0; i < num_b_cond; i++)
-	if (m_DVF_phi [i] == NULL)
-		m_potCoeff (i, i) = 1; // set the matrix to identity for the grounded conductors
-	else
-		for (size_t j = i + 1; j < num_b_cond; j++)
-			m_potCoeff (i, j) = m_potCoeff (j, i); // use the symmetry in the lower triangular part
-	
-//	Invert the capacity matrix to get the potential coefficients
-	Invert (m_potCoeff);
+#	ifdef UG_PARALLEL
+	div.change_storage_type (PST_CONSISTENT);
+#	endif
 }
 
 /**
@@ -354,12 +224,15 @@ void NedelecProject<TDomain, TAlgebra>::project_func
 	pot_gf_type & aux_cor ///< [in] a grid function for the sol. of the aux. problem
 )
 {
+	DenseVector<VariableArray1<number> > charge;
+	
 //--- Compute the correction due to the divergence:
 
-	aux_cor.set (0.0);
-	aux_rhs.set (0.0);
+#	ifdef UG_PARALLEL
+	aux_cor.set_storage_type (PST_CONSISTENT);
+#	endif
 	
-	DenseVector<VariableArray1<number> > charge;
+	aux_cor.set (0.0);
 	
 // 1. Compute the weak div:
 	assemble_div (* domain.get(), * edgeDD.get(), u, fct, * vertDD.get(), aux_rhs, charge);
@@ -442,7 +315,7 @@ void NedelecProject<TDomain, TAlgebra>::weak_div_elem_type
 
 /**
  * Sets the div operator to 0 in conductors for all elements of the same type
- * and compute the charges of the base conductors. The charges of the base
+ * and computes the charges of the base conductors. The charges of the base
  * conductors are the sums of the divergences in all the interface vertices
  * between the base conductors and the insulators. As the divergence inside
  * of the conductors is set to zero, we sum over all the nodes in the closure
@@ -516,28 +389,27 @@ void NedelecProject<TDomain, TAlgebra>::assemble_div
 	if (charge.size () != 0)
 		charge = 0.0;
 	
+#	ifdef UG_PARALLEL
+	div.set_storage_type (PST_ADDITIVE);
+#	endif
+	
 	div.set (0.0);
 //	Compute the divergence for all the types of the elements:
 	boost::mpl::for_each<ElemList> (WeakDiv (this, domain, edgeDD, u, fct, vertDD, div));
 //	Clear the entries at all the points in the closure of the conductors:
 	boost::mpl::for_each<ElemList> (ClearDivInConductors (this, vertDD, div, charge));
-}
-
-/**
- * Damps the Dirichlet vector fields (DVFs)
- */
-template <typename TDomain, typename TAlgebra>
-void NedelecProject<TDomain, TAlgebra>::damp_DVFs
-(
-	pot_vector_type & cor, ///< the potential correction to update
-	const DenseVector<VariableArray1<number> > & charge ///< [in] charges of the conductors
-)
-{
-	DenseVector<VariableArray1<number> > factor = m_potCoeff * charge;
 	
-	for (size_t i = 0; i < m_DVF_phi.size (); i++)
-	if (m_DVF_phi [i] != NULL) // skip grounded conductors
-		VecScaleAdd (cor, 1.0, cor, factor [i], * (pot_vector_type *) m_DVF_phi [i]);
+#ifdef UG_PARALLEL
+//	Sum up the charges over the processes
+	if (charge.size () != 0)
+	{
+		pcl::ProcessCommunicator proc_comm;
+		DenseVector<VariableArray1<number> > sum;
+		sum.resize (charge.size ());
+		proc_comm.allreduce (&(charge.at(0)), &(sum.at(0)), charge.size (), PCL_RO_SUM);
+		charge = sum;
+	}
+#endif
 }
 
 /**
@@ -567,6 +439,11 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 {
 //	Iterator over edges
 	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
+	
+#ifdef UG_PARALLEL
+	if (! u.has_storage_type (PST_CONSISTENT))
+		UG_THROW ("Consistent storage type is expected for the grid function to project.")
+#endif
 
 //	Arrays for the indices in the vectors:
 	std::vector<size_t> vVertInd (1);
@@ -597,6 +474,309 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 				"More than one DoF per edge. Not the Nedelec-Type-1 element?");
 		DoFRef (u, vEdgeInd[0])
 			-= corner_val [1] - corner_val [0];
+	}
+}
+
+/**
+ * Allocates memory for the DVFs associated with the conductors that
+ * do not touch the Dirichlet boundary
+ */
+template <typename TDomain, typename TAlgebra>
+void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
+(
+	const TDomain & domain, ///< [in] the domain
+	pot_gf_type & aux_rhs ///< [in] the grid function of the auxiliary rhs
+)
+{
+	const DoFDistribution * vertDD = aux_rhs.dof_distribution().get ();
+	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
+	const std::vector<int> & base_cond = m_spEmMaterial->base_conductors ();
+	size_t n_cond = base_cond.size ();
+	std::vector<bool> grounded (n_cond);
+	
+	for (size_t i = 0; i < n_cond; i++)
+		grounded [i] = false;
+	
+//	Exclude grounded conductors
+	if (m_spDirichlet.valid ())
+	{
+		typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
+		
+		const grid_type * grid = domain.grid().get ();
+		const subset_handler_type * ss_handler = domain.subset_handler().get ();
+		Grid::volume_traits::secure_container volume_list;
+		
+		SubsetGroup dirichlet_ssgrp (domain.subset_handler());
+		m_spDirichlet->get_dirichlet_subsets (dirichlet_ssgrp);
+		
+	//	Loop the Dirichlet subsets
+		for (size_t j = 0; j < dirichlet_ssgrp.size (); j++)
+		{
+			int si = dirichlet_ssgrp [j];
+			
+		//	Loop the Dirichlet edges in the subset
+			//TODO: Requires a parallelization!
+			t_edge_iterator iterEnd = vertDD->end<Edge> (si);
+			for (t_edge_iterator iter = vertDD->begin<Edge> (si); iter != iterEnd; iter++)
+			{
+			//	Loop the adjacent volumes
+				((grid_type*) grid)->associated_elements (volume_list, *iter);
+				for (size_t v = 0; v < volume_list.size (); v++)
+				{
+					int v_b_cnd;
+					if ((v_b_cnd = cond_index [ss_handler->get_subset_index (volume_list [v])]) < 0)
+						continue;
+					grounded [v_b_cnd] = true;
+				}
+			}
+		}
+	}
+	
+//	Allocate memory for the conductors
+	m_DVF_phi.resize (n_cond);
+	for (size_t i = 0; i < n_cond; i++)
+	if (grounded [i])
+		m_DVF_phi [i] = NULL; // the conductor is grounded, skip it
+	else
+		m_DVF_phi [i] = new pot_gf_type (aux_rhs.approx_space (), aux_rhs.dof_distribution ());
+}
+
+/**
+ * Computes the Dirichlet vector fields
+ */
+template <typename TDomain, typename TAlgebra>
+void NedelecProject<TDomain, TAlgebra>::compute_DVFs
+(
+	pot_gf_type & aux_rhs //< grid function for the auxiliary rhs
+)
+{
+	for (size_t i = 0; i < m_DVF_phi.size (); i++)
+	{
+		pot_gf_type * phi = m_DVF_phi [i];
+		if (phi == NULL) continue; // a grounded conductor
+		
+	// 1. Compose the right-hand side:
+		m_auxLaplaceRHS->set_base_conductor (i);
+#		ifdef UG_PARALLEL
+		aux_rhs.set_storage_type (PST_ADDITIVE);
+#		endif
+		aux_rhs.set (0.0);
+		m_auxLaplaceAss->adjust_solution (aux_rhs, aux_rhs.dof_distribution ());
+	// 2. Solve the auxiliary system:
+#		ifdef UG_PARALLEL
+		phi->set_storage_type (PST_CONSISTENT);
+#		endif
+		phi->set (0.0);
+		m_auxLaplaceAss->adjust_solution (*phi, phi->dof_distribution ());
+		m_potSolver->apply (*phi, aux_rhs);
+	}
+}
+
+/**
+ * Computes the potential coefficients
+ */
+template <typename TDomain, typename TAlgebra>
+void NedelecProject<TDomain, TAlgebra>::compute_DVF_potential_coeffs
+(
+	const TDomain & domain, ///< [in] the domain
+	DoFDistribution & vertDD ///< [in] the vertex DD
+)
+{
+//	The full-dim. grid element types for this dimension:
+	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	
+//	Prepare the matrix for the potential coefficients:
+	size_t num_b_cond = m_DVF_phi.size ();
+	m_potCoeff.resize (num_b_cond, num_b_cond, false);
+	if (num_b_cond <= 0) return; // nothing to do: no conductors
+	
+//	Get the base conductor indices at vertices (set -2 for insulators, -1 for grounded conductors)
+	SmartPtr<MultiGrid> sp_mg = vertDD.multi_grid ();
+	a_vert_cond_type a_vert_base_cond;
+	sp_mg->attach_to_vertices (a_vert_base_cond);
+	aa_vert_cond_type vert_base_cond (*sp_mg, a_vert_base_cond);
+	SetAttachmentValues (vert_base_cond, vertDD.begin<Vertex>(), vertDD.end<Vertex>(), -2);
+	
+	boost::mpl::for_each<ElemList> (MarkCondVert (this, vertDD, vert_base_cond));
+	
+#	ifdef UG_PARALLEL
+	AttachmentAllReduce<Vertex> (*sp_mg, a_vert_base_cond, PCL_RO_MAX);
+#	endif
+	
+//	Compute the capacity matrix
+	m_potCoeff = 0.0;
+	
+	boost::mpl::for_each<ElemList> (IntegrateDivDVF
+		(this, domain, vertDD, vert_base_cond, m_potCoeff));
+		
+	sp_mg->detach_from_vertices (a_vert_base_cond); // we do not need the attachment any more
+	
+#	ifdef UG_PARALLEL
+	{
+	//	Only the lower triangular part is assemble, but for simplicity, we
+	//	reduce the whole matrix (as it should be relatively small)
+		pcl::ProcessCommunicator proc_comm;
+		DenseMatrix<VariableArray2<number> > sum;
+		sum.resize (m_potCoeff.num_rows (), m_potCoeff.num_cols (), false);
+		proc_comm.allreduce (&(m_potCoeff.at(0,0)), &(sum.at(0,0)),
+			m_potCoeff.num_rows () * m_potCoeff.num_cols (), PCL_RO_SUM);
+		m_potCoeff = sum;
+	}
+#	endif
+
+	for (size_t i = 0; i < num_b_cond; i++)
+	if (m_DVF_phi [i] == NULL)
+		m_potCoeff (i, i) = 1; // set the matrix to identity for the grounded conductors
+	else
+		for (size_t j = i + 1; j < num_b_cond; j++)
+			m_potCoeff (i, j) = m_potCoeff (j, i); // use the symmetry in the lower triangular part
+	
+//	Invert the capacity matrix to get the potential coefficients
+	Invert (m_potCoeff);
+}
+
+/**
+ * Damps the Dirichlet vector fields (DVFs)
+ */
+template <typename TDomain, typename TAlgebra>
+void NedelecProject<TDomain, TAlgebra>::damp_DVFs
+(
+	pot_vector_type & cor, ///< the potential correction to update
+	const DenseVector<VariableArray1<number> > & charge ///< [in] charges of the conductors
+)
+{
+	DenseVector<VariableArray1<number> > factor = m_potCoeff * charge;
+	
+	for (size_t i = 0; i < m_DVF_phi.size (); i++)
+	if (m_DVF_phi [i] != NULL) // skip grounded conductors
+		VecScaleAdd (cor, 1.0, cor, factor [i], * (pot_vector_type *) m_DVF_phi [i]);
+}
+
+/**
+ * Initializes 'vert_base_cond' with the indices of the base conductors
+ * according to the closure of the conductive subsets. Note that the insulators
+ * are marked with -2 (and NOT with -1!), whereas the grounded conductors with
+ * -1 and the other conductors with their base conductor index. The attachment
+ * must be preinitialized with the default value -2 (for the insulators).
+ */
+template <typename TDomain, typename TAlgebra>
+template <typename TElem>
+void NedelecProject<TDomain, TAlgebra>::mark_cond_vert_elem_type
+(
+	DoFDistribution & vertDD, ///< [in] the vertex DD
+	aa_vert_cond_type & vert_base_cond ///< [out] indices of the base conductors for every vertex
+)
+{
+	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	
+	int base_cond_ind;
+	
+//	Get the conductor distribution and the positions of the grid points:
+	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
+
+//	Array for the indices in the vectors:
+	std::vector<size_t> vVertInd (ref_elem_type::numCorners);
+	
+//	Loop over all subsets representing conductors:
+	for (int si = 0; si < vertDD.num_subsets (); si++)
+	if ((base_cond_ind = cond_index [si]) >= 0)
+	{
+	//	Mark the grounded conductors with -1 (insulators are marked with -2)
+		if (m_DVF_phi [base_cond_ind] == NULL)
+			base_cond_ind = -1;
+		
+	//	Loop over all the elements of the given type in the subset
+		iterator e_end = vertDD.template end<TElem> (si);
+		for (iterator elem_iter = vertDD.template begin<TElem> (si);
+			elem_iter != e_end; ++elem_iter)
+		{
+			TElem * pElem = *elem_iter;
+			for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
+				vert_base_cond [pElem->vertex (co)] = base_cond_ind;
+		}
+	}
+}
+
+/**
+ * Integration of div E over boundaries of conductors (for one type of elements)
+ * to get the capacity matrix. We compute only the lower triangular part of
+ * the capacity matrix: This matrix is symmetric.
+ */
+template <typename TDomain, typename TAlgebra>
+template <typename TElem>
+void NedelecProject<TDomain, TAlgebra>::integrate_div_DVF_elem_type
+(
+	const TDomain & domain, ///< [in] the domain
+	const DoFDistribution & vertDD, ///< [in] the vertex DD
+	const aa_vert_cond_type & vert_base_cond, ///< [in] indices of the base conductors for every vertex
+	DenseMatrix<VariableArray2<number> > & C ///< [out] the capacity matrix to update
+)
+{
+	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	
+//	Get the positions of the grid points:
+	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();
+
+//	Get the conductor distribution and the positions of the grid points:
+	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
+
+//	Array for the indices in the vectors:
+	std::vector<size_t> vVertInd (ref_elem_type::numCorners);
+	
+//	Loop over all subsets representing insulators:
+	for (int si = 0; si < vertDD.num_subsets (); si++)
+	if (cond_index [si] == -2) // we loop over INSULATORS! (>= -1 are conductors)
+	{
+	//	Loop over all the elements of the given type in the subset
+		iterator e_end = vertDD.template end<TElem> (si);
+		for (iterator elem_iter = vertDD.template begin<TElem> (si);
+			elem_iter != e_end; ++elem_iter)
+		{
+			TElem * pElem = *elem_iter;
+			size_t corner_cond [ref_elem_type::numCorners];
+			bool cond_bnd_flag;
+			
+		//	get the indices in the vectors:
+			cond_bnd_flag = false;
+			for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
+				if ((corner_cond [co] = vert_base_cond [pElem->vertex (co)]) >= 0)
+					cond_bnd_flag = true;
+			if (! cond_bnd_flag) continue; // not at a boundary of a non-grounded conductor
+			
+		//	get the corner positions:
+			position_type aCorners [ref_elem_type::numCorners];
+			for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
+				aCorners [co] = aaPos [pElem->vertex (co)];
+			
+		//	assemble the local matrix	
+			number loc_A [ref_elem_type::numCorners] [ref_elem_type::numCorners];
+			LocLaplaceA<TElem>::stiffness (pElem, aCorners, loc_A);
+			
+		//	add the contributions to the capacity matrix
+			if (vertDD.algebra_indices (pElem, vVertInd) != (size_t) ref_elem_type::numCorners)
+				UG_THROW ("NedelecProject: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
+			for (int to_cond = 0; to_cond < (int) m_DVF_phi.size (); to_cond++)
+			{
+			//	In this computation, C(i,j) is the charge induced by phi(j)
+			//	in conductor i. The conductor i, where the charge is induced,
+			//	is called 'the from-conductor', and the conductor j, whose
+			//	potential induces the charge, is called 'the to-conductor'.
+				pot_vector_type * phi = m_DVF_phi [to_cond];
+				if (phi == NULL) continue; // this is a grounded conductor
+				
+				for (size_t to_co = 0; to_co < (size_t) ref_elem_type::numCorners; to_co++)
+				{
+					int from_cond;
+					number phi_val = (* phi) [vVertInd [to_co]];
+					for (size_t from_co = 0; from_co < (size_t) ref_elem_type::numCorners; from_co++)
+					// Exclude inner vertices of insulators and grounded conductors, as well as the upper triangle
+					if ((from_cond = corner_cond [from_co]) >= to_cond)
+						C (from_cond, to_cond) += loc_A [from_co] [to_co] * phi_val;
+				}
+			}
+		}
 	}
 }
 
@@ -999,129 +1179,6 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_solution
 		if (the_base_cond < 0) continue;
 		number val = (the_base_cond == m_base_cond)? 1 : 0;
 		boost::mpl::for_each<ElemList> (SetValueOnSubset (this, si, val, u, dd.get ()));
-	}
-}
-
-/**
- * Initializes 'vert_base_cond' with the indices of the base conductors
- * according to the closure of the conductive subsets.
- */
-template <typename TDomain, typename TAlgebra>
-template <typename TElem>
-void NedelecProject<TDomain, TAlgebra>::mark_cond_vert_elem_type
-(
-	const DoFDistribution & vertDD, ///< [in] the vertex DD
-	int * vert_base_cond ///< [out] indices of the base conductors for every vertex
-)
-{
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
-	
-	int base_cond_ind;
-	
-//	Get the conductor distribution and the positions of the grid points:
-	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
-
-//	Array for the indices in the vectors:
-	std::vector<size_t> vVertInd (ref_elem_type::numCorners);
-	
-//	Loop over all subsets representing conductors:
-	for (int si = 0; si < vertDD.num_subsets (); si++)
-	if ((base_cond_ind = cond_index [si]) >= 0)
-	{
-	//	Loop over all the elements of the given type in the subset
-		iterator e_end = vertDD.template end<TElem> (si);
-		for (iterator elem_iter = vertDD.template begin<TElem> (si);
-			elem_iter != e_end; ++elem_iter)
-		{
-		//	Add the local contribution to the global vector:
-			if (vertDD.algebra_indices (*elem_iter, vVertInd) != (size_t) ref_elem_type::numCorners)
-				UG_THROW ("NedelecProject: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
-			for (size_t i = 0; i < (size_t) ref_elem_type::numCorners; i++)
-				vert_base_cond [vVertInd [i]] = base_cond_ind;
-		}
-	}
-}
-
-/**
- * Integration of div E over boundaries of conductors (for one type of elements)
- * to get the capacity matrix. We compute only the lower triangular part of
- * the capacity matrix: This matrix is symmetric.
- */
-template <typename TDomain, typename TAlgebra>
-template <typename TElem>
-void NedelecProject<TDomain, TAlgebra>::integrate_div_DVF_elem_type
-(
-	const TDomain & domain, ///< [in] the domain
-	const DoFDistribution & vertDD, ///< [in] the vertex DD
-	const int * vert_base_cond, ///< [in] indices of the base conductors for every vertex
-	DenseMatrix<VariableArray2<number> > & C ///< [out] the capacity matrix to update
-)
-{
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
-	
-//	Get the positions of the grid points:
-	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();
-
-//	Get the conductor distribution and the positions of the grid points:
-	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
-
-//	Array for the indices in the vectors:
-	std::vector<size_t> vVertInd (ref_elem_type::numCorners);
-	
-//	Loop over all subsets representing insulators:
-	for (int si = 0; si < vertDD.num_subsets (); si++)
-	if (cond_index [si] == -1)
-	{
-	//	Loop over all the elements of the given type in the subset
-		iterator e_end = vertDD.template end<TElem> (si);
-		for (iterator elem_iter = vertDD.template begin<TElem> (si);
-			elem_iter != e_end; ++elem_iter)
-		{
-			TElem * pElem = *elem_iter;
-			size_t corner_cond [ref_elem_type::numCorners];
-			bool cond_bnd_flag;
-			
-		//	get the indices in the vectors:
-			if (vertDD.algebra_indices (pElem, vVertInd) != (size_t) ref_elem_type::numCorners)
-				UG_THROW ("NedelecProject: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
-			cond_bnd_flag = false;
-			for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
-				if ((corner_cond [co] = vert_base_cond [vVertInd [co]]) >= 0)
-					cond_bnd_flag = true;
-			if (! cond_bnd_flag) continue; // not at a boundary of a non-grounded conductor
-			
-		//	get the corner positions:
-			position_type aCorners [ref_elem_type::numCorners];
-			for (size_t co = 0; co < (size_t) ref_elem_type::numCorners; co++)
-				aCorners [co] = aaPos [pElem->vertex (co)];
-			
-		//	assemble the local matrix	
-			number loc_A [ref_elem_type::numCorners] [ref_elem_type::numCorners];
-			LocLaplaceA<TElem>::stiffness (pElem, aCorners, loc_A);
-			
-		//	add the contributions to the capacity matrix
-			for (int to_cond = 0; to_cond < (int) m_DVF_phi.size (); to_cond++)
-			{
-			//	In this computation, C(i,j) is the charge induced by phi(j)
-			//	in conductor i. The conductor i, where the charge is induced,
-			//	is called 'the from-conductor', and the conductor j, whose
-			//	potential induces the charge, is called 'the to-conductor'.
-				pot_vector_type * phi = m_DVF_phi [to_cond];
-				if (phi == NULL) continue; // this is a grounded conductor
-				
-				for (size_t to_co = 0; to_co < (size_t) ref_elem_type::numCorners; to_co++)
-				{
-					int from_cond;
-					number phi_val = (* phi) [vVertInd [to_co]];
-					for (size_t from_co = 0; from_co < (size_t) ref_elem_type::numCorners; from_co++)
-					// Exclude inner vertices of insulators and grounded conductors, as well as the upper triangle
-					if ((from_cond = corner_cond [from_co]) >= to_cond)
-						C (from_cond, to_cond) += loc_A [from_co] [to_co] * phi_val;
-				}
-			}
-		}
 	}
 }
 

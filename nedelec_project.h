@@ -38,6 +38,7 @@
 #define __H__UG__PLUGINS__ELECTROMAGNETISM__NEDELEC_PROJECT__
 
 #include "common/common.h"
+#include "lib_grid/algorithms/attachment_util.h"
 #include "lib_disc/common/function_group.h"
 #include "lib_disc/common/groups_util.h"
 #include "lib_disc/function_spaces/grid_function.h"
@@ -50,6 +51,7 @@
 #include "lib_algebra/operator/interface/linear_operator_inverse.h"
 
 #ifdef UG_PARALLEL
+#include "lib_grid/parallelization/util/attachment_operations.hpp"
 #include "lib_disc/parallelization/parallelization_util.h"
 #endif
 
@@ -102,6 +104,12 @@ public:
 ///	position type
 	typedef typename TDomain::position_type position_type;
 
+private:
+
+///	Type of the attachment and its accessor the base conductor indices
+	typedef AInt a_vert_cond_type; // the insulators are marked with -2, not with -1!
+	typedef Grid::VertexAttachmentAccessor<a_vert_cond_type> aa_vert_cond_type;
+	
 public:
 
 ///	Constructor
@@ -149,26 +157,6 @@ public:
 	);
 	
 private:
-	
-	/// Allocates memory for the DVFs associated with the ungrounded conductors
-	void alloc_DVFs
-	(
-		const SmartPtr<TDomain> & domain, ///< [in] the domain
-		pot_gf_type & aux_rhs ///< [in] grid function for the auxiliary rhs
-	);
-	
-	///	Computes the Dirichlet vector fields (DVFs)
-	void compute_DVFs
-	(
-		pot_gf_type & aux_rhs ///< grid function for the auxiliary rhs
-	);
-	
-	/// Computes the potential coefficients
-	void compute_DVF_potential_coeffs
-	(
-		const SmartPtr<TDomain> & domain, ///< [in] the domain
-		const SmartPtr<DoFDistribution> & vertDD ///< [in] the vertex DD
-	);
 	
 	/// Projects one function (i.e. performs the main action):
 	inline void project_func
@@ -271,13 +259,6 @@ private:
 		DenseVector<VariableArray1<number> > & charge ///< [out] charges of the conductors
 	);
 	
-	/// Damps the Dirichlet vector fields (DVFs)
-	void damp_DVFs
-	(
-		pot_vector_type & cor, ///< the potential correction to update
-		const DenseVector<VariableArray1<number> > & charge ///< [in] charges of the conductors
-	);
-	
 	/// Updates the grid function by the potential correction
 	void distribute_cor
 	(
@@ -288,6 +269,101 @@ private:
 		const DoFDistribution & vertDD, ///< [in] the vertex DD
 		const pot_vector_type & cor ///< [in] the potential correction for u
 	);
+	
+//	Computation of charges of the DVFs and elimination of the DVFs
+	
+	/// Allocates memory for the DVFs associated with the ungrounded conductors
+	void alloc_DVFs
+	(
+		const TDomain & domain, ///< [in] the domain
+		pot_gf_type & aux_rhs ///< [in] grid function for the auxiliary rhs
+	);
+	
+	///	Computes the Dirichlet vector fields (DVFs)
+	void compute_DVFs
+	(
+		pot_gf_type & aux_rhs ///< grid function for the auxiliary rhs
+	);
+	
+	/// Computes the potential coefficients
+	void compute_DVF_potential_coeffs
+	(
+		const TDomain & domain, ///< [in] the domain
+		DoFDistribution & vertDD ///< [in] the vertex DD
+	);
+	
+	/// Damps the Dirichlet vector fields (DVFs)
+	void damp_DVFs
+	(
+		pot_vector_type & cor, ///< the potential correction to update
+		const DenseVector<VariableArray1<number> > & charge ///< [in] charges of the conductors
+	);
+	
+	/// Sets the base conductor indices for every vertex (for all elements of the same type)
+	template <typename TElem>
+	void mark_cond_vert_elem_type
+	(
+		DoFDistribution & vertDD, ///< [in] the vertex DD
+		aa_vert_cond_type & vert_base_cond ///< [out] indices of the base conductors for every vertex
+	);
+	
+	/// Helper class for setting the base conductor indices to vertices
+	struct MarkCondVert
+	{
+		this_type * m_pThis;
+		DoFDistribution & m_vertDD;
+		aa_vert_cond_type & m_vert_base_cond;
+		
+		MarkCondVert
+		(
+			this_type * pThis,
+			DoFDistribution & vertDD, ///< [in] the vertex DD
+			aa_vert_cond_type & vert_base_cond ///< [out] indices of the base conductors for every vertex
+		)
+		:	m_pThis (pThis), m_vertDD (vertDD), m_vert_base_cond (vert_base_cond) {}
+		
+		template <typename TElem> void operator() (TElem &)
+		{
+			m_pThis->template mark_cond_vert_elem_type<TElem> (m_vertDD, m_vert_base_cond);
+		}
+	};
+	
+	/// Integrates div E over boundaries of conductors for elements of the same type
+	template <typename TElem>
+	void integrate_div_DVF_elem_type
+	(
+		const TDomain & domain, ///< [in] the domain
+		const DoFDistribution & vertDD, ///< [in] the vertex DD
+		const aa_vert_cond_type & vert_base_cond, ///< [in] indices of the base conductors for every vertex
+		DenseMatrix<VariableArray2<number> > & C ///< [out] the matrix to update
+	);
+	
+	/// Helper class for computation of the charges of the DVFs
+	struct IntegrateDivDVF
+	{
+		this_type * m_pThis;
+		const TDomain & m_domain;
+		const DoFDistribution & m_vertDD;
+		const aa_vert_cond_type & m_vert_base_cond;
+		DenseMatrix<VariableArray2<number> > & m_C;
+		
+		IntegrateDivDVF
+		(
+			this_type * pThis,
+			const TDomain & domain, ///< [in] the domain
+			const DoFDistribution & vertDD, ///< [in] the vertex DD
+			const aa_vert_cond_type & vert_base_cond, ///< [out] indices of the base conductors for every vertex
+			DenseMatrix<VariableArray2<number> > & C ///< [out] the matrix to update
+		)
+		:	m_pThis (pThis), m_domain (domain), m_vertDD (vertDD),
+			m_vert_base_cond (vert_base_cond), m_C (C) {}
+		
+		template <typename TElem> void operator() (TElem &)
+		{
+			m_pThis->template integrate_div_DVF_elem_type<TElem>
+				(m_domain, m_vertDD, m_vert_base_cond, m_C);
+		}
+	};
 	
 //	Laplace operators for the auxiliary problems
 	
@@ -391,7 +467,7 @@ private:
 		bool m_do_assemble_here;
 	};
 	
-///	Constraint that assembles the rhs und the bc for the auxiliary problems
+	///	Constraint that assembles the rhs und the bc for the auxiliary problems
 	class AuxLaplaceRHS : public IDomainConstraint<TDomain, TPotAlgebra>
 	{
 	private:
@@ -574,74 +650,6 @@ private:
 	
 	///	the base conductor index (or -1 for insulators)
 		int m_base_cond;
-	};
-	
-//	Computation of the charges of the DVFs
-	
-	/// Sets the base conductor indices for every vertex (for all elements of the same type)
-	template <typename TElem>
-	void mark_cond_vert_elem_type
-	(
-		const DoFDistribution & vertDD, ///< [in] the vertex DD
-		int * vert_base_cond ///< [out] indices of the base conductors for every vertex
-	);
-	
-	/// Helper class for setting the base conductor indices to vertices
-	struct MarkCondVert
-	{
-		this_type * m_pThis;
-		const DoFDistribution & m_vertDD;
-		int * m_vert_base_cond;
-		
-		MarkCondVert
-		(
-			this_type * pThis,
-			const DoFDistribution & vertDD, ///< [in] the vertex DD
-			int * vert_base_cond ///< [out] indices of the base conductors for every vertex
-		)
-		:	m_pThis (pThis), m_vertDD (vertDD), m_vert_base_cond (vert_base_cond) {}
-		
-		template <typename TElem> void operator() (TElem &)
-		{
-			m_pThis->template mark_cond_vert_elem_type<TElem> (m_vertDD, m_vert_base_cond);
-		}
-	};
-	
-	/// Integrates div E over boundaries of conductors for elements of the same type
-	template <typename TElem>
-	void integrate_div_DVF_elem_type
-	(
-		const TDomain & domain, ///< [in] the domain
-		const DoFDistribution & vertDD, ///< [in] the vertex DD
-		const int * vert_base_cond, ///< [in] indices of the base conductors for every vertex
-		DenseMatrix<VariableArray2<number> > & C ///< [out] the matrix to update
-	);
-	
-	/// Helper class for computation of the charges of the DVFs
-	struct IntegrateDivDVF
-	{
-		this_type * m_pThis;
-		const TDomain & m_domain;
-		const DoFDistribution & m_vertDD;
-		const int * m_vert_base_cond;
-		DenseMatrix<VariableArray2<number> > & m_C;
-		
-		IntegrateDivDVF
-		(
-			this_type * pThis,
-			const TDomain & domain, ///< [in] the domain
-			const DoFDistribution & vertDD, ///< [in] the vertex DD
-			const int * vert_base_cond, ///< [out] indices of the base conductors for every vertex
-			DenseMatrix<VariableArray2<number> > & C ///< [out] the matrix to update
-		)
-		:	m_pThis (pThis), m_domain (domain), m_vertDD (vertDD),
-			m_vert_base_cond (vert_base_cond), m_C (C) {}
-		
-		template <typename TElem> void operator() (TElem &)
-		{
-			m_pThis->template integrate_div_DVF_elem_type<TElem>
-				(m_domain, m_vertDD, m_vert_base_cond, m_C);
-		}
 	};
 	
 private:
