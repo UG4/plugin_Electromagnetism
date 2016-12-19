@@ -177,7 +177,7 @@ struct Functionality
 							"Sets a zero BC on subsets", "Value#Function#Subsets")
 				.add_method("add", static_cast<void (T::*)(MathVector<dim>&, const char*, const char*)>(&T::add),
 							"Sets a constant BC for one component", "Value#Function#Subsets")
-				.add_method("add", static_cast<void (T::*)(std::vector<number>&, const char*, const char*)>(&T::add),
+				.add_method("add", static_cast<void (T::*)(std::vector<number>, const char*, const char*)>(&T::add),
 							"Sets a constant BC for one component", "Value#Function#Subsets")
 				.add_method("add", static_cast<void (T::*)(SmartPtr<UserData<MathVector<dim>, dim> >&, const char*, const char*)>(&T::add),
 							"Sets a position and time dependent BC for one component", "UserData#Function#Subsets")

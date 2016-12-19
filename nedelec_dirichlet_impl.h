@@ -117,7 +117,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::add
 template <typename TDomain, typename TAlgebra>
 void NedelecDirichletBC<TDomain, TAlgebra>::add
 (
-	std::vector<number> & vValue, ///< values of the BC (a dim-vector)
+	std::vector<number> vValue, ///< values of the BC (a dim-vector)
 	const char* function, ///< the name of the function to impose the value at
 	const char* subsets ///< the subset of the boundary patch
 )

@@ -128,7 +128,7 @@ public:
 	/// adds a constant Dirichlet value on a subset
 		void add (MathVector<dim> & value, const char * function, const char * subsets);
 	/// adds a constant Dirichlet value on a subset
-		void add (std::vector<number> & vValue, const char * function, const char * subsets);
+		void add (std::vector<number> vValue, const char * function, const char * subsets);
 	
 	/// adds a position-dependent Dirichlet BC based on UserData
 		void add (SmartPtr<UserData<MathVector<dim>, dim> > & func, const char * function, const char * subsets);
