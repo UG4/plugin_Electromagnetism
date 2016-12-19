@@ -244,8 +244,8 @@ public:
  *
  * References:
  * <ul>
- * <li> O. Sterz. Modellierung und Numerik zeitharmonischer Wirbelstromprobleme in 3D. PhD thesis, 2003.
- * <li> A. Bossavit. Computational Electromagnetism. Academic Press (Boston), 1998 (available in the Internet)
+ * <li> O. Sterz. Modellierung und Numerik zeitharmonischer Wirbelstromprobleme in 3D. PhD thesis, Heidelberg University, 2003.
+ * <li> A. Bossavit. Computational Electromagnetism. Academic Press (Boston), 1998
  * </ul>
  *
  * \tparam	TDomain		Domain type
