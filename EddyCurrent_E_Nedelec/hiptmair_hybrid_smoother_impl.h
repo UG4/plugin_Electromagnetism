@@ -264,20 +264,25 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
 		m_GridLevel = m_spEdgeDD->grid_level ();
 		m_spVertDD = m_spVertApproxSpace->dof_distribution (m_GridLevel);
 		
-	// Compute the matrix of the potential equation:
-		compute_potential_matrix (m_spEdgeDD.get (), m_spVertDD.get ());
-	
-	// Allocate the grid functions for the defect in the potential space:
+	//	Prepare the smoother for the potential:
 		delete m_pPotCorRe; m_pPotCorRe = 0;
 		delete m_pPotCorIm; m_pPotCorIm = 0;
-		m_pPotCorRe = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
-		m_pPotCorIm = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
-	
-	// Initialize the subordinated smoother for the vertex dof:
-		m_pPotCorRe->set (0.0);
-		if (! m_spVertSmoother->init (m_spPotMat, *m_pPotCorRe))
-			UG_THROW (name() << ", init: Failed to initialize the subordinated vertex-based smoother.");
 		
+		if (! m_bSkipVertex)
+		{
+		// Compute the matrix of the potential equation:
+			compute_potential_matrix (m_spEdgeDD.get (), m_spVertDD.get ());
+	
+		// Allocate the grid functions for the defect in the potential space:
+			m_pPotCorRe = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
+			m_pPotCorIm = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
+		
+		// Initialize the subordinated smoother for the vertex dof:
+			m_pPotCorRe->set (0.0);
+			if (! m_spVertSmoother->init (m_spPotMat, *m_pPotCorRe))
+				UG_THROW (name() << ", init: Failed to initialize the subordinated vertex-based smoother.");
+		}
+	
 	// Initialize the subordinated smoother for the edge dofs:
 		if (! m_spEdgeSmoother->init (J, u))
 			UG_THROW (name() << ", init: Failed to initialize the subordinated edge-based smoother.");
@@ -428,13 +433,11 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 		UG_THROW("ERROR in '"<<name()<<"::apply': Vector [d size= "<<d.size()<<
 					", c size = " << c.size() << "] sizes have to match!");
 
-//	Temporary vectors:
-	vector_type auxEdgeDef (d.size ());
-	pot_vector_type potDefRe (m_pPotCorRe->size ());
-	pot_vector_type potDefIm (m_pPotCorIm->size ());
-	
 //---- Numerics:
 
+//	A temporary vectors for the defect:
+	vector_type auxEdgeDef (d.size ());
+	
 	auxEdgeDef = d;
 	
 //	Apply the edge-based smoother:
@@ -447,6 +450,10 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 	
 	if (! m_bSkipVertex)
 	{
+	//	Temporary vectors:
+		pot_vector_type potDefRe (m_pPotCorRe->size ());
+		pot_vector_type potDefIm (m_pPotCorIm->size ());
+	
 	//	Compute the 'vertex defect' of the potential:
 		collect_edge_defect (auxEdgeDef, potDefRe, potDefIm);
 		
