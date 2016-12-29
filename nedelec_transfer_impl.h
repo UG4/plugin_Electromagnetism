@@ -285,7 +285,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 					{
 						number coef = VecDot (shape [i], edge_vec);
 						DoFRef (mat, f_ind [0], c_ind [i]) += coef;
-						vIsRestricted [c_ind [0] [0]] = true;
+						vIsRestricted [c_ind [i] [0]] = true;
 					}
 				}
 			}
