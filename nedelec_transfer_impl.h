@@ -314,11 +314,6 @@ void NedelecTransfer<TDomain, TAlgebra>::init ()
 	const size_t numFineDoFs = fineDD.num_indices ();
 	const size_t numCoarseDoFs = coarseDD.num_indices ();
 
-//	Check if grid distribution has dofs, otherwise skip creation since father
-//	elements may not exist in parallel:
-	if(numFineDoFs == 0 || numCoarseDoFs == 0)
-		return;
-
 //	Assemble the prolongation matrix:
 	m_vIsRestricted.clear (); m_vIsRestricted.resize (numCoarseDoFs, false);
 	try
