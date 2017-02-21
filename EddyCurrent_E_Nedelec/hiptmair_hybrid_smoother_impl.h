@@ -35,6 +35,11 @@
  * hybrid smoother by Hiptmair.
  */
 
+// plugin headers
+#ifdef UG_PARALLEL
+#include "../memreduce.h"
+#endif
+
 namespace ug{
 namespace Electromagnetism{
 
@@ -58,6 +63,8 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iter;
 	
 	m_vEdgeInfo.resize (pEdgeDD->num_indices (), false);
+	for (size_t i = 0; i < pEdgeDD->num_indices (); i++) m_vEdgeInfo[i].clear_flags ();
+	
 	std::vector<size_t> vEdgeInd (1), vVertInd (1);
 	
 //	Get the edge-to-vertex correspondence
@@ -69,7 +76,7 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 			UG_THROW (name () << ": Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
 		tEdgeInfo & EdgeInfo = m_vEdgeInfo [vEdgeInd [0]];
 		
-		EdgeInfo.Dirichlet = false;
+		EdgeInfo.set_init ();
 		
 		for (size_t i = 0; i < 2; i++)
 		{
@@ -95,7 +102,7 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 			Edge * pEdge = *iter;
 			if (pEdgeDD->inner_algebra_indices (pEdge, vEdgeInd) != 1)
 				UG_THROW (name () << ": Edge DoF distribution mismatch. Not the Nedelec-Type-1 element?");
-			m_vEdgeInfo[vEdgeInd[0]].Dirichlet = true;
+			m_vEdgeInfo[vEdgeInd[0]].set_Dirichlet ();
 		}
 	}
 }
@@ -121,13 +128,19 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::compute_GtMG ()
 	size_t N_verts = m_spPotMat->num_rows ();
 	
 	m_spPotMat->set (0.0);
-	m_vConductiveVertex.resize (N_verts, false);
-	memset (& (m_vConductiveVertex.at (0)), 0, N_verts * sizeof (bool));
+	
+	// Flags of the 'conductive' vertices:
+	VariableArray1<bool> vConductiveVertex;
+	vConductiveVertex.resize (N_verts, false);
+	memset (& (vConductiveVertex.at (0)), 0, N_verts * sizeof (bool));
 	
 	// 1. Compute G^T M^{(1)}_h G and mark the 'conductive' vertices.
 	// Loop over the rows:
 	for (size_t row = 0; row < N_edges; row++)
 	{
+		if (! m_vEdgeInfo[row].is_init ())
+			UG_THROW (name () << ": Uninitialized edge data in the computation of the potential.");
+		
 		bool conductive_edge = false;
 		// Remark: For 'conductive edges', the mass matrix is non-zero. We check that.
 		
@@ -158,25 +171,46 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::compute_GtMG ()
 		
 		// Mark the 'conductive' nodes:
 		if (conductive_edge)
-			m_vConductiveVertex[startVert[0]] = m_vConductiveVertex[startVert[1]] = true;
+			vConductiveVertex[startVert[0]] = vConductiveVertex[startVert[1]] = true;
 	}
+#	ifdef UG_PARALLEL
+	MemAllReduce<VariableArray1<bool>, IndexLayout, t_red_op_or>
+		(&vConductiveVertex, m_spPotMat->layouts()->master(),
+			m_spPotMat->layouts()->slave(), & (m_spPotMat->layouts()->comm()));
+#	endif
 	
 	// 2. Unmark vertices at the Dirichlet boundary:
-	// Loop over the rows:
+	// Loop over the edges:
 	for (size_t row = 0; row < N_edges; row++)
 	{
 		tEdgeInfo & EdgeInfo = m_vEdgeInfo [row];
-		if (EdgeInfo.Dirichlet)
-			m_vConductiveVertex[EdgeInfo.vrt_index[0]]
-			 = m_vConductiveVertex[EdgeInfo.vrt_index[1]] = false;
+		if (EdgeInfo.is_Dirichlet ())
+			vConductiveVertex[EdgeInfo.vrt_index[0]]
+			 = vConductiveVertex[EdgeInfo.vrt_index[1]] = false;
 	}
+#	ifdef UG_PARALLEL
+	MemAllReduce<VariableArray1<bool>, IndexLayout, t_red_op_and>
+		(&vConductiveVertex, m_spPotMat->layouts()->master(),
+			m_spPotMat->layouts()->slave(), & (m_spPotMat->layouts()->comm()));
+#	endif
 	
-	// 2. Assemble the identity matrix for the 'non-conductive' vertices
+	// 3. Assemble the identity matrix for the 'non-conductive' vertices
 	// (otherwise we would have zero lines there).
 	// Loop over the vertices:
 	for (size_t row = 0; row < N_verts; row++)
-		if (! m_vConductiveVertex [row])
+		if (! vConductiveVertex [row])
 			SetDirichletRow (* m_spPotMat.get (), row);
+	
+	// 4. Move the conductive vertex marks into the EdgeInfo structores:
+	// Loop over the edges:
+	for (size_t row = 0; row < N_edges; row++)
+	{
+		tEdgeInfo & EdgeInfo = m_vEdgeInfo [row];
+		if (vConductiveVertex[EdgeInfo.vrt_index[0]])
+			EdgeInfo.set_conductive_vrt_0 ();
+		if (vConductiveVertex[EdgeInfo.vrt_index[1]])
+			EdgeInfo.set_conductive_vrt_1 ();
+	}
 }
 
 /**
@@ -293,7 +327,6 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
 		delete m_pPotCorRe; m_pPotCorRe = 0;
 		delete m_pPotCorIm; m_pPotCorIm = 0;
 		m_vEdgeInfo.resize (0, false);
-		m_vConductiveVertex.resize (0, false);
 		m_spPotMat->resize_and_clear (0, 0);
 		throw;
 	}
@@ -324,19 +357,20 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::collect_edge_defect
 	// Loop over the edges:
 	for (size_t edge = 0; edge < N_edges; edge++)
 	{
-		size_t i;
 		tEdgeInfo & EdgeInfo = m_vEdgeInfo [edge];
 		number Re_d = BlockRef (d [edge], 0);
 		number Im_d = BlockRef (d [edge], 1);
 		
-		if (m_vConductiveVertex [i = EdgeInfo.vrt_index[0]])
+		if (EdgeInfo.conductive_vrt_0 ())
 		{
+			size_t i = EdgeInfo.vrt_index [0];
 			potDefRe [i] -= Re_d;
 			potDefIm [i] -= Im_d;
 		}
 		
-		if (m_vConductiveVertex [i = EdgeInfo.vrt_index[1]])
+		if (EdgeInfo.conductive_vrt_1 ())
 		{
+			size_t i = EdgeInfo.vrt_index [1];
 			potDefRe [i] += Re_d;
 			potDefIm [i] += Im_d;
 		}

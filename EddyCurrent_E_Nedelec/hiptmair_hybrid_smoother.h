@@ -48,6 +48,7 @@
 #include "lib_algebra/operator/damping.h"
 #include "lib_algebra/operator/debug_writer.h"
 
+// plugin headers
 #include "../em_material.h"
 
 namespace ug{
@@ -143,14 +144,23 @@ private:
 	struct tEdgeInfo
 	{
 		size_t vrt_index [2]; ///< vertex dof's of the beginning and the end of the edge
-		bool Dirichlet; ///< whether this is a part of a Dirichlet boundary
+		
+		char flags; ///< flags: (0) Dirichlet, (1) conductive vertex 0, (2) conductive vertex 1, (3) init-ed
+		
+		bool is_Dirichlet () {return (flags & 1) != 0;}
+		bool conductive_vrt_0 () {return (flags & 2) != 0;}
+		bool conductive_vrt_1 () {return (flags & 4) != 0;}
+		bool is_init () {return (flags & 8) != 0;}
+		
+		void clear_flags () {flags = 0;}
+		void set_Dirichlet () {flags |= 1;}
+		void set_conductive_vrt_0 () {flags |= 2;}
+		void set_conductive_vrt_1 () {flags |= 4;}
+		void set_init () {flags |= 8;}
 	};
 /// Storage for the information about the edge-vertex interconnections
 	VariableArray1<tEdgeInfo> m_vEdgeInfo;
 
-/// Flags of the 'conductive' vertices:
-	VariableArray1<bool> m_vConductiveVertex;
-	
 /// Whether initialized
 	bool m_bInit;
 	
@@ -280,6 +290,19 @@ private: // Auxiliary functions:
 		pot_vector_type & potCorIm, ///< imaginary part of the potential correction \f$ c_{pot} \f$
 		vector_type & c ///< final (edge-centered) correction
 	);
+	
+#ifdef UG_PARALLEL
+///	"or" reduction operation class for the conductivity condition
+	struct t_red_op_or
+	{
+		static inline bool op (bool a, bool b) {return a || b;}
+	};
+///	"and" reduction operation class for the conductivity condition
+	struct t_red_op_and
+	{
+		static inline bool op (bool a, bool b) {return a && b;}
+	};
+#endif
 
 }; // class TimeHarmonicNedelecHybridSmoother
 
