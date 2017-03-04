@@ -296,9 +296,9 @@ void NedelecDirichletBC<TDomain, TAlgebra>::extract_implicit ()
 		UG_CATCH_THROW(" Subsets '" << iter->first << "' not all contained in ApproximationSpace.");
 		
 	// 	Loop subsets
-		for (size_t si = 0; si < ssGrp.size (); si++)
+		for (size_t i = 0; i < ssGrp.size (); i++)
 		{
-			FunctionGroup & f_grp = m_mZeroBC [si];
+			FunctionGroup & f_grp = m_mZeroBC [ssGrp [i]];
 			f_grp.set_function_pattern (base_type::m_spApproxSpace->function_pattern ());
 			f_grp.add (iter->second);
 		}
@@ -421,7 +421,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution
 			if (dd->inner_dof_indices (pEdge, vUserData[i]->fct, multInd) != 1)
 				UG_THROW ("NedelecDirichletBC:"
 					"More than one DoF per edge. Not the Nedelec-type-1 element?");
-
+			
 		//	Set the Dirichlet entry
 			DoFRef (u, multInd[0]) = (* vUserData[i]) (pEdge, si, m_aaPos, time);
 		}
