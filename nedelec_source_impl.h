@@ -139,6 +139,9 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute
 	
 //	Compute the potential of the source:
 	pot_gf_type pot_u (m_spVertApproxSpace, g_lev);
+#	ifdef UG_PARALLEL
+	pot_u.set_storage_type (PST_CONSISTENT);
+#	endif
 	compute_potential (pot_u);
 	
 //	Compute the normalization factor of the potential (to scale the current to 1)
@@ -244,6 +247,9 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute_potential
 )
 {
 	pot_gf_type pot_rhs (pot_u.approx_space (), pot_u.dof_distribution ());
+#	ifdef UG_PARALLEL
+	pot_rhs.set_storage_type (PST_ADDITIVE);
+#	endif
 	
 //	Prepare the attachment for the flags:
 	MultiGrid * mg = pot_u.dd()->multi_grid().get ();
