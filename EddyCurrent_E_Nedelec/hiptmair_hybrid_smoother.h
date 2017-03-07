@@ -116,9 +116,9 @@ private:
 	SmartPtr<pot_matrix_operator_type> m_spPotMat;
 	
 /// Vertex-centered grid function for the Re-part of potential corrections (this is a GridFunction to allow geometry-dependent smoothers)
-	pot_vector_type * m_pPotCorRe;
+	TPotGridFunc * m_pPotCorRe;
 /// Vertex-centered grid function for the Im-part of potential corrections (this is a GridFunction to allow geometry-dependent smoothers)
-	pot_vector_type * m_pPotCorIm;
+	TPotGridFunc * m_pPotCorIm;
 	
 /// DoF distribution for the Nedelec elements
 	SmartPtr<DoFDistribution> m_spEdgeDD;

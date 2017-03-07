@@ -35,6 +35,9 @@
  * hybrid smoother by Hiptmair.
  */
 
+// ug4 headers
+#include "lib_disc/function_spaces/grid_function_util.h"
+
 // plugin headers
 #ifdef UG_PARALLEL
 #include "../memreduce.h"
@@ -255,6 +258,9 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::compute_potential_matr
 		m_spPotMat->resize_and_clear (N_verts, N_verts);
 	}
 	UG_CATCH_THROW (name () << ": Failed to allocate the auxiliary matrix for the potential.");
+#	ifdef UG_PARALLEL
+	m_spPotMat->set_layouts (pVertDD->layouts ());
+#	endif
 	
 	// Get the edge-vertex dof correspondence:
 	get_edge_vert_correspondence (pEdgeDD, pVertDD);
@@ -297,7 +303,7 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
 		m_spEdgeDD = ((TGridFunc *) pGridF)->dof_distribution ();
 		m_GridLevel = m_spEdgeDD->grid_level ();
 		m_spVertDD = m_spVertApproxSpace->dof_distribution (m_GridLevel);
-		
+	
 	//	Prepare the smoother for the potential:
 		delete m_pPotCorRe; m_pPotCorRe = 0;
 		delete m_pPotCorIm; m_pPotCorIm = 0;
@@ -310,13 +316,17 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::init
 		// Allocate the grid functions for the defect in the potential space:
 			m_pPotCorRe = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
 			m_pPotCorIm = new TPotGridFunc (m_spVertApproxSpace, m_spVertDD);
+#			ifdef UG_PARALLEL
+			m_pPotCorRe->set_storage_type (PST_CONSISTENT);
+			m_pPotCorIm->set_storage_type (PST_CONSISTENT);
+#			endif
 		
 		// Initialize the subordinated smoother for the vertex dof:
 			m_pPotCorRe->set (0.0);
 			if (! m_spVertSmoother->init (m_spPotMat, *m_pPotCorRe))
 				UG_THROW (name() << ", init: Failed to initialize the subordinated vertex-based smoother.");
 		}
-	
+		
 	// Initialize the subordinated smoother for the edge dofs:
 		if (! m_spEdgeSmoother->init (J, u))
 			UG_THROW (name() << ", init: Failed to initialize the subordinated edge-based smoother.");
@@ -487,6 +497,12 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 	//	Temporary vectors:
 		pot_vector_type potDefRe (m_pPotCorRe->size ());
 		pot_vector_type potDefIm (m_pPotCorIm->size ());
+#		ifdef UG_PARALLEL
+		potDefRe.set_layouts (m_pPotCorRe->layouts ());
+		potDefRe.set_storage_type (PST_ADDITIVE);
+		potDefIm.set_layouts (m_pPotCorIm->layouts ());
+		potDefIm.set_storage_type (PST_ADDITIVE);
+#		endif
 	
 	//	Compute the 'vertex defect' of the potential:
 		collect_edge_defect (auxEdgeDef, potDefRe, potDefIm);
