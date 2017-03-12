@@ -247,9 +247,6 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute_potential
 )
 {
 	pot_gf_type pot_rhs (pot_u.approx_space (), pot_u.dof_distribution ());
-#	ifdef UG_PARALLEL
-	pot_rhs.set_storage_type (PST_ADDITIVE);
-#	endif
 	
 //	Prepare the attachment for the flags:
 	MultiGrid * mg = pot_u.dd()->multi_grid().get ();
