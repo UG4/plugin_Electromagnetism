@@ -60,6 +60,7 @@ NedelecLoopCurrent<TDomain, TAlgebra>::NedelecLoopCurrent
 	m_spVertApproxSpace (vertApproxSpace),
 	m_auxLocLaplace (new AuxLaplaceLocAss (*this)),
 	m_outOfSource (new OutOfSource (*this)),
+	m_zeroAverage (new ZeroAverage (m_outOfSource)),
 	m_auxLaplaceAss (new DomainDiscretization<TDomain, TPotAlgebra> (vertApproxSpace)),
 	m_auxLaplaceOp (new AssembledLinearOperator<TPotAlgebra> (SmartPtr<IAssemble<TPotAlgebra> >(m_auxLaplaceAss))),
 	m_potSolver (potSolver)
@@ -666,6 +667,57 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_vector
 			UG_THROW ("NedelecLoopCurrent: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
 		
 		u [vVertInd[0]] = 0;
+	}
+}
+
+/**
+ * Sets the arithmetic average of the solution vector to zero
+ */
+template <typename TDomain, typename TAlgebra>
+void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::set_zero_average
+(
+	const DoFDistribution & vertDD, ///< the vertex DD
+	pot_vector_type & u ///< the vector to process
+)
+{
+	typedef DoFDistribution::traits<Vertex>::const_iterator iterator;
+	iterator vert_end = vertDD.end<Vertex> ();
+	std::vector<size_t> vVertInd (1);
+	size_t n_values;
+	number ave;
+	
+//	Loop over all the vertices in the source and compute the average
+	n_values = 0; ave = 0;
+	for (iterator vert_iter = vertDD.begin<Vertex> (); vert_iter != vert_end; ++vert_iter)
+	{
+		Vertex * pVertex = *vert_iter;
+		if (! m_in_source [pVertex])
+			continue; // the vertex is out of the source
+		
+		if (vertDD.inner_algebra_indices (pVertex, vVertInd) != 1)
+			UG_THROW ("NedelecLoopCurrent: Vertex DoF distribution mismatch. Not the Lagrange-Order-1 element?");
+		
+		ave += u [vVertInd[0]];
+		n_values++;
+	}
+#	ifdef UG_PARALLEL
+	{
+		pcl::ProcessCommunicator proc_comm;
+		ave = proc_comm.allreduce (ave, PCL_RO_SUM);
+		n_values = proc_comm.allreduce (n_values, PCL_RO_SUM);
+	}
+#	endif
+	ave /= n_values;
+	
+//	Subtract the average from the components
+	for (iterator vert_iter = vertDD.begin<Vertex> (); vert_iter != vert_end; ++vert_iter)
+	{
+		Vertex * pVertex = *vert_iter;
+		if (! m_in_source [pVertex])
+			continue; // the vertex is out of the source
+		
+		vertDD.inner_algebra_indices (pVertex, vVertInd);
+		u [vVertInd[0]] -= ave;
 	}
 }
 

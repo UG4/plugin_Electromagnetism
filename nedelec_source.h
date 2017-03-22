@@ -48,6 +48,7 @@
 #include "lib_disc/operator/linear_operator/transfer_interface.h"
 #include "lib_disc/spatial_disc/constraints/constraint_interface.h"
 #include "lib_disc/operator/linear_operator/assembled_linear_operator.h"
+#include "lib_disc/operator/linear_operator/transfer_interface.h"
 #include "lib_algebra/operator/interface/linear_operator_inverse.h"
 #include "lib_algebra/operator/debug_writer.h"
 
@@ -190,6 +191,12 @@ public:
 	
 ///	Returns the subsets where the source is defined
 	std::string subsets () {return m_allSsNames;};
+	
+///	Returns the postprocess routine to eliminate the kernel part of the potential
+	SmartPtr<ITransferPostProcess<TDomain, TPotAlgebra> > zero_average ()
+	{
+		return m_zeroAverage;
+	};
 	
 private:
 	
@@ -419,6 +426,14 @@ private:
 		);
 		
 	public:
+	///	sets the arithmetic average of the solution vector to zero
+		void set_zero_average
+		(
+			const DoFDistribution & vertDD, ///< the vertex DD
+			pot_vector_type & u ///< the vector to adjust
+		);
+		
+	public:
 	///	constructor
 		OutOfSource
 		(
@@ -522,6 +537,31 @@ private:
 		aa_vert_flag_type m_in_source;
 	};
 	
+///	Postprocessor to eliminate the kernel parts in the solution
+/**
+ *	This class sets the arithmetical average of the components in the source
+ *	components to 0. This prevents the situations when the kernel parts
+ *	of the solution dominate over the essential parts.
+ */
+ 	class ZeroAverage : public ITransferPostProcess<TDomain, TPotAlgebra>
+ 	{
+ 	public:
+ 	
+ 	///	Constructor
+ 		ZeroAverage (SmartPtr<OutOfSource> spOoS) : m_spOoS (spOoS) {};
+ 	
+ 	///	Sets the arithmetical average to zero
+ 		virtual void post_process (SmartPtr<pot_gf_type> sp_gf)
+ 		{
+ 			m_spOoS->set_zero_average (* sp_gf->dd (), * sp_gf);
+ 		}
+ 		
+ 	private:
+ 	
+	///	access to the inner vertex marks
+		SmartPtr<OutOfSource> m_spOoS;
+ 	};
+	
 ///	Computes the flux of of the gradient of the potential over the cut (for one type of elements)
 	template <typename TElem>
 	void get_flux_of_pot
@@ -596,6 +636,8 @@ private:
 	SmartPtr<AuxLaplaceLocAss> m_auxLocLaplace;
 ///	Extension of the matrices and vectors to the whole domain
 	SmartPtr<OutOfSource> m_outOfSource;
+///	Elimination of the kernal parts in the solution
+	SmartPtr<ZeroAverage> m_zeroAverage;
 ///	Global discretization of the auxiliary equations
 /**
  *	This discretization object uses m_auxLocLaplace and m_outOfSource

@@ -281,6 +281,8 @@ struct Functionality
 	//	Computation of divergence-free sources
 		{
 			typedef NedelecLoopCurrent<TDomain, TAlgebra> T;
+			typedef typename NedelecProject<TDomain, TAlgebra>::TPotAlgebra TPotAlgebra;
+			typedef typename NedelecProject<TDomain, TAlgebra>::pot_vector_type TPotVector;
 			string name = string("NedelecLoopCurrent").append(suffix);
 			reg.add_class_<T>(name, grp)
 				.template add_constructor
@@ -289,7 +291,7 @@ struct Functionality
 						(
 							const char *, const char *, const char *,
 							SmartPtr<ApproximationSpace<TDomain> >,
-							SmartPtr<ILinearOperatorInverse<typename NedelecProject<TDomain, TAlgebra>::pot_vector_type> >
+							SmartPtr<ILinearOperatorInverse<TPotVector> >
 						)
 					>("Source subsets#Pos. dir. subsets#Cut subsets#Vert. approx. space#Lin. solver for potential")
 				.add_method("set", static_cast<void (T::*)(const char *, number)>(&T::set),
@@ -298,6 +300,8 @@ struct Functionality
 							"Evaluates the source field", "GridFunction")
 				.add_method("subsets", static_cast<std::string (T::*)()>(&T::subsets),
 							"Returns the source's subsets", "")
+				.add_method("zero_average", static_cast<SmartPtr<ITransferPostProcess<TDomain, TPotAlgebra> > (T::*)()>(&T::zero_average),
+							"Returns the average projection postprocess", "")
 				.set_construct_as_smart_pointer(true);
 			reg.add_class_to_group(name, "NedelecLoopCurrent", tag);
 		}
