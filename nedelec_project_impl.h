@@ -492,10 +492,9 @@ void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
 	const std::vector<int> & base_cond = m_spEmMaterial->base_conductors ();
 	size_t n_cond = base_cond.size ();
-	std::vector<bool> grounded (n_cond);
+	std::vector<char> grounded (n_cond); // a logical array; do not replace char->bool to avoid problems with MPI!
 	
-	for (size_t i = 0; i < n_cond; i++)
-		grounded [i] = false;
+	for (size_t i = 0; i < n_cond; i++) grounded [i] = 0; // false
 	
 //	Exclude grounded conductors
 	if (m_spDirichlet.valid ())
@@ -526,10 +525,18 @@ void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 					int v_b_cnd;
 					if ((v_b_cnd = cond_index [ss_handler->get_subset_index (volume_list [v])]) < 0)
 						continue;
-					grounded [v_b_cnd] = true;
+					grounded [v_b_cnd] = 1; // true
 				}
 			}
 		}
+#	ifdef UG_PARALLEL
+		/* The base conductors are well-defined over the parallel
+		 * architechture. For that, we only need to summarize the flags.
+		 */
+		pcl::ProcessCommunicator proc_comm;
+		std::vector<char> loc_grounded = grounded;
+		proc_comm.allreduce (loc_grounded, grounded, PCL_RO_LOR);
+#	endif
 	}
 	
 //	Allocate memory for the conductors
