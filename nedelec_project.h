@@ -49,6 +49,7 @@
 #include "lib_disc/spatial_disc/constraints/constraint_interface.h"
 #include "lib_disc/operator/linear_operator/assembled_linear_operator.h"
 #include "lib_algebra/operator/interface/linear_operator_inverse.h"
+#include "lib_algebra/operator/interface/pprocess.h"
 
 #ifdef UG_PARALLEL
 #include "lib_grid/parallelization/util/attachment_operations.hpp"
@@ -67,7 +68,7 @@ namespace Electromagnetism{
  * and elimination of the non-zero potentials of conductors.
  */
 template <typename TDomain, typename TAlgebra>
-class NedelecProject
+class NedelecProject : public IPProcessVector<typename TAlgebra::vector_type>
 {
 /// This type
 	typedef NedelecProject<TDomain, TAlgebra> this_type;
@@ -141,11 +142,24 @@ public:
 		m_bDampDVFs = val;
 	}
 	
-///	Performs the projection
+///	Performs the projection of all functions in a grid function
 	void apply
 	(
-		SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u, ///< [in] the grid function to project
-		const char * fct_name ///< [in] the function name
+		vector_type & vec ///< [in] the grid function to project
+	);
+	
+///	Performs the projection of given functions
+	void apply
+	(
+		GridFunction<TDomain, TAlgebra> & u, ///< [in] the grid function to project
+		const char * fct_names ///< [in] the function names
+	);
+	
+///	Performs the projection of given functions
+	void apply
+	(
+		GridFunction<TDomain, TAlgebra> & u, ///< [in] the grid function to project
+		const FunctionGroup & fctGrp ///< the function indices
 	);
 	
 ///	Computes the weak divergence in insulators

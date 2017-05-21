@@ -235,8 +235,9 @@ struct Functionality
 	// Projection solution to the divergence-free space
 		{
 			typedef NedelecProject<TDomain, TAlgebra> T;
+			typedef IPProcessVector<typename TAlgebra::vector_type> TBase;
 			string name = string("NedelecProject").append(suffix);
-			reg.add_class_<T>(name, grp)
+			reg.add_class_<T, TBase>(name, grp)
 				.template add_constructor
 					<
 						void (*)
@@ -248,7 +249,9 @@ struct Functionality
 					>("Matherial data#Vert.-based ApproxSpace#Vert.-based LinSolver")
 				.add_method("set_Dirichlet", static_cast<void (T::*)(SmartPtr<EMDirichlet<TDomain, TAlgebra> >)>(&T::set_Dirichlet),
 							"Sets the object of the Dirichlet BC", "Dirichlet BC")
-				.add_method("apply", static_cast<void (T::*)(SmartPtr<GridFunction<TDomain, TAlgebra> >, const char *)>(&T::apply),
+				.add_method("apply", static_cast<void (T::*)(typename TAlgebra::vector_type &)>(&T::apply),
+							"Projects all functions", "GridFunction")
+				.add_method("apply", static_cast<void (T::*)(GridFunction<TDomain, TAlgebra> &, const char *)>(&T::apply),
 							"Projects given functions", "GridFunction#Function names")
 				.add_method("compute_div", static_cast<void (T::*)(SmartPtr<GridFunction<TDomain, TAlgebra> >, const char *,SmartPtr<GridFunction<TDomain, typename T::TPotAlgebra> >)>(&T::compute_div),
 							"Compute weak div in insulators", "GridFunction for u#Function names#GridFunction for div")
@@ -281,8 +284,8 @@ struct Functionality
 	//	Computation of divergence-free sources
 		{
 			typedef NedelecLoopCurrent<TDomain, TAlgebra> T;
-			typedef typename NedelecProject<TDomain, TAlgebra>::TPotAlgebra TPotAlgebra;
-			typedef typename NedelecProject<TDomain, TAlgebra>::pot_vector_type TPotVector;
+			typedef typename NedelecLoopCurrent<TDomain, TAlgebra>::TPotAlgebra TPotAlgebra;
+			typedef typename NedelecLoopCurrent<TDomain, TAlgebra>::pot_vector_type TPotVector;
 			string name = string("NedelecLoopCurrent").append(suffix);
 			reg.add_class_<T>(name, grp)
 				.template add_constructor

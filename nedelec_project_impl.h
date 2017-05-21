@@ -83,28 +83,34 @@ NedelecProject<TDomain, TAlgebra>::NedelecProject
 }
 
 /**
- * Performs the projection
+ * Performs the projection of all functions in a grid function
  */
 template <typename TDomain, typename TAlgebra>
 void NedelecProject<TDomain, TAlgebra>::apply
 (
-	SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u, ///< the grid function to project
+	vector_type & vec ///< the grid function to project
+)
+{
+	GridFunction<TDomain, TAlgebra> * u_ptr;
+	
+	if ((u_ptr = dynamic_cast<GridFunction<TDomain, TAlgebra> *> (&vec)) == 0)
+		UG_THROW ("NedelecProject::apply: Specify a grid function, not a vector!");
+	
+	FunctionGroup fctGrp (u_ptr->dof_distribution_info ());
+	fctGrp.add_all ();
+	apply (*u_ptr, fctGrp);
+}
+
+/**
+ * Performs the projection of given functions
+ */
+template <typename TDomain, typename TAlgebra>
+void NedelecProject<TDomain, TAlgebra>::apply
+(
+	GridFunction<TDomain, TAlgebra> & u, ///< the grid function to project
 	const char * fct_names ///< the function name
 )
 {
-//	Check the data:
-	if (sp_u.invalid ())
-		UG_THROW ("NedelecProject: Illegal grid function specification.");
-	GridFunction<TDomain, TAlgebra> & u = * sp_u.get ();
-	
-	if (! m_spEmMaterial->finalized ())
-		UG_THROW ("NedelecProject: The material data structure has not been finalized.");
-	
-//	Get the domain:
-	SmartPtr<domain_type> domain = u.domain ();
-	if (domain.get () != m_spVertApproxSpace->domain().get ())
-		UG_THROW ("NedelecProject: The approximation spaces are based on different domains.");
-	
 //	Get the function indices:
 	FunctionGroup fctGrp;
 	try
@@ -113,6 +119,30 @@ void NedelecProject<TDomain, TAlgebra>::apply
 	}
 	UG_CATCH_THROW ("NedelecProject: Functions '" << fct_names << "' not all contained in the edge approximation space.");
 	
+//	Project:
+	apply (u, fctGrp);
+}
+
+/**
+ * Performs the projection of given functions
+ */
+template <typename TDomain, typename TAlgebra>
+void NedelecProject<TDomain, TAlgebra>::apply
+(
+	GridFunction<TDomain, TAlgebra> & u, ///< the grid function to project
+	const FunctionGroup & fctGrp ///< the function indices
+)
+{
+//	Check the data:
+	if (! m_spEmMaterial->finalized ())
+		UG_THROW ("NedelecProject: The material data structure has not been finalized.");
+	
+//	Get the domain:
+	SmartPtr<domain_type> domain = u.domain ();
+	if (domain.get () != m_spVertApproxSpace->domain().get ())
+		UG_THROW ("NedelecProject: The approximation spaces are based on different domains.");
+	
+//	Check the function indices:
 	for (size_t i_fct = 0; i_fct < fctGrp.size (); i_fct++)
 		if (u.local_finite_element_id(fctGrp[i_fct]).type () != LFEID::NEDELEC)
 			UG_THROW ("NedelecProject: Not a Nedelec-element-based grid function specified for the projection.");
