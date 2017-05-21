@@ -286,20 +286,20 @@ void MemAllReduce
 
 //	STEP 1: Reduce slave values on the master
 
-	//	create the required communication policies
+	// create the required communication policies
 	ComPol_MemOp<TArray, TLayout, TOp> cpMemOp (pMem);
 
-	//	perform communication
+	// perform communication
 	com.send_data (slaveLayout, cpMemOp);
 	com.receive_data (masterLayout, cpMemOp);
 	com.communicate ();
 	
 //	STEP 2: copy master values to slaves
 
-	//	create the required communication policies
+	// create the required communication policies
 	ComPol_MemCopy<TArray, TLayout> cpMemCopy (pMem);
 
-	//	perform communication
+	// perform communication
 	com.send_data (masterLayout, cpMemCopy);
 	com.receive_data (slaveLayout, cpMemCopy);
 	com.communicate ();
