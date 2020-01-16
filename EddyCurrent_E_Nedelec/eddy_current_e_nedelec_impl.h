@@ -293,7 +293,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem
 /* END code essential for the numerics */
 }
 
-/// computes the local defect and transfer it to the global discretization
+/// computes the local defect and transfers it to the global discretization
 template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_dA_elem
@@ -460,7 +460,7 @@ EddyCurrent_E_Nedelec
 //	check number of functions
 	if (this->num_fct () != 2)
 		UG_THROW ("Wrong number of functions: The ElemDisc 'EddyCurrent_E_Nedelec'"
-					" needs exactly 2 symbolic function"
+					" needs exactly 2 symbolic functions"
 					" (one for the real part and one for the imaginary one).");
 
 //	register assemble functions
