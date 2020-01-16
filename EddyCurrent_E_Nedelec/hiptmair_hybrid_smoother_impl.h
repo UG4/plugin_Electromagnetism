@@ -489,6 +489,9 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 	{
 		if (! m_spEdgeSmoother->apply_update_defect (c, auxEdgeDef))
 			return false;
+#		ifdef UG_PARALLEL
+		c.change_storage_type (PST_CONSISTENT);
+#		endif
 	}
 	else c.set (0.0);
 	
@@ -512,6 +515,10 @@ bool TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::apply
 			return false;
 		if (! m_spVertSmoother->apply (*m_pPotCorIm, potDefRe))
 			return false;	
+#		ifdef UG_PARALLEL
+		m_pPotCorRe->change_storage_type (PST_CONSISTENT);
+		m_pPotCorIm->change_storage_type (PST_CONSISTENT);
+#		endif
 		
 	//	Add the vertex-centered correction into the edge-centered one:
 		distribute_vertex_correction (*m_pPotCorRe, *m_pPotCorIm, c);
