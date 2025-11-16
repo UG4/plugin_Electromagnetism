@@ -65,13 +65,13 @@ class NedelecGridFunctionData
 {
 public:
 ///	Type of domain
-	typedef typename TGridFunc::domain_type domain_type;
+	using domain_type = typename TGridFunc::domain_type;
 
 ///	World dimension
-	static const int dim = domain_type::dim;
+	static constexpr int dim = domain_type::dim;
 
 ///	Type of position coordinates (e.g. position_type)
-	typedef typename domain_type::position_type position_type;
+	using position_type = typename domain_type::position_type;
 
 private:
 ///	grid function
@@ -125,10 +125,10 @@ public:
 		bool bDeriv,
 		int s,
 		std::vector<std::vector<MathVector<dim> > > vvvDeriv[],
-		const MathMatrix<refDim, dim> * vJT = NULL
+		const MathMatrix<refDim, dim> * vJT = nullptr
 	) const
 	{
-		static const size_t maxEdges = NedelecInterpolation<domain_type, refDim>::maxNumEdges;
+		static constexpr size_t maxEdges = NedelecInterpolation<domain_type, refDim>::maxNumEdges;
 		
 	//	Derivatives are not implemented
 		if (bDeriv)
@@ -162,13 +162,13 @@ class NedelecCurlData
 {
 public:
 ///	Type of domain
-	typedef typename TGridFunc::domain_type domain_type;
+	using domain_type = typename TGridFunc::domain_type;
 
 ///	World dimension
-	static const int dim = domain_type::dim;
+	static constexpr int dim = domain_type::dim;
 
 ///	Type of position coordinates (e.g. position_type)
-	typedef typename domain_type::position_type position_type;
+	using position_type = typename domain_type::position_type;
 
 private:
 ///	grid function
@@ -222,10 +222,10 @@ public:
 		bool bDeriv,
 		int s,
 		std::vector<std::vector<MathVector<dim> > > vvvDeriv[],
-		const MathMatrix<refDim, dim> * vJT = NULL
+		const MathMatrix<refDim, dim> * vJT = nullptr
 	) const
 	{
-		static const size_t maxEdges = NedelecInterpolation<domain_type, refDim>::maxNumEdges;
+		static constexpr size_t maxEdges = NedelecInterpolation<domain_type, refDim>::maxNumEdges;
 		
 	//	Derivatives are not implemented
 		if (bDeriv)
@@ -265,13 +265,13 @@ class NedelecSigmaEData
 {
 public:
 ///	Type of domain
-	typedef typename TGridFunc::domain_type domain_type;
+	using domain_type = typename TGridFunc::domain_type;
 
 ///	World dimension
-	static const int dim = domain_type::dim;
+	static constexpr int dim = domain_type::dim;
 
 ///	Type of position coordinates (e.g. position_type)
-	typedef typename domain_type::position_type position_type;
+	using position_type = typename domain_type::position_type;
 
 private:
 ///	grid function
@@ -329,10 +329,10 @@ public:
 		bool bDeriv,
 		int s,
 		std::vector<std::vector<MathVector<dim> > > vvvDeriv[],
-		const MathMatrix<refDim, dim> * vJT = NULL
+		const MathMatrix<refDim, dim> * vJT = nullptr
 	) const
 	{
-		static const size_t maxEdges = NedelecInterpolation<domain_type, refDim>::maxNumEdges;
+		static constexpr size_t maxEdges = NedelecInterpolation<domain_type, refDim>::maxNumEdges;
 		
 	//	Derivatives are not implemented
 		if (bDeriv)

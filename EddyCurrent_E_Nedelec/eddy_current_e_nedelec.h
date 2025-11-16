@@ -98,25 +98,25 @@ class EddyCurrent_E_Nedelec
 {
 private:
 ///	base class type
-	typedef IElemDisc<TDomain> base_type;
+	using base_type = IElemDisc<TDomain>;
 
 ///	own type
-	typedef EddyCurrent_E_Nedelec<TDomain,TAlgebra> this_type;
+	using this_type = EddyCurrent_E_Nedelec<TDomain,TAlgebra>;
 
 /// type of grid functions (used for the sources)
-	typedef GridFunction<TDomain, TAlgebra> TGridFunction;
+	using TGridFunction = GridFunction<TDomain, TAlgebra>;
 
 ///	domain type
-	typedef typename base_type::domain_type domain_type;
+	using domain_type = typename base_type::domain_type;
 
 ///	position type
-	typedef typename base_type::position_type position_type;
+	using position_type = typename base_type::position_type;
 	
 ///	world dimension
-	static const int dim = base_type::dim;
+	static constexpr int dim = base_type::dim;
 
 /// max. number of the edges of the full-dimensional elements in the domain
-	static const size_t maxNumEdges = element_list_traits<typename domain_traits<dim>::DimElemList>::maxEdges;
+	static constexpr size_t maxNumEdges = element_list_traits<typename domain_traits<dim>::DimElemList>::maxEdges;
 
 public:
 ///	class constructor
@@ -133,7 +133,7 @@ public:
 	(
 		SmartPtr<TGridFunction> spgfJG, ///< grid function with the data
 		const char * cmp, ///< grid function components
-		const char * ss_names = NULL ///< names of the subsets where the current is defined (NULL for "everywhere")
+		const char * ss_names = nullptr ///< names of the subsets where the current is defined (nullptr for "everywhere")
 	);
 /// adds a generator current item \f$ \mathbf{J}_{G,h} \f$ to the discretization
 	void set_generator_current
@@ -142,7 +142,7 @@ public:
 		const char * cmp ///< grid function components
 	)
 	{
-		set_generator_current (spgfJG, cmp, NULL);
+		set_generator_current (spgfJG, cmp, nullptr);
 	}
 
 //---- Local discretization interface: ----

@@ -60,10 +60,10 @@ private:
 		SubsetGroup & faceSSG ///< the surface (the low-dim. subsets)
 	)
 	{
-		typedef typename TGridFunc::domain_type domain_type;
-		static const int dim = domain_type::dim;
-		typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-		typedef typename domain_traits<dim>::side_type side_type;
+		using domain_type = typename TGridFunc::domain_type;
+		static constexpr int dim = domain_type::dim;
+		using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+		using side_type = typename domain_traits<dim>::side_type;
 		
 		number flux = 0;
 		
@@ -138,7 +138,7 @@ public:
 		SubsetGroup & faceSSG ///< the surface (the low-dim. subsets)
 	)
 	{
-		typedef typename TGridFunc::template traits<TElem>::const_iterator t_elem_iterator;
+		using t_elem_iterator = typename TGridFunc::template traits<TElem>::const_iterator;
 	
 		number flux = 0;
 		
@@ -217,9 +217,9 @@ number ComputeFlux
 	SubsetGroup & faceSSG
 )
 {
-	typedef typename TGridFunc::domain_type domain_type;
-	static const int dim = domain_type::dim;
-	typedef typename domain_traits<dim>::DimElemList ElemList;
+	using domain_type = typename TGridFunc::domain_type;
+	static constexpr int dim = domain_type::dim;
+	using ElemList = typename domain_traits<dim>::DimElemList;
 	
 	if (pGF->local_finite_element_id (fct).type () != LFEID::NEDELEC)
 		UG_THROW ("ComputeFlux: Not a Nedelec-element-based grid function specified.");

@@ -63,13 +63,13 @@ template <typename TGridFunc, typename TElem>
 class CalcVolPowerElemHelperClass
 {
 private:
-	typedef typename TGridFunc::domain_type domain_type;
-	typedef typename domain_type::position_accessor_type position_accessor_type;
-	typedef typename domain_type::position_type position_type;
+	using domain_type = typename TGridFunc::domain_type;
+	using position_accessor_type = typename domain_type::position_accessor_type;
+	using position_type = typename domain_type::position_type;
 	
-	static const size_t numCorners = NedelecT1_LDisc<domain_type, TElem>::numCorners;
-	static const size_t numEdges = NedelecT1_LDisc<domain_type, TElem>::numEdges;
-	static const size_t maxEdges = NedelecT1_LDisc<domain_type, TElem>::maxNumEdges;
+	static constexpr size_t numCorners = NedelecT1_LDisc<domain_type, TElem>::numCorners;
+	static constexpr size_t numEdges = NedelecT1_LDisc<domain_type, TElem>::numEdges;
+	static constexpr size_t maxEdges = NedelecT1_LDisc<domain_type, TElem>::maxNumEdges;
 		
 ///	computes the integral over one element
 	inline static void calc_elem_power
@@ -161,7 +161,7 @@ public:
 		number pow[] ///< to add the integral (Re and Im parts)
 	)
 	{
-		typedef typename TGridFunc::template traits<TElem>::const_iterator t_elem_iterator;
+		using t_elem_iterator = typename TGridFunc::template traits<TElem>::const_iterator;
 		
 		position_accessor_type & aaPos = pEGF->domain()->position_accessor();
 		
@@ -229,9 +229,9 @@ void calc_power
 	number pow[] ///< to add the integral
 )
 {
-	typedef typename TGridFunc::domain_type domain_type;
-	static const int dim = domain_type::dim;
-	typedef typename domain_traits<dim>::DimElemList ElemList;
+	using domain_type = typename TGridFunc::domain_type;
+	static constexpr int dim = domain_type::dim;
+	using ElemList = typename domain_traits<dim>::DimElemList;
 	
 	boost::mpl::for_each<ElemList>
 		(CalcVolPowerHelperClass<TGridFunc> (pJGGF, JG_fct, JG_ssg, pEGF, E_fct, pow));
@@ -337,13 +337,13 @@ number calc_EMF
 	number emf [2] ///< [out] the computed electromotive force (Re and Im)
 )
 {
-	typedef typename TGridFunc::domain_type domain_type;
-	typedef typename domain_type::position_type position_type;
-	static const int dim = TGridFunc::dim;
-	typedef typename domain_traits<dim>::grid_base_object elem_type;
-	typedef typename TGridFunc::template traits<elem_type>::const_iterator t_elem_iterator;
-	static const size_t maxCorners = domain_traits<dim>::MaxNumVerticesOfElem;
-	static const size_t maxEdges = (size_t) element_list_traits<typename domain_traits<dim>::DimElemList>::maxEdges;
+	using domain_type = typename TGridFunc::domain_type;
+	using position_type = typename domain_type::position_type;
+	static constexpr int dim = TGridFunc::dim;
+	using elem_type = typename domain_traits<dim>::grid_base_object;
+	using t_elem_iterator = typename TGridFunc::template traits<elem_type>::const_iterator;
+	static constexpr size_t maxCorners = domain_traits<dim>::MaxNumVerticesOfElem;
+	static constexpr size_t maxEdges = (size_t) element_list_traits<typename domain_traits<dim>::DimElemList>::maxEdges;
 	
 	position_type corners [maxCorners];
 	std::vector<DoFIndex> ind;
@@ -435,9 +435,9 @@ void CalcEMF
 	const std::vector<number>& d_pnt ///< [in] thickness of the windings
 )
 {
-	typedef typename TGridFunc::domain_type domain_type;
-	typedef typename domain_type::position_type position_type;
-	static const int dim = TGridFunc::dim;
+	using domain_type = typename TGridFunc::domain_type;
+	using position_type = typename domain_type::position_type;
+	static constexpr int dim = TGridFunc::dim;
 	
 //	check the sizes of the arrays and copy the values
 	if (Normal.size () != (size_t) dim || base_pnt.size () != (size_t) dim || d_pnt.size () != (size_t) dim)
@@ -452,7 +452,7 @@ void CalcEMF
 	}
 	
 //	create the subset group
-	if (subsets == NULL)
+	if (subsets == nullptr)
 		UG_THROW ("EddyCurrent: No subsets specified.");
 	SubsetGroup ssGrp (spGF->domain()->subset_handler ());
 	{

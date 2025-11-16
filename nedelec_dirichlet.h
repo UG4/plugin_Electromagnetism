@@ -86,32 +86,32 @@ class NedelecDirichletBC
 {
 public:
 	///	base type
-		typedef IDomainConstraint<TDomain, TAlgebra> base_type;
+		using base_type = IDomainConstraint<TDomain, TAlgebra>;
 		
 	/// this type
-		typedef NedelecDirichletBC<TDomain, TAlgebra> this_type;
+		using this_type = NedelecDirichletBC<TDomain, TAlgebra>;
 
 	///	type of domain
-		typedef TDomain domain_type;
+		using domain_type = TDomain;
 
 	///	world dimension
-		static const int dim = domain_type::dim;
+		static constexpr int dim = domain_type::dim;
 
 	///	type of position coordinates (e.g. position_type)
-		typedef typename domain_type::position_type position_type;
+		using position_type = typename domain_type::position_type;
 
 	///	type of algebra
-		typedef TAlgebra algebra_type;
+		using algebra_type = TAlgebra;
 
 	///	type of algebra matrix
-		typedef typename algebra_type::matrix_type matrix_type;
+		using matrix_type = typename algebra_type::matrix_type;
 
 	///	type of algebra vector
-		typedef typename algebra_type::vector_type vector_type;
+		using vector_type = typename algebra_type::vector_type;
 	
 private:
 	/// iterator over edges
-		typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
+		using t_edge_iterator = DoFDistribution::traits<Edge>::const_iterator;
 	
 public:
 	///	class constructor
@@ -331,7 +331,7 @@ public:
 		ConstSmartPtr<DoFDistribution> dd,
 		int type,
 		number time = 0.0,
-		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = SPNULL,
+		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = nullptr,
 		const number s_a0 = 1.0
 	);
 
@@ -343,9 +343,9 @@ public:
 		ConstSmartPtr<DoFDistribution> dd,
 		int type,
 		number time = 0.0,
-		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = SPNULL,
-		const std::vector<number> * vScaleMass = NULL,
-		const std::vector<number> * vScaleStiff = NULL
+		ConstSmartPtr<VectorTimeSeries<vector_type> > vSol = nullptr,
+		const std::vector<number> * vScaleMass = nullptr,
+		const std::vector<number> * vScaleStiff = nullptr
 	);
 
 	/// sets the dirichlet value in the solution for all dirichlet indices

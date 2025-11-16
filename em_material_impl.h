@@ -74,7 +74,7 @@ bool EMaterial<TDomain>::get_mu_sigma
 		UG_THROW ("EMaterial: Attempt to get data from a unfinalized object.")
 	
 	typename t_data_map::const_iterator iter = m_mUserDataBC.find (si);
-	if (iter == m_mUserDataBC.end () || (pSdD = iter->second) == NULL)
+	if (iter == m_mUserDataBC.end () || (pSdD = iter->second) == nullptr)
 		return true;
 	
 	mu = pSdD->mu;
@@ -150,7 +150,7 @@ void EMaterial<TDomain>::close ()
 			typename t_data_map::iterator iter = m_mUserDataBC.find (ssg [k]);
 			if (iter == m_mUserDataBC.end ())
 				UG_THROW ("EMaterial::close: Refered subset " << ssg.name (k) << "has an illegal dimension.");
-			if (iter->second != NULL)
+			if (iter->second != nullptr)
 				UG_THROW ("EMaterial::close: Two data items refer to subset " << ssg.name (k) << ".");
 			iter->second = psdD;
 		}
@@ -159,7 +159,7 @@ void EMaterial<TDomain>::close ()
 // Check if there are full-dim. subsets that have not been mentioned:
 	for (typename t_data_map::iterator iter = m_mUserDataBC.begin ();
 		 iter != m_mUserDataBC.end (); ++iter)
-		if (iter->second == NULL)
+		if (iter->second == nullptr)
 			UG_THROW ("EMaterial::close: Subset "
 				<< ss_handler->get_subset_name (iter->first)
 					<< " not mentioned in the description.");
@@ -198,7 +198,7 @@ void EMaterial<TDomain>::connectivity
 )
 {
 //	The full-dim. grid element types for this dimension:
-	typedef typename domain_traits<dim>::grid_base_object t_base_object;
+	using t_base_object = typename domain_traits<dim>::grid_base_object;
 	
 //	Initialize the marks of the conductor subsets:
 	std::vector<bool> isConductor (subset_handler()->num_subsets ());
@@ -206,7 +206,7 @@ void EMaterial<TDomain>::connectivity
 	for (size_t si = 0; si < isConductor.size (); si++)
 	{
 		typename t_data_map::iterator iter = m_mUserDataBC.find (si);
-		if (iter == m_mUserDataBC.end () || iter->second == NULL) // if no data
+		if (iter == m_mUserDataBC.end () || iter->second == nullptr) // if no data
 			isConductor [si] = false; // skip it
 		else if (iter->second->sigma == (number) 0) // if insulator
 			isConductor [si] = false; // skip it, too

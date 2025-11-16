@@ -86,31 +86,31 @@ class NedelecT1_LDisc
 public:
 
 /// world dimention
-	static const int WDim = TDomain::dim;
+	static constexpr int WDim = TDomain::dim;
 	
 /// type of the grid
-	typedef typename TDomain::grid_type grid_type;
+	using grid_type = typename TDomain::grid_type;
 
 /// type of the geometric positions (WDim-vectors)
-	typedef typename TDomain::position_type position_type;
+	using position_type = typename TDomain::position_type;
 	
 ///	type of reference element
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
 
 /// shapes and derivatives of the Whitney-0 (Lagrange P1) shape functions
-	typedef LagrangeP1<ref_elem_type> W0_shapes_type;
+	using W0_shapes_type = LagrangeP1<ref_elem_type>;
 
 ///	dimension of reference element
-	static const int dim = ref_elem_type::dim;
+	static constexpr int dim = ref_elem_type::dim;
 
 /// total number of the corners
-	static const size_t numCorners = ref_elem_type::numCorners;
+	static constexpr size_t numCorners = ref_elem_type::numCorners;
 	
 /// total number of the edges
-	static const size_t numEdges = ref_elem_type::numEdges;
+	static constexpr size_t numEdges = ref_elem_type::numEdges;
 	
 /// max. number of the edges of the full-dimensional elements in the domain
-	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
+	static constexpr size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
 
 public:
 
@@ -257,31 +257,31 @@ class NedelecT1_LDisc_forSimplex
 public:
 
 /// world dimention
-	static const int WDim = TDomain::dim;
+	static constexpr int WDim = TDomain::dim;
 	
 /// type of the grid
-	typedef typename TDomain::grid_type grid_type;
+	using grid_type = typename TDomain::grid_type;
 
 /// type of the geometric positions (WDim-vectors)
-	typedef typename TDomain::position_type position_type;
+	using position_type = typename TDomain::position_type;
 	
 ///	type of reference element
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
 
 /// shapes and derivatives of the Whitney-0 (Lagrange P1) shape functions
-	typedef LagrangeP1<ref_elem_type> W0_shapes_type;
+	using W0_shapes_type = LagrangeP1<ref_elem_type>;
 
 ///	dimension of reference element
-	static const int dim = ref_elem_type::dim;
+	static constexpr int dim = ref_elem_type::dim;
 
 /// total number of the corners
-	static const size_t numCorners = ref_elem_type::numCorners;
+	static constexpr size_t numCorners = ref_elem_type::numCorners;
 	
 /// total number of the edges
-	static const size_t numEdges = ref_elem_type::numEdges;
+	static constexpr size_t numEdges = ref_elem_type::numEdges;
 	
 /// max. number of the edges of the full-dimensional elements in the domain
-	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
+	static constexpr size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
 
 private:
 	
@@ -400,10 +400,10 @@ class NedelecInterpolation
 public:
 
 /// type of the geometric positions (WDim-vectors)
-	typedef typename TDomain::position_type position_type;
+	using position_type = typename TDomain::position_type;
 
 /// max. number of the edges of the full-dimensional elements in the domain
-	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
+	static constexpr size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxEdges;
 
 public:
 /// computes the values at given points
@@ -478,10 +478,10 @@ class NedelecInterpolation<TDomain, 2, 2>
 public:
 
 /// type of the geometric positions (WDim-vectors)
-	typedef typename TDomain::position_type position_type;
+	using position_type = typename TDomain::position_type;
 
 /// max. number of the edges of the full-dimensional elements in the domain
-	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<2>::DimElemList>::maxEdges;
+	static constexpr size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<2>::DimElemList>::maxEdges;
 
 public:
 /// computes the values at given points
@@ -562,10 +562,10 @@ class NedelecInterpolation<TDomain, 3, 3>
 public:
 
 /// type of the geometric positions (WDim-vectors)
-	typedef typename TDomain::position_type position_type;
+	using position_type = typename TDomain::position_type;
 
 /// max. number of the edges of the full-dimensional elements in the domain
-	static const size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<3>::DimElemList>::maxEdges;
+	static constexpr size_t maxNumEdges = (size_t) element_list_traits<typename domain_traits<3>::DimElemList>::maxEdges;
 
 public:
 /// computes the values at given points

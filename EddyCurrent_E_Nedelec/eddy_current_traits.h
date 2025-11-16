@@ -45,9 +45,9 @@ class EddyCurrentTraits
 public:
 	
 /// index of the real part in the grid functions
-	static const size_t _Re_ = 0;
+	static constexpr size_t _Re_ = 0;
 /// index of the imaginary part in the grid functions
-	static const size_t _Im_ = 1;
+	static constexpr size_t _Im_ = 1;
 };
 	
 } // end namespace Electromagnetism

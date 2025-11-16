@@ -67,7 +67,7 @@ inline number ComputeNedelecDoF
 	number time ///< the time argument
 )
 {
-	typedef typename TDomain::position_type position_type;
+	using position_type = typename TDomain::position_type;
 	
 	number dofValue;
 	MathVector<TDomain::dim> func_value;
@@ -102,8 +102,8 @@ void ComputeNedelecDoFs
 )
 {
 //	Domain type, position_type and iterators
-	typedef typename TGridFunction::domain_type domain_type;
-	typedef typename TGridFunction::template traits<Edge>::const_iterator t_edge_iterator;
+	using domain_type = typename TGridFunction::domain_type;
+	using t_edge_iterator = typename TGridFunction::template traits<Edge>::const_iterator;
 
 //	Get position accessor
 	const typename domain_type::position_accessor_type& aaPos = spGridFct->domain()->position_accessor();
@@ -157,7 +157,7 @@ void ComputeNedelecDoFs
 	SmartPtr<UserData<MathVector<TGridFunction::dim>, TGridFunction::dim> > spFunction, ///< the function to encode
 	SmartPtr<TGridFunction> spGridFct, ///< the grid function to store the result
 	const char* cmp, ///< name of the component
-    const char* subsets, ///< names of the subsets (may be NULL meaning "all")
+    const char* subsets, ///< names of the subsets (may be nullptr meaning "all")
     number time ///< the time argument
 )
 {
@@ -174,7 +174,7 @@ void ComputeNedelecDoFs
 	
 //	Create the subset group
 	SubsetGroup ssGrp (spGridFct->domain()->subset_handler ());
-	if (subsets != NULL)
+	if (subsets != nullptr)
 		ssGrp.add (TokenizeString (subsets));
 	else //	add all subsets and remove lower dim subsets afterwards
 		ssGrp.add_all();
@@ -192,7 +192,7 @@ void ComputeNedelecDoFs
     number time ///< the time argument
 )
 {
-	ComputeNedelecDoFs (spFunction, spGridFct, cmp, NULL, time);
+	ComputeNedelecDoFs (spFunction, spGridFct, cmp, nullptr, time);
 }
 
 template <typename TGridFunction>
@@ -201,7 +201,7 @@ void ComputeNedelecDoFs
 	SmartPtr<UserData<MathVector<TGridFunction::dim>, TGridFunction::dim> > spFunction, ///< the function to encode
 	SmartPtr<TGridFunction> spGridFct, ///< the grid function to store the result
 	const char* cmp, ///< name of the component
-    const char* subsets ///< names of the subsets (may be NULL meaning "all")
+    const char* subsets ///< names of the subsets (may be nullptr meaning "all")
 )
 {
 	ComputeNedelecDoFs (spFunction, spGridFct, cmp, subsets, 0.0);
@@ -215,7 +215,7 @@ void ComputeNedelecDoFs
 	const char* cmp ///< name of the component
 )
 {
-	ComputeNedelecDoFs (spFunction, spGridFct, cmp, NULL, 0.0);
+	ComputeNedelecDoFs (spFunction, spGridFct, cmp, nullptr, 0.0);
 }
 
 ///\}
@@ -237,7 +237,7 @@ void ComputeNedelecDoFs
 	number time ///< time argument
 )
 {
-	static const int dim = TGridFunction::dim;
+	static constexpr int dim = TGridFunction::dim;
 	SmartPtr<UserData<MathVector<dim>, dim> > spFunction
 				= LuaUserDataFactory<MathVector<dim>, dim>::create (LuaFunction);
 	ComputeNedelecDoFs (spFunction, spGridFct, cmp, subsets, time);
@@ -251,7 +251,7 @@ void ComputeNedelecDoFs
 	number time ///< time argument
 )
 {
-	ComputeNedelecDoFs (LuaFunction, spGridFct, cmp, NULL, time);
+	ComputeNedelecDoFs (LuaFunction, spGridFct, cmp, nullptr, time);
 }
 template <typename TGridFunction>
 void ComputeNedelecDoFs
@@ -272,7 +272,7 @@ void ComputeNedelecDoFs
     const char* cmp ///< name of the component of the grid function
 )
 {
-	ComputeNedelecDoFs (LuaFunction, spGridFct, cmp, NULL, 0);
+	ComputeNedelecDoFs (LuaFunction, spGridFct, cmp, nullptr, 0);
 }
 
 #endif // UG_FOR_LUA
@@ -289,7 +289,7 @@ void NedelecGradPotential
 	size_t fct ///< index of the function in spGF
 )
 {
-	typedef typename TGridFunc::template traits<Edge>::const_iterator t_edge_iterator;
+	using t_edge_iterator = typename TGridFunc::template traits<Edge>::const_iterator;
 	
 //	Check the basis type
 	if (spGF->local_finite_element_id(fct).type () != LFEID::NEDELEC)
@@ -362,7 +362,7 @@ void SetSubsetVertVal
 	number value ///< value to set in the subset group
 )
 {
-	typedef typename TPotGridFunc::template traits<Vertex>::const_iterator t_vert_iterator;
+	using t_vert_iterator = typename TPotGridFunc::template traits<Vertex>::const_iterator;
 	
 //	Array for the indices in the grid function:
 	std::vector<size_t> vVertInd (1);
@@ -402,13 +402,13 @@ template <typename TPotGridFunc>
 void SetSubsetVertVal
 (
 	SmartPtr<TPotGridFunc> spPotGF, ///< the potential to compute the gradient for
-    const char* subsets, ///< names of the subsets (may be NULL meaning "all")
+    const char* subsets, ///< names of the subsets (may be nullptr meaning "all")
 	number value ///< value to set in the subset group
 )
 {
 //	Create the subset group
 	SubsetGroup ssGrp (spPotGF->domain()->subset_handler ());
-	if (subsets != NULL)
+	if (subsets != nullptr)
 		ssGrp.add (TokenizeString (subsets));
 	else //	add all subsets and remove lower dim subsets afterwards
 		ssGrp.add_all();

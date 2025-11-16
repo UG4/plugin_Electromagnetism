@@ -91,7 +91,7 @@ struct Functionality
 		
 	// Parameter specification tools
 		{
-			typedef EMaterial<TDomain> T;
+			using T = EMaterial<TDomain>;
 			string name = string("EMaterial").append(suffix);
 			reg.add_class_<T> (name, grp)
 				.template add_constructor<void (*) (ConstSmartPtr<TDomain>)>("Domain")
@@ -109,8 +109,8 @@ struct Functionality
 		}
 	// Further tools
 		{
-			typedef ug::CPUAlgebra TPotAlgebra;
-			typedef ug::GridFunction<TDomain, TPotAlgebra> TPotFct;
+			using TPotAlgebra = CPUAlgebra;
+			using TPotFct = GridFunction<TDomain, TPotAlgebra>;
 			
 			reg.add_function("SetSubsetVertVal", static_cast<void (*)(SmartPtr<TPotFct>, const char*, number)>(&SetSubsetVertVal<TPotFct>), grp, "Set a field to a constant on subsets", "GradientGridFunction#Subsets#Value");
 		}
@@ -128,14 +128,14 @@ struct Functionality
 	template <typename TDomain, typename TAlgebra>
 	static void DomainAlgebra(Registry& reg, string grp)
 	{
-		static const int dim = TDomain::dim;
+		static constexpr int dim = TDomain::dim;
 		string suffix = GetDomainAlgebraSuffix<TDomain,TAlgebra>();
 		string tag = GetDomainAlgebraTag<TDomain,TAlgebra>();
 		
 	// Time-harmonic E-based formulation of the eddy current model:
 		{
-			typedef EddyCurrent_E_Nedelec<TDomain, TAlgebra> T;
-			typedef IElemDisc<TDomain> TBase;
+			using T = EddyCurrent_E_Nedelec<TDomain, TAlgebra>;
+			using TBase = IElemDisc<TDomain>;
 			string name = string("EddyCurrent_E_Nedelec").append(suffix);
 			reg.add_class_<T, TBase >(name, grp)
 				.template add_constructor
@@ -159,8 +159,8 @@ struct Functionality
 	
 	// Base class for Dirichlet BC for all type of the discretizations
 		{
-			typedef EMDirichlet<TDomain, TAlgebra> T;
-			typedef IDomainConstraint<TDomain, TAlgebra> TBase;
+			using T = EMDirichlet<TDomain, TAlgebra>;
+			using TBase = IDomainConstraint<TDomain, TAlgebra>;
 			string name = string("EMDirichlet").append(suffix);
 			reg.add_class_<T, TBase>(name, grp);
 			reg.add_class_to_group(name, "EMDirichlet", tag);
@@ -168,8 +168,8 @@ struct Functionality
 	
 	// Dirichlet BC for Nedelec-based discretizations
 		{
-			typedef NedelecDirichletBC<TDomain, TAlgebra> T;
-			typedef EMDirichlet<TDomain, TAlgebra> TBase;
+			using T = NedelecDirichletBC<TDomain, TAlgebra>;
+			using TBase = EMDirichlet<TDomain, TAlgebra>;
 			string name = string("NedelecDirichletBC").append(suffix);
 			reg.add_class_<T, TBase>(name, grp)
 				.template add_constructor<void (*) (const char*)>("Functions")
@@ -191,8 +191,8 @@ struct Functionality
 	
 	// Hybrid smoother by Hiptmair
 		{
-			typedef TimeHarmonicNedelecHybridSmoother<TDomain, TAlgebra> T;
-			typedef ILinearIterator<typename T::vector_type> TBase;
+			using T = TimeHarmonicNedelecHybridSmoother<TDomain, TAlgebra>;
+			using TBase = ILinearIterator<typename T::vector_type>;
 			string name = string("HiptmairHybridSmoother").append(suffix);
 			reg.add_class_<T, TBase>(name, grp)
 				.template add_constructor
@@ -216,8 +216,8 @@ struct Functionality
 	
 	// Transfer operators for the Whitney-1 elements
 		{
-			typedef NedelecTransfer<TDomain, TAlgebra> T;
-			typedef ITransferOperator<TDomain, TAlgebra> TBase;
+			using T = NedelecTransfer<TDomain, TAlgebra>;
+			using TBase = ITransferOperator<TDomain, TAlgebra>;
 			string name = string("NedelecTransfer").append(suffix);
 			reg.add_class_<T, TBase>(name, grp)
 				.template add_constructor
@@ -234,8 +234,8 @@ struct Functionality
 		
 	// Projection solution to the divergence-free space
 		{
-			typedef NedelecProject<TDomain, TAlgebra> T;
-			typedef IPProcessVector<typename TAlgebra::vector_type> TBase;
+			using T = NedelecProject<TDomain, TAlgebra>;
+			using TBase = IPProcessVector<typename TAlgebra::vector_type>;
 			string name = string("NedelecProject").append(suffix);
 			reg.add_class_<T, TBase>(name, grp)
 				.template add_constructor
@@ -261,10 +261,10 @@ struct Functionality
 	
 	// Computation of the Whitney-1 DoFs for a given function
 		{
-			static const int dim = TDomain::dim;
-			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
-			typedef ug::CPUAlgebra TPotAlgebra;
-			typedef ug::GridFunction<TDomain, TPotAlgebra> TPotFct;
+			static constexpr int dim = TDomain::dim;
+			using TFct = GridFunction<TDomain, TAlgebra>;
+			using TPotAlgebra = CPUAlgebra;
+			using TPotFct = GridFunction<TDomain, TPotAlgebra>;
 			
 			reg.add_function("ComputeNedelecDoFs", static_cast<void (*)(SmartPtr<UserData<MathVector<dim>, dim> >, SmartPtr<TFct>, const char*, const char*, number)>(&ComputeNedelecDoFs<TFct>), grp, "Nedelec DoFs for given vector field", "Data#GridFunction#Component#Subsets#Time");
 			reg.add_function("ComputeNedelecDoFs", static_cast<void (*)(SmartPtr<UserData<MathVector<dim>, dim> >, SmartPtr<TFct>, const char*, number)>(&ComputeNedelecDoFs<TFct>), grp, "Nedelec DoFs for given vector field", "Data#GridFunction#Component#Time");
@@ -283,9 +283,9 @@ struct Functionality
 	
 	//	Computation of divergence-free sources
 		{
-			typedef NedelecLoopCurrent<TDomain, TAlgebra> T;
-			typedef typename NedelecLoopCurrent<TDomain, TAlgebra>::TPotAlgebra TPotAlgebra;
-			typedef typename NedelecLoopCurrent<TDomain, TAlgebra>::pot_vector_type TPotVector;
+			using T = NedelecLoopCurrent<TDomain, TAlgebra>;
+			using TPotAlgebra = typename NedelecLoopCurrent<TDomain, TAlgebra>::TPotAlgebra;
+			using TPotVector = typename NedelecLoopCurrent<TDomain, TAlgebra>::pot_vector_type;
 			string name = string("NedelecLoopCurrent").append(suffix);
 			reg.add_class_<T>(name, grp)
 				.template add_constructor
@@ -311,11 +311,11 @@ struct Functionality
 	
 	//	Computation of the vector and curl fields for a given Nedelec-element based grid function, etc
 		{
-			static const int dim = TDomain::dim;
-			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			static constexpr int dim = TDomain::dim;
+			using TFct = GridFunction<TDomain, TAlgebra>;
 			string name = string("NedelecGridFunctionData").append(suffix);
-			typedef NedelecGridFunctionData<TFct> T;
-			typedef UserData<MathVector<dim>, dim> TBase;
+			using T = NedelecGridFunctionData<TFct>;
+			using TBase = UserData<MathVector<dim>, dim>;
 			
 			reg.add_class_<T, TBase> (name, grp)
 				.template add_constructor<void (*)(SmartPtr<TFct>, const char*)>("GridFunction#Components")
@@ -323,11 +323,11 @@ struct Functionality
 			reg.add_class_to_group(name, "NedelecGridFunctionData", tag);
 		}
 		{
-			static const int dim = TDomain::dim;
-			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			static constexpr int dim = TDomain::dim;
+			using TFct = GridFunction<TDomain, TAlgebra>;
 			string name = string("NedelecCurlData").append(suffix);
-			typedef NedelecCurlData<TFct> T;
-			typedef UserData<MathVector<dim>, dim> TBase;
+			using T = NedelecCurlData<TFct>;
+			using TBase = UserData<MathVector<dim>, dim>;
 			
 			reg.add_class_<T, TBase> (name, grp)
 				.template add_constructor<void (*)(SmartPtr<TFct>, const char*)>("GridFunction#Components")
@@ -335,11 +335,11 @@ struct Functionality
 			reg.add_class_to_group(name, "NedelecCurlData", tag);
 		}
 		{
-			static const int dim = TDomain::dim;
-			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			static constexpr int dim = TDomain::dim;
+			using TFct = GridFunction<TDomain, TAlgebra>;
 			string name = string("NedelecSigmaEData").append(suffix);
-			typedef NedelecSigmaEData<TFct> T;
-			typedef UserData<MathVector<dim>, dim> TBase;
+			using T = NedelecSigmaEData<TFct>;
+			using TBase = UserData<MathVector<dim>, dim>;
 			
 			reg.add_class_<T, TBase> (name, grp)
 				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, SmartPtr<EMaterial<TDomain> >)>("GridFunction#Components#Materials")
@@ -347,11 +347,11 @@ struct Functionality
 			reg.add_class_to_group(name, "NedelecSigmaEData", tag);
 		}
 		{
-			static const int dim = TDomain::dim;
-			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			static constexpr int dim = TDomain::dim;
+			using TFct = GridFunction<TDomain, TAlgebra>;
 			string name = string("EddyCurrentHeat").append(suffix);
-			typedef EddyCurrentHeat<TFct> T;
-			typedef UserData<number, dim> TBase;
+			using T = EddyCurrentHeat<TFct>;
+			using TBase = UserData<number, dim>;
 			
 			reg.add_class_<T, TBase> (name, grp)
 				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, SmartPtr<EMaterial<TDomain> >)>("GridFunction#Components#Materials")
@@ -359,11 +359,11 @@ struct Functionality
 			reg.add_class_to_group(name, "EddyCurrentHeat", tag);
 		}
 		{
-			static const int dim = TDomain::dim;
-			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			static constexpr int dim = TDomain::dim;
+			using TFct = GridFunction<TDomain, TAlgebra>;
 			string name = string("EddyCurrentReBofEUserData").append(suffix);
-			typedef EddyCurrentReBofEUserData<TFct> T;
-			typedef UserData<MathVector<dim>, dim> TBase;
+			using T = EddyCurrentReBofEUserData<TFct>;
+			using TBase = UserData<MathVector<dim>, dim>;
 			
 			reg.add_class_<T, TBase> (name, grp)
 				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, number)>("GridFunction#Components#Frequency")
@@ -371,11 +371,11 @@ struct Functionality
 			reg.add_class_to_group(name, "EddyCurrentReBofEUserData", tag);
 		}
 		{
-			static const int dim = TDomain::dim;
-			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			static constexpr int dim = TDomain::dim;
+			using TFct = GridFunction<TDomain, TAlgebra>;
 			string name = string("EddyCurrentImBofEUserData").append(suffix);
-			typedef EddyCurrentImBofEUserData<TFct> T;
-			typedef UserData<MathVector<dim>, dim> TBase;
+			using T = EddyCurrentImBofEUserData<TFct>;
+			using TBase = UserData<MathVector<dim>, dim>;
 			
 			reg.add_class_<T, TBase> (name, grp)
 				.template add_constructor<void (*)(SmartPtr<TFct>, const char*, number)>("GridFunction#Components#Frequency")
@@ -385,7 +385,7 @@ struct Functionality
 		
 	// Computation of various values
 		{
-			typedef ug::GridFunction<TDomain, TAlgebra> TFct;
+			using TFct = GridFunction<TDomain, TAlgebra>;
 			
 			reg.add_function
 			(
@@ -461,7 +461,7 @@ extern "C" void
 InitUGPlugin_Electromagnetism(Registry* reg, string grp)
 {
 	grp.append("/SpatialDisc/Electromagnetism");
-	typedef Electromagnetism::Functionality Functionality;
+	using Functionality = Electromagnetism::Functionality;
 
 	try{
 		RegisterDomainDependent<Functionality>(*reg,grp);

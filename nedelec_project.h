@@ -71,45 +71,45 @@ template <typename TDomain, typename TAlgebra>
 class NedelecProject : public IPProcessVector<typename TAlgebra::vector_type>
 {
 /// This type
-	typedef NedelecProject<TDomain, TAlgebra> this_type;
+	using this_type = NedelecProject<TDomain, TAlgebra>;
 	
 public:
 ///	Type of Domain
-	typedef TDomain domain_type;
+	using domain_type = TDomain;
 	
 ///	Type of Grid:
-	typedef typename TDomain::grid_type grid_type;
+	using grid_type = typename TDomain::grid_type;
 	
 /// Type of subset handler
-	typedef typename domain_type::subset_handler_type subset_handler_type;
+	using subset_handler_type = typename domain_type::subset_handler_type;
 	
 ///	Type of algebra (for the Nedelec-element-based grid functions)
-	typedef TAlgebra algebra_type;
+	using algebra_type = TAlgebra;
 ///	Type of Vector (for the Nedelec-element-based grid functions)
-	typedef typename TAlgebra::vector_type vector_type;
+	using vector_type = typename TAlgebra::vector_type;
 ///	Type of Vector (for the Nedelec-element-based grid functions)
-	typedef typename TAlgebra::matrix_type matrix_type;
+	using matrix_type = typename TAlgebra::matrix_type;
 
 /// The auxiliary algebra type for the space of the potential. (Note: It should be scalar.)
-	typedef CPUAlgebra TPotAlgebra;
+	using TPotAlgebra = CPUAlgebra;
 ///	Vector type for the potential space
-	typedef typename TPotAlgebra::vector_type pot_vector_type;
+	using pot_vector_type = TPotAlgebra::vector_type;
 /// Matrix type for the potential space
-	typedef typename TPotAlgebra::matrix_type pot_matrix_type;
+	using pot_matrix_type = TPotAlgebra::matrix_type;
 ///	Grid function type for the potential space
-	typedef GridFunction<TDomain, TPotAlgebra> pot_gf_type;
+	using pot_gf_type = GridFunction<TDomain, TPotAlgebra>;
 
 /// world dimention
-	static const int WDim = TDomain::dim;
+	static constexpr int WDim = TDomain::dim;
 	
 ///	position type
-	typedef typename TDomain::position_type position_type;
+	using position_type = typename TDomain::position_type;
 
 private:
 
 ///	Type of the attachment and its accessor the base conductor indices
-	typedef AInt a_vert_cond_type; // the insulators are marked with -2, not with -1!
-	typedef Grid::VertexAttachmentAccessor<a_vert_cond_type> aa_vert_cond_type;
+	using a_vert_cond_type = AInt; // the insulators are marked with -2, not with -1!
+	using aa_vert_cond_type = Grid::VertexAttachmentAccessor<a_vert_cond_type>;
 	
 public:
 
@@ -386,8 +386,8 @@ private:
 	class LocLaplaceA
 	{
 	public:
-		typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-		static const int numCorners = ref_elem_type::numCorners;
+		using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+		static constexpr int numCorners = ref_elem_type::numCorners;
 		
 		/// Computes the local discretization of the Laplace operator
 		static void stiffness
@@ -403,10 +403,10 @@ private:
 	{
 	private:
 	///	a name for the component in the grid functions
-		static const size_t _C_ = 0;
+		static constexpr size_t _C_ = 0;
 		
 	/// maximum number of corners of an element
-		static const size_t maxCorners = domain_traits<WDim>::MaxNumVerticesOfElem;
+		static constexpr size_t maxCorners = domain_traits<WDim>::MaxNumVerticesOfElem;
 		
 	public:
 	///	constructor
@@ -486,13 +486,13 @@ private:
 	{
 	private:
 	/// Iterator over edges
-		typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
+	using t_edge_iterator = DoFDistribution::traits<Edge>::const_iterator;
 	
 	/// maximum number of corners of an element
-		static const size_t maxCorners = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxCorners;
+		static constexpr size_t maxCorners = (size_t) element_list_traits<typename domain_traits<WDim>::DimElemList>::maxCorners;
 		
 	/// Iterator over vertices
-		typedef DoFDistribution::traits<Vertex>::const_iterator t_vert_iterator;
+		using t_vert_iterator = DoFDistribution::traits<Vertex>::const_iterator;
 	
 	public:
 	///	constructor
@@ -518,7 +518,7 @@ private:
 			ConstSmartPtr<DoFDistribution> dd,
 			int type,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = SPNULL,
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = nullptr,
 			const number s_a0 = 1.0
 		);
 	
@@ -530,9 +530,9 @@ private:
 			ConstSmartPtr<DoFDistribution> dd,
 			int type,
 			number time = 0.0,
-			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = SPNULL,
-			const std::vector<number> * vScaleMass = NULL,
-			const std::vector<number> * vScaleStiff = NULL
+			ConstSmartPtr<VectorTimeSeries<pot_vector_type> > vSol = nullptr,
+			const std::vector<number> * vScaleMass = nullptr,
+			const std::vector<number> * vScaleStiff = nullptr
 		);
 	
 	/// sets the value in the solution for all conductor indices

@@ -58,18 +58,18 @@ namespace Electromagnetism{
 template <typename TArray, typename TLayout, typename TOp>
 class ComPol_MemOp : public pcl::ICommunicationPolicy<TLayout>
 {
-	typedef ComPol_MemOp<TArray, TLayout, TOp> this_type;
-	typedef typename pcl::ICommunicationPolicy<TLayout> base_type;
+	using this_type = ComPol_MemOp<TArray, TLayout, TOp>;
+	using base_type = pcl::ICommunicationPolicy<TLayout>;
 	
 public:
-	typedef TArray array_type;
-	typedef typename array_type::value_type value_type;
-	typedef typename base_type::Layout Layout;
-	typedef typename base_type::Interface Interface;
+	using array_type = TArray;
+	using value_type = typename array_type::value_type;
+	using Layout = typename base_type::Layout;
+	using Interface = typename base_type::Interface;
 
 public:
 ///	Default constructor
-	ComPol_MemOp () : m_pMemDst(NULL), m_pMemSrc(NULL) {}
+	ComPol_MemOp () : m_pMemDst(nullptr), m_pMemSrc(nullptr) {}
 
 ///	Constructor setting the same arrays for the source and the destination
 	ComPol_MemOp (TArray* pVec): m_pMemDst(pVec), m_pMemSrc(pVec)	{}
@@ -110,7 +110,7 @@ public:
 	virtual bool collect (ug::BinaryBuffer& buff, const Interface& interface)
 	{
 	//	check that vector has been set
-		if (m_pMemSrc == NULL) return false;
+		if (m_pMemSrc == nullptr) return false;
 
 	//	loop interface
 		for (typename Interface::const_iterator iter = interface.begin ();
@@ -135,7 +135,7 @@ public:
 	virtual bool extract (ug::BinaryBuffer& buff, const Interface& interface)
 	{
 	//	check that vector has been set
-		if(m_pMemDst == NULL) return false;
+		if(m_pMemDst == nullptr) return false;
 
 	//	loop interface
 		for (typename Interface::const_iterator iter = interface.begin ();
@@ -167,18 +167,18 @@ private:
 template <typename TArray, typename TLayout>
 class ComPol_MemCopy : public pcl::ICommunicationPolicy<TLayout>
 {
-	typedef ComPol_MemCopy<TArray, TLayout> this_type;
-	typedef typename pcl::ICommunicationPolicy<TLayout> base_type;
+	using this_type = ComPol_MemCopy<TArray, TLayout>;
+	using base_type = pcl::ICommunicationPolicy<TLayout>;
 	
 public:
-	typedef TArray array_type;
-	typedef typename array_type::value_type value_type;
-	typedef typename base_type::Layout Layout;
-	typedef typename base_type::Interface Interface;
+	using array_type = TArray;
+	using value_type = typename array_type::value_type;
+	using Layout = typename base_type::Layout;
+	using Interface = typename base_type::Interface;
 
 public:
 ///	Default constructor
-	ComPol_MemCopy () : m_pMemDst(NULL), m_pMemSrc(NULL) {}
+	ComPol_MemCopy () : m_pMemDst(nullptr), m_pMemSrc(nullptr) {}
 
 ///	Constructor setting the same arrays for the source and the destination
 	ComPol_MemCopy (TArray* pVec): m_pMemDst(pVec), m_pMemSrc(pVec)	{}
@@ -219,7 +219,7 @@ public:
 	virtual bool collect (ug::BinaryBuffer& buff, const Interface& interface)
 	{
 	//	check that vector has been set
-		if (m_pMemSrc == NULL) return false;
+		if (m_pMemSrc == nullptr) return false;
 
 	//	loop interface
 		for (typename Interface::const_iterator iter = interface.begin ();
@@ -244,7 +244,7 @@ public:
 	virtual bool extract (ug::BinaryBuffer& buff, const Interface& interface)
 	{
 	//	check that vector has been set
-		if(m_pMemDst == NULL) return false;
+		if(m_pMemDst == nullptr) return false;
 
 	//	loop interface
 		for (typename Interface::const_iterator iter = interface.begin ();
@@ -277,7 +277,7 @@ void MemAllReduce
 	TArray* pMem, ///< the array to syncronize
 	const TLayout& masterLayout, ///< the master layout
 	const TLayout& slaveLayout, ///< the slave layout
-	pcl::InterfaceCommunicator<TLayout>* pCom = NULL ///< (optionally) the communicator
+	pcl::InterfaceCommunicator<TLayout>* pCom = nullptr ///< (optionally) the communicator
 )
 {
 //	create a new communicator if required

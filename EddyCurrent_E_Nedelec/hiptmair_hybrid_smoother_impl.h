@@ -63,7 +63,7 @@ void TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>::get_edge_vert_correspo
 	const DoFDistribution * pVertDD ///< vertex-centered DoF distribution of the grid functions
 )
 {
-	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iter;
+	using t_edge_iter = DoFDistribution::traits<Edge>::const_iterator;
 	
 	m_vEdgeInfo.resize (pEdgeDD->num_indices (), false);
 	for (size_t i = 0; i < pEdgeDD->num_indices (); i++) m_vEdgeInfo[i].clear_flags ();

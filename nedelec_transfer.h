@@ -54,25 +54,25 @@ template <typename TDomain, typename TAlgebra, typename TElem>
 class NedelecProlongationMatrixHelper
 {
 ///	Type of Domain
-	typedef TDomain domain_type;
+	using domain_type = TDomain;
 	
 ///	Type of algebra
-	typedef TAlgebra algebra_type;
+	using algebra_type = TAlgebra;
 
 ///	Type of Vector
-	typedef typename TAlgebra::matrix_type matrix_type;
+	using matrix_type = typename TAlgebra::matrix_type;
 
 /// world dimention
-	static const int WDim = TDomain::dim;
+	static constexpr int WDim = TDomain::dim;
 
 /// reference element type
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
 	
 /// dimensionality of the reference element
-	static const int dim = ref_elem_type::dim;
+	static constexpr int dim = ref_elem_type::dim;
 
 /// position type in the domain
-	typedef typename TDomain::position_type position_type;
+	using position_type = typename TDomain::position_type;
 
 ///	computes the local coordinates of a vertex according to the assumption of the regular refinement
 	static void GetRegularLocalCoordinate
@@ -103,16 +103,16 @@ template <typename TDomain, typename TAlgebra>
 class NedelecProlongationMatrixHelper<TDomain, TAlgebra, RegularEdge>
 {
 ///	Type of Domain
-	typedef TDomain domain_type;
+	using domain_type = TDomain;
 	
 ///	Type of algebra
-	typedef TAlgebra algebra_type;
+	using algebra_type = TAlgebra;
 
 ///	Type of Vector
-	typedef typename TAlgebra::matrix_type matrix_type;
+	using matrix_type = typename TAlgebra::matrix_type;
 
 /// world dimention
-	static const int WDim = TDomain::dim;
+	static constexpr int WDim = TDomain::dim;
 
 public:
 
@@ -168,25 +168,25 @@ class NedelecTransfer: public ITransferOperator<TDomain, TAlgebra>
 {
 public:
 /// This type
-	typedef NedelecTransfer<TDomain, TAlgebra> this_type;
+	using this_type = NedelecTransfer<TDomain, TAlgebra>;
 
 ///	Type of base class
-	typedef ITransferOperator<TDomain, TAlgebra> base_type;
+	using base_type = ITransferOperator<TDomain, TAlgebra>;
 
 ///	Type of Domain
-	typedef TDomain domain_type;
+	using domain_type = TDomain;
 	
 ///	Type of algebra
-	typedef TAlgebra algebra_type;
+	using algebra_type = TAlgebra;
 
 ///	Type of Vector
-	typedef typename TAlgebra::vector_type vector_type;
+	using vector_type = typename TAlgebra::vector_type;
 
 ///	Type of Vector
-	typedef typename TAlgebra::matrix_type matrix_type;
+	using matrix_type = typename TAlgebra::matrix_type;
 
 /// world dimention
-	static const int WDim = TDomain::dim;
+	static constexpr int WDim = TDomain::dim;
 	
 public:
 

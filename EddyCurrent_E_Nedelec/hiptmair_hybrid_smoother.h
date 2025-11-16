@@ -80,29 +80,29 @@ class TimeHarmonicNedelecHybridSmoother :
 	public ILinearIterator<typename TAlgebra::vector_type>,
 	public DebugWritingObject<TAlgebra>
 {
-	typedef TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra> this_type;
+	using this_type = TimeHarmonicNedelecHybridSmoother<TDomain,TAlgebra>;
 	
 public:
 ///	Vector type
-	typedef typename TAlgebra::vector_type vector_type;
+	using vector_type = typename TAlgebra::vector_type;
 ///	Matrix type
-	typedef typename TAlgebra::matrix_type matrix_type;
+	using matrix_type = typename TAlgebra::matrix_type;
 ///	Matrix Operator type
-	typedef MatrixOperator<matrix_type, vector_type> matrix_operator_type;
+	using matrix_operator_type = MatrixOperator<matrix_type, vector_type>;
 
 /// The auxiliary algebra type for the space of the potential. (Note: It should be scalar.)
-	typedef CPUAlgebra TPotAlgebra;
+	using TPotAlgebra = CPUAlgebra;
 ///	Vector type for the potential space
-	typedef typename TPotAlgebra::vector_type pot_vector_type;
+	using pot_vector_type = TPotAlgebra::vector_type;
 /// Matrix type for the potential space
-	typedef typename TPotAlgebra::matrix_type pot_matrix_type;
+	using pot_matrix_type = TPotAlgebra::matrix_type;
 ///	Matrix Operator type for the potential space
-	typedef MatrixOperator<pot_matrix_type, pot_vector_type> pot_matrix_operator_type;
+	using pot_matrix_operator_type = MatrixOperator<pot_matrix_type, pot_vector_type>;
 	
 /// Grid function type for the solution
-	typedef GridFunction<TDomain, TAlgebra> TGridFunc;
+	using TGridFunc = GridFunction<TDomain, TAlgebra>;
 /// Grid function type for the potential
-	typedef GridFunction<TDomain, TPotAlgebra> TPotGridFunc;
+	using TPotGridFunc = GridFunction<TDomain, TPotAlgebra>;
 
 private:
 
@@ -176,7 +176,7 @@ public:
 		SmartPtr<ILinearIterator<pot_vector_type> > vertSmoother ///< the vertex-centered smoother
 	)
 	: m_spPotMat (new pot_matrix_operator_type),
-	  m_pPotCorRe (NULL), m_pPotCorIm (NULL),
+	  m_pPotCorRe (nullptr), m_pPotCorIm (nullptr),
 	  m_spVertApproxSpace (vertApproxSpace),
 	  m_spEdgeSmoother (edgeSmoother), m_spVertSmoother (vertSmoother),
 	  m_bInit (false),

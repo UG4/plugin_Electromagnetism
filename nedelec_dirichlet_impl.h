@@ -52,7 +52,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::add_subset
 	const char* ss_names ///< names of the subsets
 )
 {
-	typedef std::vector<std::string> t_f_vec;
+	using t_f_vec = std::vector<std::string>;
 	
 	std::vector<std::string> subsets;
 	TokenizeString (std::string (ss_names), subsets);
@@ -175,7 +175,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::get_dirichlet_subsets
 	SubsetGroup & dirichlet_ssgrp ///< the group to update
 ) const
 {
-	typedef std::map<std::string, std::vector<std::string> > t_ss_map;
+	using t_ss_map = std::map<std::string, std::vector<std::string> >;
 	
 // Loop the subset names
 	t_ss_map::const_iterator iterEnd = m_mDirichletSS.end ();
@@ -280,7 +280,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::extract_data
 template <typename TDomain, typename TAlgebra>
 void NedelecDirichletBC<TDomain, TAlgebra>::extract_implicit ()
 {
-	typedef std::map<std::string, std::vector<std::string> > t_ss_map;
+	using t_ss_map = std::map<std::string, std::vector<std::string> >;
 	
 // Loop the subset names
 	t_ss_map::const_iterator iterEnd = m_mDirichletSS.end ();
@@ -439,7 +439,7 @@ void NedelecDirichletBC<TDomain, TAlgebra>::adjust_solution_implicit
     number time ///< time argument
 )
 {
-	typedef std::map<int, FunctionGroup> t_ss_map;
+	using t_ss_map = std::map<int, FunctionGroup>;
 	
 	std::vector<DoFIndex>  multInd;
 	

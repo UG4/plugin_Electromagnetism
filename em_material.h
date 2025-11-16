@@ -63,16 +63,16 @@ class EMaterial
 {
 private:
 /// own type
-	typedef EMaterial<TDomain> this_type;
+	using this_type = EMaterial<TDomain>;
 	
 ///	domain type
-	typedef TDomain domain_type;
+	using domain_type = TDomain;
 
 /// subset handler type
-	typedef typename domain_type::subset_handler_type subset_handler_type;
+	using subset_handler_type = typename domain_type::subset_handler_type;
 	
 ///	world dimension
-	static const int dim = domain_type::dim;
+	static constexpr int dim = domain_type::dim;
 
 public:
 /// Constructor
@@ -236,7 +236,7 @@ private:
 	std::vector<TSubdomData> m_vSdD;
 	
 	///	Data map type
-	typedef std::map<int, TSubdomData *> t_data_map;
+	using t_data_map = std::map<int, TSubdomData *>;
 
 	/// Map assigning subdomain indices to the subdomain data items
 	t_data_map m_mUserDataBC;

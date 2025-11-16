@@ -100,7 +100,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::get_edge_corners
 	size_t edge_corner [numEdges] [2] /**< [out] edge dof -> corner of the element */
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
 	const ref_elem_type & rRefElem = Provider<ref_elem_type>::get ();
 	
 	const grid_type * grid = domain->grid().get ();
@@ -188,7 +188,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_stiffness_and_mass
 // Journal of Computational and Applied Mathematics 134 (2001), pp. 1-11,
 // DOI: 10.1016/S0377-0427(00)00444-1
 
-	static const number lambda = ((number) (WDim + 1)) / (WDim + 2);
+	static constexpr number lambda = ((number) (WDim + 1)) / (WDim + 2);
 	
 // compute the values of the w^{(1)}_e-functions at the center of the element
 	MathVector<WDim> w1_at_center[numEdges];
@@ -264,7 +264,7 @@ void NedelecT1_LDisc_forSimplex<TDomain, TElem>::local_mass
 // Journal of Computational and Applied Mathematics 134 (2001), pp. 1-11,
 // DOI: 10.1016/S0377-0427(00)00444-1
 
-	static const number lambda = ((number) (WDim + 1)) / (WDim + 2);
+	static constexpr number lambda = ((number) (WDim + 1)) / (WDim + 2);
 	
 // compute the values of the w^{(1)}_e-functions at the center of the element
 	MathVector<WDim> w1_at_center[numEdges];

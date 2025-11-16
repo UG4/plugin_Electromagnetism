@@ -61,7 +61,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::GetRegularLocalC
 	MathVector<TElem::dim> & local ///< [out] to save the local coordinates
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
 	
 //	Get the parent of the vertex (note that this is typically not the 'base')
 	GridObject * parent = mg->get_parent (v);
@@ -107,7 +107,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, RegularEdge>::assemble_p
 	std::vector<bool> & vIsRestricted ///< [out] whether a coarse grid DoF has children
 )
 {
-	typedef DoFDistribution::traits<RegularEdge>::const_iterator iterator;
+	using iterator = DoFDistribution::traits<RegularEdge>::const_iterator;
 	
 // Multiindices to access the components
 	std::vector<DoFIndex> c_ind (1), f_ind (1);
@@ -214,7 +214,7 @@ void NedelecProlongationMatrixHelper<TDomain, TAlgebra, TElem>::assemble_prolong
 	std::vector<bool> & vIsRestricted ///< [out] whether a coarse grid DoF has children
 )
 {
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	using iterator = typename DoFDistribution::traits<TElem>::const_iterator;
 	const ReferenceObjectID roid = geometry_traits<TElem>::REFERENCE_OBJECT_ID;
 	
 // Multiindices to access the components
@@ -301,7 +301,7 @@ template <typename TDomain, typename TAlgebra>
 void NedelecTransfer<TDomain, TAlgebra>::init ()
 {
 //	The grid element types for this dimension:
-	typedef typename domain_traits<WDim>::AllElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::AllElemList;
 	
 //	Verify the approximation space:
 	check_approximation_space ();

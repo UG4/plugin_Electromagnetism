@@ -122,7 +122,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::compute
 	SmartPtr<GridFunction<TDomain, TAlgebra> > sp_u ///< the grid function for the source
 )
 {
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::DimElemList;
 	
 //	Do we have data to compute?
 	if (m_vSrcData.size () == 0)
@@ -201,8 +201,8 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::mark_source_edges
 	aa_edge_flag_type & in_source ///< [out] the array of flags to update
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+	using iterator = typename DoFDistribution::traits<TElem>::const_iterator;
 	
 	const ISubsetHandler * pIsh = edgeDD.subset_handler().get ();
 	Grid::edge_traits::secure_container edge_list;
@@ -287,10 +287,10 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::distribute_source_potential
 	vector_type & src_field ///< [out] the computed source field
 )
 {
-	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iter;
+	using t_edge_iter = DoFDistribution::traits<Edge>::const_iterator;
 	
 //	The full-dim. grid element types for this dimension:
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::DimElemList;
 	
 //	Multigrid and iterators:
 	SmartPtr<MultiGrid> sp_mg = edgeDD.multi_grid ();
@@ -358,7 +358,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::LocLaplaceA<TElem>::stiffness
 	number loc_A [numCorners] [numCorners] ///< [out] the local stiffness matrix
 )
 {
-	typedef FEGeometry<TElem, WDim, LagrangeLSFS<ref_elem_type, 1>, GaussQuadrature<ref_elem_type, 1> > TFEGeom;
+	using TFEGeom = FEGeometry<TElem, WDim, LagrangeLSFS<ref_elem_type, 1>, GaussQuadrature<ref_elem_type, 1> >;
 	
 //	request the finite element geometry
 	TFEGeom & geo = GeomProvider<TFEGeom>::get ();
@@ -452,7 +452,7 @@ template<typename TDomain, typename TAlgebra>
 void NedelecLoopCurrent<TDomain, TAlgebra>::AuxLaplaceLocAss::register_all_loc_discr_funcs ()
 {
 //	get all grid element types in this dimension and below
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::DimElemList;
 
 //	switch assemble functions
 	boost::mpl::for_each<ElemList> (RegisterLocalDiscr (this));
@@ -500,7 +500,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::AuxLaplaceLocAss::ass_JA_elem
 	const position_type vCornerCoords [] ///< [in] coordinates of the corners of the element
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
 
 //	assemble the local matrix	
 	number loc_A [ref_elem_type::numCorners] [ref_elem_type::numCorners];
@@ -522,7 +522,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::AuxLaplaceLocAss::ass_rhs_elem
 	const position_type vCornerCoords [] ///< [in] coordinates of the corners of the element
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
 	
 	if (! m_in_pos_subset) return; // rhs is nonzero only in one subset
 
@@ -565,8 +565,8 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices_el
 	const TDomain * dom ///< [in] the domain
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename geometry_traits<TElem>::const_iterator iterator;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+	using iterator = typename geometry_traits<TElem>::const_iterator;
 	
 //	Get the multigrid and the subset handler:
 	const MultiGrid * mg = dom->grid().get ();
@@ -602,7 +602,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::mark_source_vertices
 )
 {
 //	The full-dim. grid element types for this dimension:
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::DimElemList;
 	
 //	Reset the flags:
 	const MultiGrid * mg = dom->grid().get ();
@@ -623,7 +623,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_matrix
 	pot_matrix_type & A ///< the matrix to adjust
 )
 {
-	typedef DoFDistribution::traits<Vertex>::const_iterator iterator;
+	using iterator = DoFDistribution::traits<Vertex>::const_iterator;
 	std::vector<size_t> vVertInd (1);
 	
 //	Loop over all the vertices out of the source
@@ -652,7 +652,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::adjust_vector
 	pot_vector_type & u ///< the vector to adjust
 )
 {
-	typedef DoFDistribution::traits<Vertex>::const_iterator iterator;
+	using iterator = DoFDistribution::traits<Vertex>::const_iterator;
 	std::vector<size_t> vVertInd (1);
 	
 //	Loop over all the vertices out of the source
@@ -680,7 +680,7 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::OutOfSource::set_zero_average
 	pot_vector_type & u ///< the vector to process
 )
 {
-	typedef DoFDistribution::traits<Vertex>::const_iterator iterator;
+	using iterator = DoFDistribution::traits<Vertex>::const_iterator;
 	iterator vert_end = vertDD.end<Vertex> ();
 	std::vector<size_t> vVertInd (1);
 	size_t n_values;
@@ -737,8 +737,8 @@ void NedelecLoopCurrent<TDomain, TAlgebra>::get_flux_of_pot
 	number & flux ///< [out] the flux to update
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+	using iterator = typename DoFDistribution::traits<TElem>::const_iterator;
 	
 //	Get the positions of the grid points:
 	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();

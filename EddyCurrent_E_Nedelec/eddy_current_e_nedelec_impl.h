@@ -88,11 +88,11 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::prepare_element_loop
 		UG_THROW ("Cannot get material data for subset " << si << ".");
 	
 //	Get the source for this subset
-	m_pSsJG = NULL;
+	m_pSsJG = nullptr;
 	for (size_t i = 0; i < m_vJG.size (); i++)
 	if (m_vJG[i].m_everywhere || m_vJG[i].m_ssGrp.contains (si))
 	{
-		if (m_pSsJG != NULL)
+		if (m_pSsJG != nullptr)
 			UG_THROW ("More than one specification of the generator current in subset " << si << ".");
 		m_pSsJG = & (m_vJG[i]);
 	}
@@ -103,7 +103,7 @@ template<typename TDomain, typename TAlgebra>
 template<typename TElem>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::finish_element_loop ()
 {
-	m_pSsJG = NULL;
+	m_pSsJG = nullptr;
 }
 
 /// prepares a given element for assembling: computes the discretization of the rot-rot operator
@@ -261,7 +261,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::ass_rhs_elem
 	const position_type vCornerCoords []
 )
 {
-	if (m_pSsJG == NULL) return; // no rhs
+	if (m_pSsJG == nullptr) return; // no rhs
 	
 //	The generator current (source) at the dofs
 	MathVector<2> vJG [NedelecT1_LDisc<TDomain, TElem>::numEdges];
@@ -337,7 +337,7 @@ template<typename TDomain, typename TAlgebra>
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_all_loc_discr_funcs ()
 {
 //	get all grid element types in this dimension and below
-	typedef typename domain_traits<dim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<dim>::DimElemList;
 
 //	switch assemble functions
 	boost::mpl::for_each<ElemList> (RegisterLocalDiscr (this));
@@ -348,7 +348,7 @@ template<typename TDomain, typename TAlgebra>
 template<typename TElem> // the element to register for
 void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::register_loc_discr_func ()
 {
-	static const ReferenceObjectID id = geometry_traits<TElem>::REFERENCE_OBJECT_ID;
+	static constexpr ReferenceObjectID id = geometry_traits<TElem>::REFERENCE_OBJECT_ID;
 	
 	this->clear_add_fct(id);
 	
@@ -377,7 +377,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::set_generator_current
 (
 	SmartPtr<TGridFunction> spgfJG, ///< pointer to the grid function
 	const char * cmp, ///< names of the components
-	const char * ss_names ///< names of the subsets (or NULL if defined everywhere)
+	const char * ss_names ///< names of the subsets (or nullptr if defined everywhere)
 )
 {
 	std::vector<std::string> tokens;
@@ -421,7 +421,7 @@ void EddyCurrent_E_Nedelec<TDomain,TAlgebra>::set_generator_current
 							"to the Nedelec element.");
 	
 //	Get the subsets:
-	if (ss_names == NULL)
+	if (ss_names == nullptr)
 		ew = true;
 	else
 	{

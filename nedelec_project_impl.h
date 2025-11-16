@@ -295,8 +295,8 @@ void NedelecProject<TDomain, TAlgebra>::weak_div_elem_type
 	pot_vector_type & div ///< to update the weak divergence of u
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+	using iterator = typename DoFDistribution::traits<TElem>::const_iterator;
 	
 //	Get the conductor distribution and the positions of the grid points:
 	const std::vector<int> & cond_index = m_spEmMaterial->base_conductor_index ();
@@ -311,8 +311,8 @@ void NedelecProject<TDomain, TAlgebra>::weak_div_elem_type
 	if (cond_index [si] == -1)
 	{
 	//	Loop over all the elements of the given type in the subset
-		iterator e_end = vertDD.template end<TElem> (si);
-		for (iterator elem_iter = vertDD.template begin<TElem> (si);
+		iterator e_end = vertDD.end<TElem> (si);
+		for (iterator elem_iter = vertDD.begin<TElem> (si);
 			elem_iter != e_end; ++elem_iter)
 		{
 			TElem * pElem = *elem_iter;
@@ -361,8 +361,8 @@ void NedelecProject<TDomain, TAlgebra>::clear_div_in_conductors
 	DenseVector<VariableArray1<number> > & charge ///< [out] charges of the conductors
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+	using iterator = typename DoFDistribution::traits<TElem>::const_iterator;
 	
 	const std::vector<int> & base_cond = m_spEmMaterial->base_conductors ();
 	if (base_cond.size () == 0) return; // no conductors
@@ -412,7 +412,7 @@ void NedelecProject<TDomain, TAlgebra>::assemble_div
 )
 {
 //	The full-dim. grid element types for this dimension:
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::DimElemList;
 	
 	const std::vector<int> & base_cond = m_spEmMaterial->base_conductors ();
 	charge.resize (base_cond.size ());
@@ -468,7 +468,7 @@ void NedelecProject<TDomain, TAlgebra>::distribute_cor
 )
 {
 //	Iterator over edges
-	typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
+	using t_edge_iterator = DoFDistribution::traits<Edge>::const_iterator;
 	
 #ifdef UG_PARALLEL
 	if (! u.has_storage_type (PST_CONSISTENT))
@@ -529,7 +529,7 @@ void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 //	Exclude grounded conductors
 	if (m_spDirichlet.valid ())
 	{
-		typedef DoFDistribution::traits<Edge>::const_iterator t_edge_iterator;
+		using t_edge_iterator = DoFDistribution::traits<Edge>::const_iterator;
 		
 		const grid_type * grid = domain.grid().get ();
 		const subset_handler_type * ss_handler = domain.subset_handler().get ();
@@ -573,7 +573,7 @@ void NedelecProject<TDomain, TAlgebra>::alloc_DVFs
 	m_DVF_phi.resize (n_cond);
 	for (size_t i = 0; i < n_cond; i++)
 	if (grounded [i])
-		m_DVF_phi [i] = NULL; // the conductor is grounded, skip it
+		m_DVF_phi [i] = nullptr; // the conductor is grounded, skip it
 	else
 		m_DVF_phi [i] = new pot_gf_type (aux_rhs.approx_space (), aux_rhs.dof_distribution ());
 }
@@ -590,7 +590,7 @@ void NedelecProject<TDomain, TAlgebra>::compute_DVFs
 	for (size_t i = 0; i < m_DVF_phi.size (); i++)
 	{
 		pot_gf_type * phi = m_DVF_phi [i];
-		if (phi == NULL) continue; // a grounded conductor
+		if (phi == nullptr) continue; // a grounded conductor
 		
 	// 1. Compose the right-hand side:
 		m_auxLaplaceRHS->set_base_conductor (i);
@@ -620,7 +620,7 @@ void NedelecProject<TDomain, TAlgebra>::compute_DVF_potential_coeffs
 )
 {
 //	The full-dim. grid element types for this dimension:
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::DimElemList;
 	
 //	Prepare the matrix for the potential coefficients:
 	size_t num_b_cond = m_DVF_phi.size ();
@@ -662,7 +662,7 @@ void NedelecProject<TDomain, TAlgebra>::compute_DVF_potential_coeffs
 #	endif
 
 	for (size_t i = 0; i < num_b_cond; i++)
-	if (m_DVF_phi [i] == NULL)
+	if (m_DVF_phi [i] == nullptr)
 		m_potCoeff (i, i) = 1; // set the matrix to identity for the grounded conductors
 	else
 		for (size_t j = i + 1; j < num_b_cond; j++)
@@ -685,7 +685,7 @@ void NedelecProject<TDomain, TAlgebra>::damp_DVFs
 	DenseVector<VariableArray1<number> > factor = m_potCoeff * charge;
 	
 	for (size_t i = 0; i < m_DVF_phi.size (); i++)
-	if (m_DVF_phi [i] != NULL) // skip grounded conductors
+	if (m_DVF_phi [i] != nullptr) // skip grounded conductors
 		VecScaleAdd (cor, 1.0, cor, factor [i], * (pot_vector_type *) m_DVF_phi [i]);
 }
 
@@ -704,8 +704,8 @@ void NedelecProject<TDomain, TAlgebra>::mark_cond_vert_elem_type
 	aa_vert_cond_type & vert_base_cond ///< [out] indices of the base conductors for every vertex
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+	using iterator = typename DoFDistribution::traits<TElem>::const_iterator;
 	
 	int base_cond_ind;
 	
@@ -720,7 +720,7 @@ void NedelecProject<TDomain, TAlgebra>::mark_cond_vert_elem_type
 	if ((base_cond_ind = cond_index [si]) >= 0)
 	{
 	//	Mark the grounded conductors with -1 (insulators are marked with -2)
-		if (m_DVF_phi [base_cond_ind] == NULL)
+		if (m_DVF_phi [base_cond_ind] == nullptr)
 			base_cond_ind = -1;
 		
 	//	Loop over all the elements of the given type in the subset
@@ -750,8 +750,8 @@ void NedelecProject<TDomain, TAlgebra>::integrate_div_DVF_elem_type
 	DenseMatrix<VariableArray2<number> > & C ///< [out] the capacity matrix to update
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator iterator;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+	using iterator = typename DoFDistribution::traits<TElem>::const_iterator;
 	
 //	Get the positions of the grid points:
 	const typename TDomain::position_accessor_type & aaPos = domain.position_accessor ();
@@ -801,7 +801,7 @@ void NedelecProject<TDomain, TAlgebra>::integrate_div_DVF_elem_type
 			//	is called 'the from-conductor', and the conductor j, whose
 			//	potential induces the charge, is called 'the to-conductor'.
 				pot_vector_type * phi = m_DVF_phi [to_cond];
-				if (phi == NULL) continue; // this is a grounded conductor
+				if (phi == nullptr) continue; // this is a grounded conductor
 				
 				for (size_t to_co = 0; to_co < (size_t) ref_elem_type::numCorners; to_co++)
 				{
@@ -831,7 +831,7 @@ void NedelecProject<TDomain, TAlgebra>::LocLaplaceA<TElem>::stiffness
 	number loc_A [numCorners] [numCorners] ///< [out] the local stiffness matrix
 )
 {
-	typedef FEGeometry<TElem, WDim, LagrangeLSFS<ref_elem_type, 1>, GaussQuadrature<ref_elem_type, 1> > TFEGeom;
+	using TFEGeom = FEGeometry<TElem, WDim, LagrangeLSFS<ref_elem_type, 1>, GaussQuadrature<ref_elem_type, 1> >;
 	
 //	request the finite element geometry
 	TFEGeom & geo = GeomProvider<TFEGeom>::get ();
@@ -895,7 +895,7 @@ template<typename TDomain, typename TAlgebra>
 void NedelecProject<TDomain, TAlgebra>::AuxLaplaceLocAss::register_all_loc_discr_funcs ()
 {
 //	get all grid element types in this dimension and below
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::DimElemList;
 
 //	switch assemble functions
 	boost::mpl::for_each<ElemList> (RegisterLocalDiscr (this));
@@ -947,8 +947,8 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceLocAss::ass_JA_elem
 )
 {
 	if (! m_do_assemble_here) return;
-	
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
+
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
 
 //	assemble the local matrix	
 	number loc_A [ref_elem_type::numCorners] [ref_elem_type::numCorners];
@@ -1074,8 +1074,8 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::set_value_on_subset
 	const DoFDistribution * dd ///< the vert.-based DoF distribution
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator t_elem_iterator;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+	using t_elem_iterator = typename DoFDistribution::traits<TElem>::const_iterator;
 	
 	std::vector<size_t> vVertInd (1);
 	
@@ -1111,8 +1111,8 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::set_identity_on_subset
 	const DoFDistribution * dd ///< the vert.-based DoF distribution
 )
 {
-	typedef typename reference_element_traits<TElem>::reference_element_type ref_elem_type;
-	typedef typename DoFDistribution::traits<TElem>::const_iterator t_elem_iterator;
+	using ref_elem_type = typename reference_element_traits<TElem>::reference_element_type;
+	using t_elem_iterator = typename DoFDistribution::traits<TElem>::const_iterator;
 	
 	std::vector<size_t> vVertInd (1);
 	
@@ -1155,7 +1155,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_jacobian
 	set_identity_Dirichlet (J, dd.get());
 	
 // Set all matrix rows in conductors to identity:
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::DimElemList;
 	const std::vector<int> & base_cond = m_master.m_spEmMaterial->base_conductor_index ();
 	
 	for (size_t si = 0; si < base_cond.size (); si++)
@@ -1183,7 +1183,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_defect
 	set_zero_Dirichlet (d, dd.get ());
 	
 // Set all entries in conductors to zero:
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+using ElemList = typename domain_traits<WDim>::DimElemList;
 	const std::vector<int> & base_cond = m_master.m_spEmMaterial->base_conductor_index ();
 	
 	for (size_t si = 0; si < base_cond.size (); si++)
@@ -1207,7 +1207,7 @@ void NedelecProject<TDomain, TAlgebra>::AuxLaplaceRHS::adjust_solution
 	set_zero_Dirichlet (u, dd.get ());
 	
 //	Set all entries in conductors to 0 or 1:
-	typedef typename domain_traits<WDim>::DimElemList ElemList;
+	using ElemList = typename domain_traits<WDim>::DimElemList;
 	const std::vector<int> & base_cond = m_master.m_spEmMaterial->base_conductor_index ();
 	
 	for (size_t si = 0; si < base_cond.size (); si++)

@@ -70,13 +70,13 @@ class EddyCurrentHeat
 {
 public:
 ///	Type of domain
-	typedef typename TGridFunc::domain_type domain_type;
+	using domain_type = typename TGridFunc::domain_type;
 
 ///	World dimension
-	static const int dim = domain_type::dim;
+	static constexpr int dim = domain_type::dim;
 
 ///	Type of position coordinates (e.g. position_type)
-	typedef typename domain_type::position_type position_type;
+	using position_type = typename domain_type::position_type;
 
 private:
 ///	grid function for \f$ \mathbf{E} \f$
@@ -148,7 +148,7 @@ public:
 		bool bDeriv,
 		int s,
 		std::vector<std::vector<number> > vvvDeriv[],
-		const MathMatrix<refDim, dim>* vJT = NULL
+		const MathMatrix<refDim, dim>* vJT = nullptr
 	) const
 	{
 	//	Derivatives are not implemented
@@ -213,13 +213,13 @@ class EddyCurrentCurlEDependentCmpUserData
 {
 public:
 ///	Type of domain
-	typedef typename TGFunc::domain_type domain_type;
+	using domain_type = typename TGFunc::domain_type;
 
 ///	World dimension
-	static const int dim = domain_type::dim;
+	static constexpr int dim = domain_type::dim;
 
 ///	Type of position coordinates (e.g. position_type)
-	typedef typename domain_type::position_type position_type;
+	using position_type = typename domain_type::position_type;
 
 protected:
 ///	grid function
@@ -291,7 +291,7 @@ public:
 		bool bDeriv,
 		int s,
 		std::vector<std::vector<MathVector<dim> > > vvvDeriv[],
-		const MathMatrix<refDim, dim> * vJT = NULL
+		const MathMatrix<refDim, dim> * vJT = nullptr
 	) const
 	{
 	//	Derivatives are not implemented
@@ -330,10 +330,10 @@ class EddyCurrentReBofEUserData
 		<EddyCurrentReBofEUserData<TGridFunc>, EddyCurrentTraits::_Im_, TGridFunc>
 {
 ///	Type of domain
-	typedef typename TGridFunc::domain_type domain_type;
+	using domain_type = typename TGridFunc::domain_type;
 
 ///	World dimension
-	static const int dim = domain_type::dim;
+	static constexpr int dim = domain_type::dim;
 
 private:
 ///	Frequency \f$ \omega \f$
@@ -374,10 +374,10 @@ class EddyCurrentImBofEUserData
 		<EddyCurrentImBofEUserData<TGridFunc>, EddyCurrentTraits::_Re_, TGridFunc>
 {
 ///	Type of domain
-	typedef typename TGridFunc::domain_type domain_type;
+	using domain_type = typename TGridFunc::domain_type;
 
 ///	World dimension
-	static const int dim = domain_type::dim;
+	static constexpr int dim = domain_type::dim;
 
 private:
 ///	Frequency \f$ \omega \f$
