@@ -42,7 +42,7 @@ set(SOURCES		em_plugin.cpp)
 ################################################################################
 # The code below doesn't have to be changed (usually)
 ################################################################################
-cmake_minimum_required(VERSION 2.8.12...3.27.1)
+cmake_minimum_required(VERSION 2.8.12...4.4)
 
 project(UG_PLUGIN_${pluginName})
 
